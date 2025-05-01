@@ -71,6 +71,8 @@ const uiText = {
         tagline: "Tell us what's in your fridge, and we'll whip up a recipe or a full menu!", // Updated tagline
         ingredientsTitle: "Your Ingredients",
         ingredientsDescription: "Enter ingredients, select language, and optionally choose a taste preference.",
+        proChefInputTitle: "Plan Your Menu", // New title for pro mode input card
+        proChefInputDescription: "Describe the event and the menu you envision using your available ingredients.", // New description for pro mode
         proChefModeLabel: "Pro Chef Mode",
         proChefModeDescription: "Plan a menu for an event!",
         eventThemeLabel: "Event Theme/Name",
@@ -116,6 +118,8 @@ const uiText = {
         tagline: "¡Dinos qué hay en tu nevera y te prepararemos una receta o un menú completo!",
         ingredientsTitle: "Tus Ingredientes",
         ingredientsDescription: "Ingresa ingredientes, selecciona idioma y opcionalmente elige una preferencia de sabor.",
+        proChefInputTitle: "Planifica tu Menú",
+        proChefInputDescription: "Describe el evento y el menú que imaginas utilizando tus ingredientes disponibles.",
         proChefModeLabel: "Modo Chef Profesional",
         proChefModeDescription: "¡Planifica un menú para un evento!",
         eventThemeLabel: "Tema/Nombre del Evento",
@@ -161,6 +165,8 @@ const uiText = {
         tagline: "Dites-nous ce qu'il y a dans votre frigo et nous vous concocterons une recette ou un menu complet !",
         ingredientsTitle: "Vos Ingrédients",
         ingredientsDescription: "Entrez les ingrédients, sélectionnez la langue et choisissez éventuellement une préférence gustative.",
+        proChefInputTitle: "Planifiez votre Menu",
+        proChefInputDescription: "Décrivez l'événement et le menu que vous imaginez en utilisant vos ingrédients disponibles.",
         proChefModeLabel: "Mode Chef Pro",
         proChefModeDescription: "Planifiez un menu pour un événement !",
         eventThemeLabel: "Thème/Nom de l'événement",
@@ -206,6 +212,8 @@ const uiText = {
         tagline: "Sagen Sie uns, was in Ihrem Kühlschrank ist, und wir zaubern ein Rezept oder ein ganzes Menü für Sie!",
         ingredientsTitle: "Ihre Zutaten",
         ingredientsDescription: "Zutaten eingeben, Sprache wählen und optional eine Geschmackspräferenz auswählen.",
+        proChefInputTitle: "Planen Sie Ihr Menü",
+        proChefInputDescription: "Beschreiben Sie die Veranstaltung und das Menü, das Sie sich vorstellen, unter Verwendung Ihrer verfügbaren Zutaten.",
         proChefModeLabel: "Profi-Koch-Modus",
         proChefModeDescription: "Planen Sie ein Menü für eine Veranstaltung!",
         eventThemeLabel: "Veranstaltungsthema/Name",
@@ -251,6 +259,8 @@ const uiText = {
         tagline: "हमें बताएं कि आपके फ्रिज में क्या है, और हम आपके लिए एक रेसिपी या पूरा मेनू तैयार करेंगे!",
         ingredientsTitle: "आपकी सामग्री",
         ingredientsDescription: "सामग्री दर्ज करें, भाषा चुनें, और वैकल्पिक रूप से स्वाद वरीयता चुनें।",
+        proChefInputTitle: "अपना मेनू प्लान करें",
+        proChefInputDescription: "कार्यक्रम और अपनी उपलब्ध सामग्री का उपयोग करके आपके मन में जो मेनू है उसका वर्णन करें।",
         proChefModeLabel: "प्रो शेफ मोड",
         proChefModeDescription: "एक कार्यक्रम के लिए मेनू की योजना बनाएं!",
         eventThemeLabel: "कार्यक्रम थीम/नाम",
@@ -296,6 +306,8 @@ const uiText = {
         tagline: "আপনার ফ্রিজে কী আছে বলুন, এবং আমরা আপনার জন্য একটি রেসিপি বা একটি সম্পূর্ণ মেনু তৈরি করব!",
         ingredientsTitle: "আপনার উপকরণ",
         ingredientsDescription: "উপকরণ লিখুন, ভাষা নির্বাচন করুন, এবং ঐচ্ছিকভাবে একটি স্বাদের পছন্দ নির্বাচন করুন।",
+        proChefInputTitle: "আপনার মেনু পরিকল্পনা করুন",
+        proChefInputDescription: "অনুষ্ঠান এবং আপনার উপলব্ধ উপকরণ ব্যবহার করে আপনি যে মেনুটি কল্পনা করছেন তা বর্ণনা করুন।",
         proChefModeLabel: "প্রো শেফ মোড",
         proChefModeDescription: "একটি অনুষ্ঠানের জন্য মেনু পরিকল্পনা করুন!",
         eventThemeLabel: "অনুষ্ঠানের থিম/নাম",
@@ -660,10 +672,10 @@ export default function Home() {
         <Card className="shadow-xl rounded-lg overflow-hidden">
           <CardHeader className="bg-primary/10 dark:bg-primary/20 p-5">
             <CardTitle className="text-2xl font-semibold text-primary flex items-center gap-2">
-               <ChefHat className="h-6 w-6"/> {T.ingredientsTitle}
+               <ChefHat className="h-6 w-6"/> {isProChefMode ? T.proChefInputTitle : T.ingredientsTitle}
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              {isProChefMode ? T.proChefModeDescription : T.ingredientsDescription}
+              {isProChefMode ? T.proChefInputDescription : T.ingredientsDescription}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-5 space-y-5">
@@ -800,5 +812,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
