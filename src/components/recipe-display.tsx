@@ -14,6 +14,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Loader2, Sparkles, List, CookingPot, TriangleAlert, CheckSquare, Info, Lightbulb } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
+import type { TastePreference } from '@/app/page'; // Import TastePreference type
 
 // UI Text translations
 const uiText = {
@@ -149,6 +150,72 @@ const uiText = {
         ingredientsUnavailablePlaceholder: "Zutatenliste nicht verfügbar.",
         instructionsUnavailablePlaceholder: "Anweisungen nicht verfügbar.",
     },
+    "hi": { // Hindi Translations
+        recipeNotePrefix: "ध्यान दें:",
+        ingredientsTitle: "सामग्री",
+        ingredientsNotAvailable: "कोई सामग्री सूचीबद्ध नहीं है।",
+        mainIngredientsHeader: "**मुख्य सामग्री:**",
+        additionalIngredientsHeader: "**अतिरिक्त सामग्री:**",
+        alternativeIdeasTitle: "वैकल्पिक विचार",
+        alternativeIdeasDescription: "इन सामग्रियों से अन्य प्रकार के व्यंजन भी बन सकते हैं। एक अलग रेसिपी बनाने के लिए किसी एक पर क्लिक करें:",
+        tryAlternativeButton: "{type} आज़माएँ",
+        reviewAdditionalTitle: "अतिरिक्त सामग्री की समीक्षा करें",
+        reviewAdditionalDescription: "शेफ ने इन अतिरिक्त वस्तुओं का सुझाव दिया है। जो आपके पास नहीं हैं उन्हें अनचेक करें, फिर \"रेसिपी परिष्कृत करें\" पर क्लिक करें।",
+        refinementInfoTitle: "शोधन जानकारी",
+        refineRecipeButton: "रेसिपी परिष्कृत करें",
+        refiningButton: "परिष्कृत हो रहा है...",
+        instructionsTitle: "निर्देश",
+        explainStepsButton: "चरण समझाएं",
+        fetchingDetails: "विवरण प्राप्त हो रहा है...",
+        explanationError: "स्पष्टीकरण त्रुटि",
+        viewDetailedExplanation: "विस्तृत स्पष्टीकरण देखें",
+        loadingExplanation: "स्पष्टीकरण लोड हो रहा है...",
+        errorTitle: "त्रुटि",
+        noInstructionsToExplainTitle: "कोई निर्देश नहीं",
+        noInstructionsToExplainDesc: "समझाने के लिए कोई निर्देश उपलब्ध नहीं हैं।",
+        explanationFailedTitle: "स्पष्टीकरण विफल",
+        explanationFailedDesc: "एआई से विस्तृत निर्देश प्राप्त करने में विफल।",
+        explanationErrorTitle: "स्पष्टीकरण त्रुटि",
+        explanationErrorDesc: "विस्तृत स्पष्टीकरण प्राप्त नहीं किया जा सका: {errorMsg}",
+        ingredientsUnavailable: "सामग्री विवरण उपलब्ध नहीं हैं।",
+        instructionsUnavailable: "निर्देश अनुपलब्ध।",
+        notesUnavailable: "कोई विशिष्ट नोट प्रदान नहीं किया गया।",
+        ingredientsUnavailablePlaceholder: "सामग्री सूची अनुपलब्ध।",
+        instructionsUnavailablePlaceholder: "निर्देश अनुपलब्ध।",
+    },
+    "bn": { // Bengali Translations
+        recipeNotePrefix: "দ্রষ্টব্য:",
+        ingredientsTitle: "উপকরণ",
+        ingredientsNotAvailable: "কোনো উপকরণ তালিকাভুক্ত নেই।",
+        mainIngredientsHeader: "**প্রধান উপকরণ:**",
+        additionalIngredientsHeader: "**অতিরিক্ত উপকরণ:**",
+        alternativeIdeasTitle: "বিকল্প ধারণা",
+        alternativeIdeasDescription: "এই উপকরণগুলি দিয়ে অন্য ধরনের খাবারও তৈরি করা যেতে পারে। একটি ভিন্ন রেসিপি তৈরি করতে যেকোনো একটিতে ক্লিক করুন:",
+        tryAlternativeButton: "{type} চেষ্টা করুন",
+        reviewAdditionalTitle: "অতিরিক্ত আইটেম পর্যালোচনা করুন",
+        reviewAdditionalDescription: "শেফ এই অতিরিক্ত আইটেমগুলির পরামর্শ দিয়েছেন। আপনার কাছে যা নেই তা আনচেক করুন, তারপর \"রেসিপি পরিমার্জন করুন\" ক্লিক করুন।",
+        refinementInfoTitle: "পরিমার্জন তথ্য",
+        refineRecipeButton: "রেসিপি পরিমার্জন করুন",
+        refiningButton: "পরিমার্জন চলছে...",
+        instructionsTitle: "নির্দেশাবলী",
+        explainStepsButton: "ধাপগুলি ব্যাখ্যা করুন",
+        fetchingDetails: "বিস্তারিত আনা হচ্ছে...",
+        explanationError: "ব্যাখ্যা ত্রুটি",
+        viewDetailedExplanation: "বিস্তারিত ব্যাখ্যা দেখুন",
+        loadingExplanation: "ব্যাখ্যা লোড হচ্ছে...",
+        errorTitle: "ত্রুটি",
+        noInstructionsToExplainTitle: "কোনো নির্দেশাবলী নেই",
+        noInstructionsToExplainDesc: "ব্যাখ্যা করার জন্য কোনো নির্দেশাবলী উপলব্ধ নেই।",
+        explanationFailedTitle: "ব্যাখ্যা ব্যর্থ হয়েছে",
+        explanationFailedDesc: "এআই থেকে বিস্তারিত নির্দেশাবলী পেতে ব্যর্থ হয়েছে।",
+        explanationErrorTitle: "ব্যাখ্যা ত্রুটি",
+        explanationErrorDesc: "বিস্তারিত ব্যাখ্যা আনা যায়নি: {errorMsg}",
+        ingredientsUnavailable: "উপকরণ বিবরণ উপলব্ধ নেই।",
+        instructionsUnavailable: "নির্দেশাবলী অনুপলব্ধ।",
+        notesUnavailable: "কোনো নির্দিষ্ট নোট প্রদান করা হয়নি।",
+        ingredientsUnavailablePlaceholder: "উপকরণ তালিকা অনুপলব্ধ।",
+        instructionsUnavailablePlaceholder: "নির্দেশাবলী অনুপলব্ধ।",
+    },
      // Add more languages as needed
 };
 
@@ -158,6 +225,8 @@ const supportedLanguages = {
     "es": "Spanish",
     "fr": "French",
     "de": "German",
+    "hi": "Hindi",
+    "bn": "Bengali",
     // Add more as needed
 };
 
@@ -170,6 +239,7 @@ interface RecipeDisplayProps {
   isRefining: boolean;
   isGenerating: boolean;
   language: string; // Receive language code (e.g., 'en', 'es')
+  tastePreference?: TastePreference; // Add taste preference prop
 }
 
 interface AdditionalIngredientItem {
@@ -186,7 +256,8 @@ export function RecipeDisplay({
     onSelectAlternative,
     isRefining,
     isGenerating,
-    language // Receive language code
+    language, // Receive language code
+    tastePreference // Receive taste preference
 }: RecipeDisplayProps) {
   const [additionalIngredientsChecklist, setAdditionalIngredientsChecklist] = useState<AdditionalIngredientItem[]>([]);
   const [showRefineSection, setShowRefineSection] = useState(false);
@@ -348,6 +419,7 @@ export function RecipeDisplay({
             originalInstructions: displayData.instructionsText,
             ingredientsList: displayData.ingredientsText || T.ingredientsUnavailable,
             language: languageName // Pass the full language name
+            // Taste preference is not directly used by explain flow, but could be added if needed
         };
 
         startExplaining(async () => {

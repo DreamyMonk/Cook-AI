@@ -127,6 +127,62 @@ const uiText = {
         ariaLabelStartListening: "Zuhören beginnen",
         ariaLabelVoiceChatToggle: "Interaktiven Voice-Chat umschalten",
     },
+    "hi": { // Hindi Translations
+        enterIngredientsTitle: "सामग्री दर्ज करें",
+        ingredientsLabel: "सामग्री को अल्पविराम से अलग करके सूचीबद्ध करें (उदा., चिकन, चावल, ब्रोकोली)।",
+        voiceChatPlaceholderListening: "सुन रहा हूँ...",
+        voiceChatPlaceholderActive: "वॉइस चैट सक्रिय। बोलने के लिए माइक पर टैप करें।",
+        voiceChatPlaceholderInactive: "अपनी सामग्री टाइप करें...",
+        voiceChatErrorTitle: "वॉइस त्रुटि",
+        voiceChatToggleLabel: "इंटरैक्टिव वॉइस चैट",
+        voiceChatSupportWarning: "वॉइस चैट के लिए स्पीच रिकग्निशन और सिंथेसिस के लिए ब्राउज़र समर्थन आवश्यक है।",
+        voiceChatNotSupported: "(समर्थित नहीं)",
+        voiceChatInfoListening: "सामग्री के लिए सक्रिय रूप से सुन रहा हूँ...",
+        voiceChatInfoReady: "वॉइस चैट चालू है। बोलने के लिए माइक आइकन पर टैप करें।",
+        generateButtonLabel: "रेसिपी बनाएं",
+        generatingButtonLabel: "बनाया जा रहा है...",
+        inputErrorEmpty: "कृपया कम से कम एक सामग्री सूचीबद्ध करें।",
+        inputErrorTooShort: "सामग्री का नाम बहुत छोटा लगता है। कृपया मान्य सामग्री दर्ज करें।",
+        inputErrorInvalid: "कोई मान्य सामग्री नहीं मिली। कृपया अल्पविराम से अलग करके सामग्री सूचीबद्ध करें।",
+        toastFormatWarningTitle: "प्रारूप जांचें",
+        toastFormatWarningDescription: "सर्वोत्तम परिणामों के लिए एकाधिक सामग्रियों को अल्पविराम से अलग करना याद रखें।",
+        voiceChatNotSupportedTitle: "वॉइस चैट समर्थित नहीं",
+        voiceChatNotSupportedDesc: "आपका ब्राउज़र आवश्यक स्पीच रिकग्निशन या सिंथेसिस एपीआई का पूरी तरह से समर्थन नहीं करता है।",
+        voiceChatEnabledSpeak: "वॉइस चैट सक्षम। कृपया अपनी सामग्री स्पष्ट रूप से बताएं, विरामों से अलग करें।",
+        voiceChatDisabledSpeak: "वॉइस चैट अक्षम।",
+        ariaLabelIngredients: "उपलब्ध सामग्री अल्पविराम से अलग करके दर्ज करें",
+        ariaLabelStopListening: "सुनना बंद करें",
+        ariaLabelStartListening: "सुनना शुरू करें",
+        ariaLabelVoiceChatToggle: "इंटरैक्टिव वॉइस चैट टॉगल करें",
+    },
+    "bn": { // Bengali Translations
+        enterIngredientsTitle: "উপকরণ লিখুন",
+        ingredientsLabel: "উপকরণগুলি কমা দ্বারা পৃথক করে তালিকাভুক্ত করুন (যেমন, চিকেন, ভাত, ব্রোকলি)।",
+        voiceChatPlaceholderListening: "শুনছি...",
+        voiceChatPlaceholderActive: "ভয়েস চ্যাট সক্রিয়। কথা বলতে মাইকে ট্যাপ করুন।",
+        voiceChatPlaceholderInactive: "আপনার উপকরণ টাইপ করুন...",
+        voiceChatErrorTitle: "ভয়েস ত্রুটি",
+        voiceChatToggleLabel: "ইন্টারেক্টিভ ভয়েস চ্যাট",
+        voiceChatSupportWarning: "ভয়েস চ্যাটের জন্য স্পিচ রিকগনিশন এবং সিন্থেসিসের জন্য ব্রাউজার সমর্থন প্রয়োজন।",
+        voiceChatNotSupported: "(সমর্থিত নয়)",
+        voiceChatInfoListening: "সক্রিয়ভাবে উপকরণের জন্য শুনছি...",
+        voiceChatInfoReady: "ভয়েস চ্যাট চালু আছে। কথা বলতে মাইক আইকনে ট্যাপ করুন।",
+        generateButtonLabel: "রেসিপি তৈরি করুন",
+        generatingButtonLabel: "তৈরি হচ্ছে...",
+        inputErrorEmpty: "অনুগ্রহ করে অন্তত একটি উপকরণ তালিকাভুক্ত করুন।",
+        inputErrorTooShort: "উপকরণের নাম খুব ছোট মনে হচ্ছে। অনুগ্রহ করে বৈধ উপকরণ লিখুন।",
+        inputErrorInvalid: "কোনো বৈধ উপকরণ পাওয়া যায়নি। অনুগ্রহ করে কমা দ্বারা পৃথক করে উপকরণ তালিকাভুক্ত করুন।",
+        toastFormatWarningTitle: "ফর্ম্যাট পরীক্ষা করুন",
+        toastFormatWarningDescription: "সেরা ফলাফলের জন্য একাধিক উপকরণ কমা দিয়ে আলাদা করতে মনে রাখবেন।",
+        voiceChatNotSupportedTitle: "ভয়েস চ্যাট সমর্থিত নয়",
+        voiceChatNotSupportedDesc: "আপনার ব্রাউজার প্রয়োজনীয় স্পিচ রিকগনিশন বা সিন্থেসিস এপিআই সম্পূর্ণরূপে সমর্থন করে না।",
+        voiceChatEnabledSpeak: "ভয়েস চ্যাট সক্ষম। অনুগ্রহ করে আপনার উপকরণগুলি স্পষ্টভাবে বলুন, বিরতি দিয়ে আলাদা করুন।",
+        voiceChatDisabledSpeak: "ভয়েস চ্যাট অক্ষম।",
+        ariaLabelIngredients: "উপলব্ধ উপকরণ কমা দ্বারা পৃথক করে লিখুন",
+        ariaLabelStopListening: "শোনা বন্ধ করুন",
+        ariaLabelStartListening: "শোনা শুরু করুন",
+        ariaLabelVoiceChatToggle: "ইন্টারেক্টিভ ভয়েস চ্যাট টগল করুন",
+    },
      // Add more languages as needed
 };
 
@@ -136,6 +192,8 @@ const speechRecognitionLangMap: { [key: string]: string } = {
     "es": "es-ES", // Or es-MX, es-US etc. depending on target dialect
     "fr": "fr-FR",
     "de": "de-DE",
+    "hi": "hi-IN", // Added Hindi India
+    "bn": "bn-BD", // Added Bengali Bangladesh (or bn-IN for India)
     // Add more mappings as needed
 };
 
@@ -143,7 +201,7 @@ const speechRecognitionLangMap: { [key: string]: string } = {
 interface IngredientFormProps {
   onSubmit: (ingredientsString: string, preferredType?: string) => void;
   isGenerating: boolean;
-  language: string; // Receive language code (e.g., 'en', 'es')
+  language: string; // Receive language code (e.g., 'en', 'es', 'hi', 'bn')
 }
 
 export function IngredientForm({ onSubmit, isGenerating, language }: IngredientFormProps) {
@@ -252,26 +310,30 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
       setInputError(T.inputErrorEmpty);
       return;
     }
+    // Basic validation: check if the input is very short and doesn't contain a comma
     if (trimmedInput.length < 3 && !trimmedInput.includes(',')) {
        setInputError(T.inputErrorTooShort);
        return;
     }
 
 
+    // Show toast warning if spaces are used without commas (potential user error)
     if (trimmedInput.includes(' ') && !trimmedInput.includes(',')) {
        toast({
-            variant: "default",
+            variant: "default", // Use default variant for non-critical warning
             title: T.toastFormatWarningTitle,
             description: T.toastFormatWarningDescription,
-            duration: 5000,
+            duration: 5000, // Show for 5 seconds
        });
     }
 
+    // Clean up input: split by comma, trim spaces, filter out empty strings
     const nonEmptyIngredients = trimmedInput
                                 .split(',')
                                 .map(s => s.trim())
-                                .filter(Boolean);
+                                .filter(Boolean); // Filter out empty strings resulting from multiple commas etc.
 
+    // Final validation: ensure there's at least one valid ingredient after cleaning
     if (nonEmptyIngredients.length === 0) {
         setInputError(T.inputErrorInvalid);
         return;
@@ -282,7 +344,7 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
     }
 
     // Call onSubmit without preferredType for initial generation
-    onSubmit(nonEmptyIngredients.join(', '));
+    onSubmit(nonEmptyIngredients.join(', ')); // Submit the cleaned, comma-separated string
   };
 
    const toggleManualListen = () => {

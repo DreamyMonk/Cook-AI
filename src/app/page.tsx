@@ -30,9 +30,29 @@ const supportedLanguages = {
     "es": "Spanish",
     "fr": "French",
     "de": "German",
+    "hi": "Hindi",     // Added Hindi
+    "bn": "Bengali",   // Added Bengali
     // Add more as needed
 };
 type LanguageCode = keyof typeof supportedLanguages;
+
+// Supported Taste Preferences
+export const supportedTastePreferences = [
+    "Any", // Default
+    "Indian",
+    "Chinese",
+    "Japanese",
+    "Thai",
+    "Mediterranean",
+    "Italian",
+    "Mexican",
+    "American",
+    "French", // Added French cuisine
+    "Middle Eastern", // Added Middle Eastern
+    "Korean", // Added Korean
+];
+export type TastePreference = typeof supportedTastePreferences[number];
+
 
 // UI Text translations
 const uiText = {
@@ -40,7 +60,7 @@ const uiText = {
         title: "FridgeChef",
         tagline: "Tell us what's in your fridge, and we'll whip up a recipe for you!",
         ingredientsTitle: "Your Ingredients",
-        ingredientsDescription: "Enter ingredients separated by commas and select your language.",
+        ingredientsDescription: "Enter ingredients, select language, and optionally choose a taste preference.",
         recipeTitle: "Suggested Recipe",
         recipeDescriptionGenerated: "Generated based on your ingredients.",
         recipeDescriptionRefined: "Refined recipe based on your feedback.",
@@ -52,6 +72,7 @@ const uiText = {
         errorTitle: "Error",
         footerText: "FridgeChef. Powered by AI.",
         selectLanguagePlaceholder: "Select Language",
+        selectTastePlaceholder: "Taste Preference (Optional)",
         inputErrorNoIngredients: "No ingredients provided. Please list the ingredients you have.",
         generateFailedGeneric: "Could not generate a recipe. The AI might be unavailable or the request failed unexpectedly.",
         refineFailedGeneric: "Could not refine the recipe. The AI might be unavailable or the request failed unexpectedly.",
@@ -66,7 +87,7 @@ const uiText = {
         title: "ChefDeNevera",
         tagline: "¡Dinos qué hay en tu nevera y te prepararemos una receta!",
         ingredientsTitle: "Tus Ingredientes",
-        ingredientsDescription: "Ingresa los ingredientes separados por comas y selecciona tu idioma.",
+        ingredientsDescription: "Ingresa ingredientes, selecciona idioma y opcionalmente elige una preferencia de sabor.",
         recipeTitle: "Receta Sugerida",
         recipeDescriptionGenerated: "Generada según tus ingredientes.",
         recipeDescriptionRefined: "Receta refinada basada en tus comentarios.",
@@ -78,6 +99,7 @@ const uiText = {
         errorTitle: "Error",
         footerText: "ChefDeNevera. Impulsado por IA.",
         selectLanguagePlaceholder: "Seleccionar Idioma",
+        selectTastePlaceholder: "Preferencia de Sabor (Opcional)",
         inputErrorNoIngredients: "No se proporcionaron ingredientes. Por favor, enumera los ingredientes que tienes.",
         generateFailedGeneric: "No se pudo generar una receta. La IA podría no estar disponible o la solicitud falló inesperadamente.",
         refineFailedGeneric: "No se pudo refinar la receta. La IA podría no estar disponible o la solicitud falló inesperadamente.",
@@ -92,7 +114,7 @@ const uiText = {
         title: "ChefDuFrigo",
         tagline: "Dites-nous ce qu'il y a dans votre frigo et nous vous concocterons une recette !",
         ingredientsTitle: "Vos Ingrédients",
-        ingredientsDescription: "Entrez les ingrédients séparés par des virgules et sélectionnez votre langue.",
+        ingredientsDescription: "Entrez les ingrédients, sélectionnez la langue et choisissez éventuellement une préférence gustative.",
         recipeTitle: "Recette Suggérée",
         recipeDescriptionGenerated: "Générée à partir de vos ingrédients.",
         recipeDescriptionRefined: "Recette affinée suite à vos commentaires.",
@@ -104,6 +126,7 @@ const uiText = {
         errorTitle: "Erreur",
         footerText: "ChefDuFrigo. Propulsé par l'IA.",
         selectLanguagePlaceholder: "Choisir la Langue",
+        selectTastePlaceholder: "Préférence Gustative (Facultatif)",
         inputErrorNoIngredients: "Aucun ingrédient fourni. Veuillez lister les ingrédients dont vous disposez.",
         generateFailedGeneric: "Impossible de générer une recette. L'IA est peut-être indisponible ou la requête a échoué.",
         refineFailedGeneric: "Impossible d'affiner la recette. L'IA est peut-être indisponible ou la requête a échoué.",
@@ -118,7 +141,7 @@ const uiText = {
         title: "KühlschrankChef",
         tagline: "Sagen Sie uns, was in Ihrem Kühlschrank ist, und wir zaubern ein Rezept für Sie!",
         ingredientsTitle: "Ihre Zutaten",
-        ingredientsDescription: "Geben Sie Zutaten durch Kommas getrennt ein und wählen Sie Ihre Sprache.",
+        ingredientsDescription: "Zutaten eingeben, Sprache wählen und optional eine Geschmackspräferenz auswählen.",
         recipeTitle: "Rezeptvorschlag",
         recipeDescriptionGenerated: "Basierend auf Ihren Zutaten generiert.",
         recipeDescriptionRefined: "Verfeinertes Rezept basierend auf Ihrem Feedback.",
@@ -130,6 +153,7 @@ const uiText = {
         errorTitle: "Fehler",
         footerText: "KühlschrankChef. Unterstützt durch KI.",
         selectLanguagePlaceholder: "Sprache auswählen",
+        selectTastePlaceholder: "Geschmackspräferenz (Optional)",
         inputErrorNoIngredients: "Keine Zutaten angegeben. Bitte listen Sie die vorhandenen Zutaten auf.",
         generateFailedGeneric: "Rezept konnte nicht generiert werden. Die KI ist möglicherweise nicht verfügbar oder die Anfrage ist fehlgeschlagen.",
         refineFailedGeneric: "Rezept konnte nicht verfeinert werden. Die KI ist möglicherweise nicht verfügbar oder die Anfrage ist fehlgeschlagen.",
@@ -139,6 +163,60 @@ const uiText = {
         generateErrorGeneric: "Ein unerwarteter Fehler ist aufgetreten: {message}. Bitte versuchen Sie es später erneut.",
         generateErrorUnknown: "Beim Generieren des Rezepts ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
         generateAltErrorMissingIngredients: "Alternative kann nicht generiert werden - ursprüngliche Zutatenliste fehlt.",
+    },
+    "hi": { // Hindi Translations
+        title: "फ्रिजशेफ",
+        tagline: "हमें बताएं कि आपके फ्रिज में क्या है, और हम आपके लिए एक रेसिपी तैयार करेंगे!",
+        ingredientsTitle: "आपकी सामग्री",
+        ingredientsDescription: "सामग्री दर्ज करें, भाषा चुनें, और वैकल्पिक रूप से स्वाद वरीयता चुनें।",
+        recipeTitle: "सुझाई गई रेसिपी",
+        recipeDescriptionGenerated: "आपकी सामग्री के आधार पर उत्पन्न।",
+        recipeDescriptionRefined: "आपकी प्रतिक्रिया के आधार पर परिष्कृत रेसिपी।",
+        recipeDescriptionPlaceholder: "आपकी उत्पन्न रेसिपी यहां दिखाई देगी।",
+        generatingAltText: "आपकी स्वादिष्ट रेसिपी तैयार हो रही है...",
+        refiningAltText: "रेसिपी को परिष्कृत किया जा रहा है...",
+        loadingPlaceholder: "कृपया प्रतीक्षा करें जब तक शेफ सोच रहा है...",
+        errorPlaceholder: "रेसिपी बनाने या परिष्कृत करने में कोई समस्या हुई।",
+        errorTitle: "त्रुटि",
+        footerText: "फ्रिजशेफ। एआई द्वारा संचालित।",
+        selectLanguagePlaceholder: "भाषा चुनें",
+        selectTastePlaceholder: "स्वाद वरीयता (वैकल्पिक)",
+        inputErrorNoIngredients: "कोई सामग्री प्रदान नहीं की गई। कृपया आपके पास उपलब्ध सामग्री सूचीबद्ध करें।",
+        generateFailedGeneric: "रेसिपी बनाने में विफल। एआई अनुपलब्ध हो सकती है या अनुरोध अप्रत्याशित रूप से विफल हो गया।",
+        refineFailedGeneric: "रेसिपी को परिष्कृत करने में विफल। एआई अनुपलब्ध हो सकती है या अनुरोध अप्रत्याशित रूप से विफल हो गया।",
+        refineErrorNoRecipe: "रेसिपी परिष्कृत नहीं की जा सकती - कोई प्रारंभिक रेसिपी नहीं बनाई गई।",
+        refineErrorGeneric: "परिष्करण के दौरान एक अप्रत्याशित त्रुटि हुई: {message}। कृपया बाद में पुनः प्रयास करें।",
+        refineErrorUnknown: "रेसिपी परिष्कृत करते समय एक अप्रत्याशित त्रुटि हुई। कृपया बाद में पुनः प्रयास करें।",
+        generateErrorGeneric: "एक अप्रत्याशित त्रुटि हुई: {message}। कृपया बाद में पुनः प्रयास करें।",
+        generateErrorUnknown: "रेसिपी बनाते समय एक अप्रत्याशित त्रुटि हुई। कृपया बाद में पुनः प्रयास करें।",
+        generateAltErrorMissingIngredients: "विकल्प उत्पन्न नहीं किया जा सकता - मूल सामग्री सूची गायब है।",
+    },
+    "bn": { // Bengali Translations
+        title: "ফ্রিজশেফ",
+        tagline: "আপনার ফ্রিজে কী আছে বলুন, এবং আমরা আপনার জন্য একটি রেসিপি তৈরি করব!",
+        ingredientsTitle: "আপনার উপকরণ",
+        ingredientsDescription: "উপকরণ লিখুন, ভাষা নির্বাচন করুন, এবং ঐচ্ছিকভাবে একটি স্বাদের পছন্দ নির্বাচন করুন।",
+        recipeTitle: "প্রস্তাবিত রেসিপি",
+        recipeDescriptionGenerated: "আপনার উপকরণের উপর ভিত্তি করে তৈরি।",
+        recipeDescriptionRefined: "আপনার মতামতের উপর ভিত্তি করে পরিমার্জিত রেসিপি।",
+        recipeDescriptionPlaceholder: "আপনার তৈরি রেসিপি এখানে প্রদর্শিত হবে।",
+        generatingAltText: "আপনার সুস্বাদু রেসিপি তৈরি হচ্ছে...",
+        refiningAltText: "রেসিপি পরিমার্জন করা হচ্ছে...",
+        loadingPlaceholder: "শেফ চিন্তা করার সময় দয়া করে অপেক্ষা করুন...",
+        errorPlaceholder: "রেসিপি তৈরি বা পরিমার্জনে একটি সমস্যা হয়েছে।",
+        errorTitle: "ত্রুটি",
+        footerText: "ফ্রিজশেফ। এআই দ্বারা চালিত।",
+        selectLanguagePlaceholder: "ভাষা নির্বাচন করুন",
+        selectTastePlaceholder: "স্বাদের পছন্দ (ঐচ্ছিক)",
+        inputErrorNoIngredients: "কোন উপকরণ প্রদান করা হয়নি। আপনার কাছে উপলব্ধ উপকরণ তালিকাভুক্ত করুন।",
+        generateFailedGeneric: "একটি রেসিপি তৈরি করা যায়নি। এআই অনুপলব্ধ হতে পারে বা অনুরোধ অপ্রত্যাশিতভাবে ব্যর্থ হয়েছে।",
+        refineFailedGeneric: "রেসিপি পরিমার্জন করা যায়নি। এআই অনুপলব্ধ হতে পারে বা অনুরোধ অপ্রত্যাশিতভাবে ব্যর্থ হয়েছে।",
+        refineErrorNoRecipe: "রেসিপি পরিমার্জন করা যাবে না - কোনো প্রাথমিক রেসিপি তৈরি হয়নি।",
+        refineErrorGeneric: "পরিমার্জনের সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে: {message}। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
+        refineErrorUnknown: "রেসিপি পরিমার্জন করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
+        generateErrorGeneric: "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে: {message}। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
+        generateErrorUnknown: "রেসিপি তৈরি করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
+        generateAltErrorMissingIngredients: "বিকল্প তৈরি করা যাবে না - মূল উপকরণ তালিকা অনুপস্থিত।",
     },
      // Add more languages as needed
 };
@@ -152,6 +230,7 @@ export default function Home() {
   const [isRefining, startRefining] = useTransition();
   const [latestSubmittedIngredientsString, setLatestSubmittedIngredientsString] = useState<string>('');
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>('en'); // Default to English
+  const [selectedTaste, setSelectedTaste] = useState<TastePreference>('Any'); // State for taste preference
 
   // Get translated UI text
   const T = uiText[selectedLanguage] || uiText['en'];
@@ -172,13 +251,15 @@ export default function Home() {
      }
 
     const languageName = supportedLanguages[selectedLanguage]; // Get full language name
+    const tastePreference = selectedTaste === 'Any' ? undefined : selectedTaste; // Don't pass 'Any'
 
     startGenerating(async () => {
       try {
         const result = await generateRecipe({
             ingredients: ingredientsString,
             preferredDishType: preferredType,
-            language: languageName // Pass the full language name
+            language: languageName, // Pass the full language name
+            tastePreference: tastePreference, // Pass the taste preference
         });
 
         if (result && (result.recipeName.includes("Failed") || result.recipeName.includes("Error") || result.recipeName.includes("Unable"))) {
@@ -214,6 +295,7 @@ export default function Home() {
           setError(T.generateAltErrorMissingIngredients);
           return;
       }
+      // Re-use the current taste preference when generating alternative
       handleGenerateRecipe(latestSubmittedIngredientsString, dishType);
   };
 
@@ -228,6 +310,7 @@ export default function Home() {
     setRefinedRecipe(null);
 
     const languageName = supportedLanguages[selectedLanguage]; // Get full language name
+    const tastePreference = selectedTaste === 'Any' ? undefined : selectedTaste; // Don't pass 'Any'
 
     const refineInput: RefineRecipeInput = {
       originalRecipeName: recipe.recipeName,
@@ -235,7 +318,8 @@ export default function Home() {
       originalAdditionalIngredients: recipe.additionalIngredients || [],
       unavailableAdditionalIngredients: unavailableAdditional,
       originalInstructions: recipe.instructions,
-      language: languageName // Pass the full language name
+      language: languageName, // Pass the full language name
+      tastePreference: tastePreference, // Pass the taste preference
     };
 
     startRefining(async () => {
@@ -275,7 +359,7 @@ export default function Home() {
         <p className="text-lg text-muted-foreground">
           {T.tagline}
         </p>
-         <div className="mt-4 flex justify-center">
+         <div className="mt-4 flex justify-center gap-4">
              <Select value={selectedLanguage} onValueChange={(value) => setSelectedLanguage(value as LanguageCode)}>
                 <SelectTrigger className="w-[180px] h-9">
                      <Languages className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -284,6 +368,20 @@ export default function Home() {
                 <SelectContent>
                     {Object.entries(supportedLanguages).map(([code, name]) => (
                         <SelectItem key={code} value={code}>{name}</SelectItem>
+                    ))}
+                </SelectContent>
+             </Select>
+             {/* Taste Preference Dropdown */}
+             <Select value={selectedTaste} onValueChange={(value) => setSelectedTaste(value as TastePreference)}>
+                <SelectTrigger className="w-[240px] h-9">
+                    {/* Consider adding a relevant icon like Utensils or similar */}
+                    <SelectValue placeholder={T.selectTastePlaceholder} />
+                </SelectTrigger>
+                <SelectContent>
+                    {supportedTastePreferences.map((taste) => (
+                        <SelectItem key={taste} value={taste}>
+                            {taste === "Any" ? `${taste} (Default)` : taste}
+                        </SelectItem>
                     ))}
                 </SelectContent>
              </Select>
@@ -360,6 +458,7 @@ export default function Home() {
                 isRefining={isRefining}
                 isGenerating={isGenerating}
                 language={selectedLanguage} // Pass selected language code
+                tastePreference={selectedTaste} // Pass selected taste
               />
             ) : (
               // Initial placeholder state
