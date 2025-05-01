@@ -75,6 +75,7 @@ const uiText = {
         selectTastePlaceholder: "Taste Preference (Optional)",
         inputErrorNoIngredients: "No ingredients provided. Please list the ingredients you have.",
         generateFailedGeneric: "Could not generate a recipe. The AI might be unavailable or the request failed unexpectedly.",
+        generateFailedInsufficient: "Could not generate a recipe. The provided ingredients may be insufficient or mismatched for a complete dish.",
         refineFailedGeneric: "Could not refine the recipe. The AI might be unavailable or the request failed unexpectedly.",
         refineErrorNoRecipe: "Cannot refine recipe - no initial recipe generated.",
         refineErrorGeneric: "An unexpected error occurred during refinement: {message}. Please try again later.",
@@ -102,6 +103,7 @@ const uiText = {
         selectTastePlaceholder: "Preferencia de Sabor (Opcional)",
         inputErrorNoIngredients: "No se proporcionaron ingredientes. Por favor, enumera los ingredientes que tienes.",
         generateFailedGeneric: "No se pudo generar una receta. La IA podría no estar disponible o la solicitud falló inesperadamente.",
+        generateFailedInsufficient: "No se pudo generar una receta. Los ingredientes proporcionados pueden ser insuficientes o incompatibles para un plato completo.",
         refineFailedGeneric: "No se pudo refinar la receta. La IA podría no estar disponible o la solicitud falló inesperadamente.",
         refineErrorNoRecipe: "No se puede refinar la receta - no se generó ninguna receta inicial.",
         refineErrorGeneric: "Ocurrió un error inesperado durante el refinamiento: {message}. Por favor, inténtalo de nuevo más tarde.",
@@ -129,6 +131,7 @@ const uiText = {
         selectTastePlaceholder: "Préférence Gustative (Facultatif)",
         inputErrorNoIngredients: "Aucun ingrédient fourni. Veuillez lister les ingrédients dont vous disposez.",
         generateFailedGeneric: "Impossible de générer une recette. L'IA est peut-être indisponible ou la requête a échoué.",
+        generateFailedInsufficient: "Impossible de générer une recette. Les ingrédients fournis peuvent être insuffisants ou incompatibles pour un plat complet.",
         refineFailedGeneric: "Impossible d'affiner la recette. L'IA est peut-être indisponible ou la requête a échoué.",
         refineErrorNoRecipe: "Impossible d'affiner la recette - aucune recette initiale générée.",
         refineErrorGeneric: "Une erreur inattendue s'est produite lors de l'affinage : {message}. Veuillez réessayer plus tard.",
@@ -156,6 +159,7 @@ const uiText = {
         selectTastePlaceholder: "Geschmackspräferenz (Optional)",
         inputErrorNoIngredients: "Keine Zutaten angegeben. Bitte listen Sie die vorhandenen Zutaten auf.",
         generateFailedGeneric: "Rezept konnte nicht generiert werden. Die KI ist möglicherweise nicht verfügbar oder die Anfrage ist fehlgeschlagen.",
+        generateFailedInsufficient: "Rezept konnte nicht generiert werden. Die bereitgestellten Zutaten reichen möglicherweise nicht aus oder passen nicht für ein komplettes Gericht.",
         refineFailedGeneric: "Rezept konnte nicht verfeinert werden. Die KI ist möglicherweise nicht verfügbar oder die Anfrage ist fehlgeschlagen.",
         refineErrorNoRecipe: "Rezept kann nicht verfeinert werden - kein ursprüngliches Rezept generiert.",
         refineErrorGeneric: "Beim Verfeinern ist ein unerwarteter Fehler aufgetreten: {message}. Bitte versuchen Sie es später erneut.",
@@ -183,6 +187,7 @@ const uiText = {
         selectTastePlaceholder: "स्वाद वरीयता (वैकल्पिक)",
         inputErrorNoIngredients: "कोई सामग्री प्रदान नहीं की गई। कृपया आपके पास उपलब्ध सामग्री सूचीबद्ध करें।",
         generateFailedGeneric: "रेसिपी बनाने में विफल। एआई अनुपलब्ध हो सकती है या अनुरोध अप्रत्याशित रूप से विफल हो गया।",
+        generateFailedInsufficient: "रेसिपी बनाने में विफल। प्रदान की गई सामग्री पूरी डिश के लिए अपर्याप्त या असंगत हो सकती है।",
         refineFailedGeneric: "रेसिपी को परिष्कृत करने में विफल। एआई अनुपलब्ध हो सकती है या अनुरोध अप्रत्याशित रूप से विफल हो गया।",
         refineErrorNoRecipe: "रेसिपी परिष्कृत नहीं की जा सकती - कोई प्रारंभिक रेसिपी नहीं बनाई गई।",
         refineErrorGeneric: "परिष्करण के दौरान एक अप्रत्याशित त्रुटि हुई: {message}। कृपया बाद में पुनः प्रयास करें।",
@@ -210,6 +215,7 @@ const uiText = {
         selectTastePlaceholder: "স্বাদের পছন্দ (ঐচ্ছিক)",
         inputErrorNoIngredients: "কোন উপকরণ প্রদান করা হয়নি। আপনার কাছে উপলব্ধ উপকরণ তালিকাভুক্ত করুন।",
         generateFailedGeneric: "একটি রেসিপি তৈরি করা যায়নি। এআই অনুপলব্ধ হতে পারে বা অনুরোধ অপ্রত্যাশিতভাবে ব্যর্থ হয়েছে।",
+        generateFailedInsufficient: "একটি রেসিপি তৈরি করা যায়নি। প্রদত্ত উপাদানগুলি একটি সম্পূর্ণ খাবারের জন্য অপর্যাপ্ত বা বেমানান হতে পারে।",
         refineFailedGeneric: "রেসিপি পরিমার্জন করা যায়নি। এআই অনুপলব্ধ হতে পারে বা অনুরোধ অপ্রত্যাশিতভাবে ব্যর্থ হয়েছে।",
         refineErrorNoRecipe: "রেসিপি পরিমার্জন করা যাবে না - কোনো প্রাথমিক রেসিপি তৈরি হয়নি।",
         refineErrorGeneric: "পরিমার্জনের সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে: {message}। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
@@ -262,8 +268,10 @@ export default function Home() {
             tastePreference: tastePreference, // Pass the taste preference
         });
 
+        // Explicitly check if the AI response indicates failure
         if (result && (result.recipeName.includes("Failed") || result.recipeName.includes("Error") || result.recipeName.includes("Unable"))) {
-             setError(result.notes || T.generateFailedGeneric);
+             // Use the note from the AI if it explains the failure, otherwise use a specific insufficient ingredients message
+             setError(result.notes || T.generateFailedInsufficient);
              setRecipe(null);
              setAlternativeTypes(null);
         } else if (result) {
@@ -274,6 +282,7 @@ export default function Home() {
                 setAlternativeTypes(null);
            }
         } else {
+          // If result is null/undefined, assume generic failure
           setError(T.generateFailedGeneric);
           setAlternativeTypes(null);
         }
@@ -486,3 +495,4 @@ export default function Home() {
     </main>
   );
 }
+
