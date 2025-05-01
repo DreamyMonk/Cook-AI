@@ -9,7 +9,7 @@ import { generateProMenu, type GenerateProMenuInput, type GenerateProMenuOutput 
 import { refineRecipe, type RefineRecipeInput, type RefineRecipeOutput } from '@/ai/flows/refine-recipe';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, UtensilsCrossed, TriangleAlert, Languages, ChefHat, PartyPopper, BrainCircuit } from 'lucide-react'; // Added BrainCircuit
+import { Loader2, UtensilsCrossed, TriangleAlert, Languages, ChefHat, PartyPopper, BrainCircuit, Info } from 'lucide-react'; // Added BrainCircuit, Info
 import Image from 'next/image';
 import {
   Select,
@@ -68,13 +68,13 @@ export type CourseType = typeof courseTypes[number];
 const uiText = {
     "en": {
         title: "Cook AI",
-        tagline: "Tell us what's in your fridge, and we'll whip up a recipe or a full menu!", // Updated tagline
+        tagline: "Tell us what's in your fridge, or describe your perfect event menu, and we'll whip up a recipe or a full plan!", // Updated tagline
         ingredientsTitle: "Your Ingredients",
         ingredientsDescription: "Enter ingredients, select language, and optionally choose a taste preference.",
-        proChefInputTitle: "Plan Your Menu", // New title for pro mode input card
-        proChefInputDescription: "Describe the event and the menu you envision using your available ingredients.", // New description for pro mode
+        proChefInputTitle: "Plan Your Event Menu", // New title for pro mode input card
+        proChefInputDescription: "Describe the event, desired courses, guest count, and any preferences (cuisine, diet, key ingredients) to generate a custom menu.", // New description for pro mode
         proChefModeLabel: "Pro Chef Mode",
-        proChefModeDescription: "Plan a menu for an event!",
+        proChefModeDescription: "Plan a multi-course menu for an event!",
         eventThemeLabel: "Event Theme/Name",
         eventThemePlaceholder: "e.g., Summer BBQ, Birthday Dinner",
         numGuestsLabel: "Number of Guests",
@@ -82,10 +82,10 @@ const uiText = {
         courseStarter: "Starter",
         courseMain: "Main Course",
         courseDessert: "Dessert",
-        proPreferencesLabel: "Additional Preferences/Notes",
-        proPreferencesPlaceholder: "e.g., Vegetarian options needed, avoid nuts...",
+        proPreferencesLabel: "Menu Preferences & Details", // Updated Label
+        proPreferencesPlaceholder: "e.g., Vegetarian options, avoid nuts, Italian cuisine focus, feature salmon...", // Updated Placeholder
         recipeTitle: "Suggested Recipe / Menu", // Updated
-        recipeDescriptionGenerated: "Generated based on your ingredients.",
+        recipeDescriptionGenerated: "Generated based on your input.", // Updated
         recipeDescriptionRefined: "Refined recipe based on your feedback.",
         recipeDescriptionProMenu: "Pro menu generated for your event.", // New description
         recipeDescriptionPlaceholder: "Your generated recipe or menu will appear here.", // Updated
@@ -100,7 +100,7 @@ const uiText = {
         selectTastePlaceholder: "Taste Preference (Optional)",
         inputErrorNoIngredients: "No ingredients provided. Please list the ingredients you have.",
         generateFailedGeneric: "Could not generate a recipe/menu. The AI might be unavailable or the request failed unexpectedly.", // Updated
-        generateFailedInsufficient: "Could not generate a recipe/menu. The provided ingredients may be insufficient or mismatched for a complete dish/menu.", // Updated
+        generateFailedInsufficient: "Could not generate a recipe/menu. The provided input may be insufficient or conflicting for a complete dish/menu.", // Updated
         refineFailedGeneric: "Could not refine the recipe. The AI might be unavailable or the request failed unexpectedly.",
         refineErrorNoRecipe: "Cannot refine recipe - no initial single recipe generated.", // Clarified
         refineErrorGeneric: "An unexpected error occurred during refinement: {message}. Please try again later.",
@@ -112,16 +112,17 @@ const uiText = {
         serverComponentError: "An unexpected server error occurred. Please try again later. (Details omitted for security)",
         inputErrorNumGuests: "Please enter a valid number of guests (1 or more).", // New error
         inputErrorNoCourses: "Please select at least one course for the Pro menu.", // New error
+        inputErrorNoTheme: "Please provide a theme or name for the event.", // New error for pro mode
     },
     "es": {
         title: "Cook AI",
-        tagline: "¡Dinos qué hay en tu nevera y te prepararemos una receta o un menú completo!",
+        tagline: "¡Dinos qué hay en tu nevera, o describe el menú perfecto para tu evento, y prepararemos una receta o un plan completo!",
         ingredientsTitle: "Tus Ingredientes",
         ingredientsDescription: "Ingresa ingredientes, selecciona idioma y opcionalmente elige una preferencia de sabor.",
-        proChefInputTitle: "Planifica tu Menú",
-        proChefInputDescription: "Describe el evento y el menú que imaginas utilizando tus ingredientes disponibles.",
+        proChefInputTitle: "Planifica el Menú de tu Evento",
+        proChefInputDescription: "Describe el evento, los platos deseados, el número de invitados y cualquier preferencia (cocina, dieta, ingredientes clave) para generar un menú personalizado.",
         proChefModeLabel: "Modo Chef Profesional",
-        proChefModeDescription: "¡Planifica un menú para un evento!",
+        proChefModeDescription: "¡Planifica un menú de varios platos para un evento!",
         eventThemeLabel: "Tema/Nombre del Evento",
         eventThemePlaceholder: "ej., Barbacoa de Verano, Cena de Cumpleaños",
         numGuestsLabel: "Número de Invitados",
@@ -129,10 +130,10 @@ const uiText = {
         courseStarter: "Entrante",
         courseMain: "Plato Principal",
         courseDessert: "Postre",
-        proPreferencesLabel: "Preferencias/Notas Adicionales",
-        proPreferencesPlaceholder: "ej., Se necesitan opciones vegetarianas, evitar nueces...",
+        proPreferencesLabel: "Preferencias y Detalles del Menú",
+        proPreferencesPlaceholder: "ej., Opciones vegetarianas, evitar nueces, enfoque cocina italiana, destacar salmón...",
         recipeTitle: "Receta / Menú Sugerido",
-        recipeDescriptionGenerated: "Generada según tus ingredientes.",
+        recipeDescriptionGenerated: "Generado según tu entrada.",
         recipeDescriptionRefined: "Receta refinada basada en tus comentarios.",
         recipeDescriptionProMenu: "Menú profesional generado para tu evento.",
         recipeDescriptionPlaceholder: "Tu receta o menú generado aparecerá aquí.",
@@ -147,7 +148,7 @@ const uiText = {
         selectTastePlaceholder: "Preferencia de Sabor (Opcional)",
         inputErrorNoIngredients: "No se proporcionaron ingredientes. Por favor, enumera los ingredientes que tienes.",
         generateFailedGeneric: "No se pudo generar una receta/menú. La IA podría no estar disponible o la solicitud falló inesperadamente.",
-        generateFailedInsufficient: "No se pudo generar una receta/menú. Los ingredientes proporcionados pueden ser insuficientes o incompatibles para un plato/menú completo.",
+        generateFailedInsufficient: "No se pudo generar una receta/menú. La entrada proporcionada puede ser insuficiente o conflictiva para un plato/menú completo.",
         refineFailedGeneric: "No se pudo refinar la receta. La IA podría no estar disponible o la solicitud falló inesperadamente.",
         refineErrorNoRecipe: "No se puede refinar la receta - no se generó ninguna receta inicial individual.",
         refineErrorGeneric: "Ocurrió un error inesperado durante el refinamiento: {message}. Por favor, inténtalo de nuevo más tarde.",
@@ -159,16 +160,17 @@ const uiText = {
         serverComponentError: "Ocurrió un error inesperado en el servidor. Por favor, inténtalo de nuevo más tarde. (Detalles omitidos por seguridad)",
         inputErrorNumGuests: "Introduce un número válido de invitados (1 o más).",
         inputErrorNoCourses: "Selecciona al menos un plato para el menú Pro.",
+        inputErrorNoTheme: "Proporciona un tema o nombre para el evento.",
     },
     "fr": {
         title: "Cook AI",
-        tagline: "Dites-nous ce qu'il y a dans votre frigo et nous vous concocterons une recette ou un menu complet !",
+        tagline: "Dites-nous ce qu'il y a dans votre frigo, ou décrivez le menu parfait pour votre événement, et nous concocterons une recette ou un plan complet !",
         ingredientsTitle: "Vos Ingrédients",
         ingredientsDescription: "Entrez les ingrédients, sélectionnez la langue et choisissez éventuellement une préférence gustative.",
-        proChefInputTitle: "Planifiez votre Menu",
-        proChefInputDescription: "Décrivez l'événement et le menu que vous imaginez en utilisant vos ingrédients disponibles.",
+        proChefInputTitle: "Planifiez le Menu de votre Événement",
+        proChefInputDescription: "Décrivez l'événement, les plats souhaités, le nombre d'invités et toutes les préférences (cuisine, régime, ingrédients clés) pour générer un menu personnalisé.",
         proChefModeLabel: "Mode Chef Pro",
-        proChefModeDescription: "Planifiez un menu pour un événement !",
+        proChefModeDescription: "Planifiez un menu à plusieurs plats pour un événement !",
         eventThemeLabel: "Thème/Nom de l'événement",
         eventThemePlaceholder: "ex: BBQ d'été, Dîner d'anniversaire",
         numGuestsLabel: "Nombre d'invités",
@@ -176,10 +178,10 @@ const uiText = {
         courseStarter: "Entrée",
         courseMain: "Plat principal",
         courseDessert: "Dessert",
-        proPreferencesLabel: "Préférences/Notes supplémentaires",
-        proPreferencesPlaceholder: "ex: Options végétariennes nécessaires, éviter les noix...",
+        proPreferencesLabel: "Préférences et Détails du Menu",
+        proPreferencesPlaceholder: "ex: Options végétariennes, éviter les noix, focus cuisine italienne, mettre en avant le saumon...",
         recipeTitle: "Recette / Menu Suggéré",
-        recipeDescriptionGenerated: "Générée à partir de vos ingrédients.",
+        recipeDescriptionGenerated: "Généré(e) à partir de votre saisie.",
         recipeDescriptionRefined: "Recette affinée suite à vos commentaires.",
         recipeDescriptionProMenu: "Menu pro généré pour votre événement.",
         recipeDescriptionPlaceholder: "Votre recette ou menu généré apparaîtra ici.",
@@ -194,7 +196,7 @@ const uiText = {
         selectTastePlaceholder: "Préférence Gustative (Facultatif)",
         inputErrorNoIngredients: "Aucun ingrédient fourni. Veuillez lister les ingrédients dont vous disposez.",
         generateFailedGeneric: "Impossible de générer une recette/menu. L'IA est peut-être indisponible ou la requête a échoué.",
-        generateFailedInsufficient: "Impossible de générer une recette/menu. Les ingrédients fournis peuvent être insuffisants ou incompatibles pour un plat/menu complet.",
+        generateFailedInsufficient: "Impossible de générer une recette/menu. L'entrée fournie peut être insuffisante ou conflictuelle pour un plat/menu complet.",
         refineFailedGeneric: "Impossible d'affiner la recette. L'IA est peut-être indisponible ou la requête a échoué.",
         refineErrorNoRecipe: "Impossible d'affiner la recette - aucune recette initiale unique générée.",
         refineErrorGeneric: "Une erreur inattendue s'est produite lors de l'affinage : {message}. Veuillez réessayer plus tard.",
@@ -206,16 +208,17 @@ const uiText = {
         serverComponentError: "Une erreur serveur inattendue s'est produite. Veuillez réessayer plus tard. (Détails omis pour la sécurité)",
         inputErrorNumGuests: "Veuillez entrer un nombre valide d'invités (1 ou plus).",
         inputErrorNoCourses: "Veuillez sélectionner au moins un plat pour le menu Pro.",
+        inputErrorNoTheme: "Veuillez fournir un thème ou un nom pour l'événement.",
     },
     "de": {
         title: "Cook AI",
-        tagline: "Sagen Sie uns, was in Ihrem Kühlschrank ist, und wir zaubern ein Rezept oder ein ganzes Menü für Sie!",
+        tagline: "Sagen Sie uns, was in Ihrem Kühlschrank ist, oder beschreiben Sie Ihr perfektes Event-Menü, und wir zaubern ein Rezept oder einen ganzen Plan!",
         ingredientsTitle: "Ihre Zutaten",
         ingredientsDescription: "Zutaten eingeben, Sprache wählen und optional eine Geschmackspräferenz auswählen.",
-        proChefInputTitle: "Planen Sie Ihr Menü",
-        proChefInputDescription: "Beschreiben Sie die Veranstaltung und das Menü, das Sie sich vorstellen, unter Verwendung Ihrer verfügbaren Zutaten.",
+        proChefInputTitle: "Planen Sie Ihr Event-Menü",
+        proChefInputDescription: "Beschreiben Sie die Veranstaltung, gewünschte Gänge, Gästeanzahl und Vorlieben (Küche, Diät, Hauptzutaten), um ein individuelles Menü zu generieren.",
         proChefModeLabel: "Profi-Koch-Modus",
-        proChefModeDescription: "Planen Sie ein Menü für eine Veranstaltung!",
+        proChefModeDescription: "Planen Sie ein mehrgängiges Menü für eine Veranstaltung!",
         eventThemeLabel: "Veranstaltungsthema/Name",
         eventThemePlaceholder: "z.B. Sommergrillen, Geburtstagsessen",
         numGuestsLabel: "Anzahl der Gäste",
@@ -223,10 +226,10 @@ const uiText = {
         courseStarter: "Vorspeise",
         courseMain: "Hauptgericht",
         courseDessert: "Dessert",
-        proPreferencesLabel: "Zusätzliche Vorlieben/Notizen",
-        proPreferencesPlaceholder: "z.B. Vegetarische Optionen benötigt, Nüsse vermeiden...",
+        proPreferencesLabel: "Menü-Vorlieben & Details",
+        proPreferencesPlaceholder: "z.B. Vegetarische Optionen, Nüsse vermeiden, Fokus italienische Küche, Lachs hervorheben...",
         recipeTitle: "Rezept- / Menüvorschlag",
-        recipeDescriptionGenerated: "Basierend auf Ihren Zutaten generiert.",
+        recipeDescriptionGenerated: "Basierend auf Ihrer Eingabe generiert.",
         recipeDescriptionRefined: "Verfeinertes Rezept basierend auf Ihrem Feedback.",
         recipeDescriptionProMenu: "Profi-Menü für Ihre Veranstaltung generiert.",
         recipeDescriptionPlaceholder: "Ihr generiertes Rezept oder Menü wird hier erscheinen.",
@@ -241,7 +244,7 @@ const uiText = {
         selectTastePlaceholder: "Geschmackspräferenz (Optional)",
         inputErrorNoIngredients: "Keine Zutaten angegeben. Bitte listen Sie die vorhandenen Zutaten auf.",
         generateFailedGeneric: "Rezept/Menü konnte nicht generiert werden. Die KI ist möglicherweise nicht verfügbar oder die Anfrage ist fehlgeschlagen.",
-        generateFailedInsufficient: "Rezept/Menü konnte nicht generiert werden. Die bereitgestellten Zutaten reichen möglicherweise nicht aus oder passen nicht für ein komplettes Gericht/Menü.",
+        generateFailedInsufficient: "Rezept/Menü konnte nicht generiert werden. Die bereitgestellte Eingabe reicht möglicherweise nicht aus oder widerspricht einem vollständigen Gericht/Menü.",
         refineFailedGeneric: "Rezept konnte nicht verfeinert werden. Die KI ist möglicherweise nicht verfügbar oder die Anfrage ist fehlgeschlagen.",
         refineErrorNoRecipe: "Rezept kann nicht verfeinert werden - kein ursprüngliches Einzelrezept generiert.",
         refineErrorGeneric: "Beim Verfeinern ist ein unerwarteter Fehler aufgetreten: {message}. Bitte versuchen Sie es später erneut.",
@@ -253,16 +256,17 @@ const uiText = {
         serverComponentError: "Ein unerwarteter Serverfehler ist aufgetreten. Bitte versuchen Sie es später erneut. (Details aus Sicherheitsgründen weggelassen)",
         inputErrorNumGuests: "Bitte geben Sie eine gültige Anzahl von Gästen ein (1 oder mehr).",
         inputErrorNoCourses: "Bitte wählen Sie mindestens einen Gang für das Pro-Menü aus.",
+        inputErrorNoTheme: "Bitte geben Sie ein Thema oder einen Namen für die Veranstaltung an.",
     },
     "hi": {
         title: "Cook AI",
-        tagline: "हमें बताएं कि आपके फ्रिज में क्या है, और हम आपके लिए एक रेसिपी या पूरा मेनू तैयार करेंगे!",
+        tagline: "हमें बताएं कि आपके फ्रिज में क्या है, या अपने आदर्श इवेंट मेनू का वर्णन करें, और हम एक रेसिपी या एक पूरी योजना तैयार करेंगे!",
         ingredientsTitle: "आपकी सामग्री",
         ingredientsDescription: "सामग्री दर्ज करें, भाषा चुनें, और वैकल्पिक रूप से स्वाद वरीयता चुनें।",
-        proChefInputTitle: "अपना मेनू प्लान करें",
-        proChefInputDescription: "कार्यक्रम और अपनी उपलब्ध सामग्री का उपयोग करके आपके मन में जो मेनू है उसका वर्णन करें।",
+        proChefInputTitle: "अपने इवेंट मेनू की योजना बनाएं",
+        proChefInputDescription: "इवेंट, वांछित कोर्स, मेहमानों की संख्या, और किसी भी प्राथमिकता (व्यंजन, आहार, मुख्य सामग्री) का वर्णन करें ताकि एक कस्टम मेनू तैयार हो सके।",
         proChefModeLabel: "प्रो शेफ मोड",
-        proChefModeDescription: "एक कार्यक्रम के लिए मेनू की योजना बनाएं!",
+        proChefModeDescription: "एक कार्यक्रम के लिए बहु-कोर्स मेनू की योजना बनाएं!",
         eventThemeLabel: "कार्यक्रम थीम/नाम",
         eventThemePlaceholder: "उदा., समर BBQ, जन्मदिन का खाना",
         numGuestsLabel: "मेहमानों की संख्या",
@@ -270,10 +274,10 @@ const uiText = {
         courseStarter: "स्टार्टर",
         courseMain: "मुख्य कोर्स",
         courseDessert: "मिठाई",
-        proPreferencesLabel: "अतिरिक्त प्राथमिकताएं/नोट्स",
-        proPreferencesPlaceholder: "उदा., शाकाहारी विकल्प चाहिए, नट्स से बचें...",
+        proPreferencesLabel: "मेनू प्राथमिकताएं और विवरण",
+        proPreferencesPlaceholder: "उदा., शाकाहारी विकल्प, नट्स से बचें, इतालवी व्यंजन फोकस, सामन सुविधा...",
         recipeTitle: "सुझाई गई रेसिपी / मेनू",
-        recipeDescriptionGenerated: "आपकी सामग्री के आधार पर उत्पन्न।",
+        recipeDescriptionGenerated: "आपकी इनपुट के आधार पर उत्पन्न।",
         recipeDescriptionRefined: "आपकी प्रतिक्रिया के आधार पर परिष्कृत रेसिपी।",
         recipeDescriptionProMenu: "आपके कार्यक्रम के लिए प्रो मेनू उत्पन्न।",
         recipeDescriptionPlaceholder: "आपकी उत्पन्न रेसिपी या मेनू यहां दिखाई देगा।",
@@ -288,7 +292,7 @@ const uiText = {
         selectTastePlaceholder: "स्वाद वरीयता (वैकल्पिक)",
         inputErrorNoIngredients: "कोई सामग्री प्रदान नहीं की गई। कृपया आपके पास उपलब्ध सामग्री सूचीबद्ध करें।",
         generateFailedGeneric: "रेसिपी/मेनू बनाने में विफल। एआई अनुपलब्ध हो सकती है या अनुरोध अप्रत्याशित रूप से विफल हो गया।",
-        generateFailedInsufficient: "रेसिपी/मेनू बनाने में विफल। प्रदान की गई सामग्री पूरी डिश/मेनू के लिए अपर्याप्त या असंगत हो सकती है।",
+        generateFailedInsufficient: "रेसिपी/मेनू बनाने में विफल। प्रदान की गई इनपुट पूरी डिश/मेनू के लिए अपर्याप्त या विरोधाभासी हो सकती है।",
         refineFailedGeneric: "रेसिपी को परिष्कृत करने में विफल। एआई अनुपलब्ध हो सकती है या अनुरोध अप्रत्याशित रूप से विफल हो गया।",
         refineErrorNoRecipe: "रेसिपी परिष्कृत नहीं की जा सकती - कोई प्रारंभिक एकल रेसिपी नहीं बनाई गई।",
         refineErrorGeneric: "परिष्करण के दौरान एक अप्रत्याशित त्रुटि हुई: {message}। कृपया बाद में पुनः प्रयास करें।",
@@ -300,16 +304,17 @@ const uiText = {
         serverComponentError: "एक अप्रत्याशित सर्वर त्रुटि हुई। कृपया बाद में पुनः प्रयास करें। (सुरक्षा कारणों से विवरण छोड़े गए)",
         inputErrorNumGuests: "कृपया मेहमानों की एक मान्य संख्या दर्ज करें (1 या अधिक)।",
         inputErrorNoCourses: "प्रो मेनू के लिए कृपया कम से कम एक कोर्स चुनें।",
+        inputErrorNoTheme: "कृपया घटना के लिए एक थीम या नाम प्रदान करें।",
     },
     "bn": {
         title: "Cook AI",
-        tagline: "আপনার ফ্রিজে কী আছে বলুন, এবং আমরা আপনার জন্য একটি রেসিপি বা একটি সম্পূর্ণ মেনু তৈরি করব!",
+        tagline: "আপনার ফ্রিজে কী আছে বলুন, অথবা আপনার নিখুঁত ইভেন্ট মেনু বর্ণনা করুন, এবং আমরা একটি রেসিপি বা একটি সম্পূর্ণ পরিকল্পনা তৈরি করব!",
         ingredientsTitle: "আপনার উপকরণ",
         ingredientsDescription: "উপকরণ লিখুন, ভাষা নির্বাচন করুন, এবং ঐচ্ছিকভাবে একটি স্বাদের পছন্দ নির্বাচন করুন।",
-        proChefInputTitle: "আপনার মেনু পরিকল্পনা করুন",
-        proChefInputDescription: "অনুষ্ঠান এবং আপনার উপলব্ধ উপকরণ ব্যবহার করে আপনি যে মেনুটি কল্পনা করছেন তা বর্ণনা করুন।",
+        proChefInputTitle: "আপনার ইভেন্ট মেনু পরিকল্পনা করুন",
+        proChefInputDescription: "ইভেন্ট, কাঙ্ক্ষিত কোর্স, অতিথির সংখ্যা, এবং যেকোনো পছন্দ (রন্ধনশৈলী, ডায়েট, মূল উপকরণ) বর্ণনা করুন একটি কাস্টম মেনু তৈরি করতে।",
         proChefModeLabel: "প্রো শেফ মোড",
-        proChefModeDescription: "একটি অনুষ্ঠানের জন্য মেনু পরিকল্পনা করুন!",
+        proChefModeDescription: "একটি অনুষ্ঠানের জন্য বহু-কোর্স মেনু পরিকল্পনা করুন!",
         eventThemeLabel: "অনুষ্ঠানের থিম/নাম",
         eventThemePlaceholder: "যেমন, গ্রীষ্মকালীন BBQ, জন্মদিনের ডিনার",
         numGuestsLabel: "অতিথির সংখ্যা",
@@ -317,10 +322,10 @@ const uiText = {
         courseStarter: "স্টার্টার",
         courseMain: "প্রধান কোর্স",
         courseDessert: "ডেজার্ট",
-        proPreferencesLabel: "অতিরিক্ত পছন্দ/নোট",
-        proPreferencesPlaceholder: "যেমন, নিরামিষ বিকল্প প্রয়োজন, বাদাম এড়িয়ে চলুন...",
+        proPreferencesLabel: "মেনু পছন্দ ও বিবরণ",
+        proPreferencesPlaceholder: "যেমন, নিরামিষ বিকল্প, বাদাম এড়িয়ে চলুন, ইতালীয় রন্ধনশৈলী ফোকাস, স্যামন বৈশিষ্ট্য...",
         recipeTitle: "প্রস্তাবিত রেসিপি / মেনু",
-        recipeDescriptionGenerated: "আপনার উপকরণের উপর ভিত্তি করে তৈরি।",
+        recipeDescriptionGenerated: "আপনার ইনপুটের উপর ভিত্তি করে তৈরি।",
         recipeDescriptionRefined: "আপনার মতামতের উপর ভিত্তি করে পরিমার্জিত রেসিপি।",
         recipeDescriptionProMenu: "আপনার অনুষ্ঠানের জন্য প্রো মেনু তৈরি করা হয়েছে।",
         recipeDescriptionPlaceholder: "আপনার তৈরি রেসিপি বা মেনু এখানে প্রদর্শিত হবে।",
@@ -335,18 +340,18 @@ const uiText = {
         selectTastePlaceholder: "স্বাদের পছন্দ (ঐচ্ছিক)",
         inputErrorNoIngredients: "কোন উপকরণ প্রদান করা হয়নি। আপনার কাছে উপলব্ধ উপকরণ তালিকাভুক্ত করুন।",
         generateFailedGeneric: "একটি রেসিপি/মেনু তৈরি করা যায়নি। এআই অনুপলব্ধ হতে পারে বা অনুরোধ অপ্রত্যাশিতভাবে ব্যর্থ হয়েছে।",
-        generateFailedInsufficient: "একটি রেসিপি/মেনু তৈরি করা যায়নি। প্রদত্ত উপাদানগুলি একটি সম্পূর্ণ খাবারের/মেনুর জন্য অপর্যাপ্ত বা বেমানান হতে পারে।",
+        generateFailedInsufficient: "একটি রেসিপি/মেনু তৈরি করা যায়নি। প্রদত্ত ইনপুট একটি সম্পূর্ণ ডিশ/মেনুর জন্য অপর্যাপ্ত বা পরস্পরবিরোধী হতে পারে।",
         refineFailedGeneric: "রেসিপি পরিমার্জন করা যায়নি। এআই অনুপলব্ধ হতে পারে বা অনুরোধ অপ্রত্যাশিতভাবে ব্যর্থ হয়েছে।",
         refineErrorNoRecipe: "রেসিপি পরিমার্জন করা যাবে না - কোনো প্রাথমিক একক রেসিপি তৈরি হয়নি।",
         refineErrorGeneric: "পরিমার্জনের সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে: {message}। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
         refineErrorUnknown: "রেসিপি পরিমার্জন করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
         generateErrorGeneric: "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে: {message}। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
         generateErrorUnknown: "রেসিপি/মেনু তৈরি করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
-        generateAltErrorMissingIngredients: "বিকল্প তৈরি করা যাবে না - মূল উপকরণ তালিকা অনুপস্থিত।",
         comingSoonBanner: "রেসিপি ডাউনলোড এবং প্রো শেফ বৈশিষ্ট্য শীঘ্রই আসছে!",
         serverComponentError: "একটি অপ্রত্যাশিত সার্ভার ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন। (নিরাপত্তার জন্য বিস্তারিত বাদ দেওয়া হয়েছে)",
         inputErrorNumGuests: "অনুগ্রহ করে অতিথিদের একটি বৈধ সংখ্যা লিখুন (1 বা তার বেশি)।",
         inputErrorNoCourses: "প্রো মেনুর জন্য অনুগ্রহ করে অন্তত একটি কোর্স নির্বাচন করুন।",
+        inputErrorNoTheme: "অনুগ্রহ করে ইভেন্টের জন্য একটি থিম বা নাম প্রদান করুন।",
     },
      // Add more languages as needed
 };
@@ -365,9 +370,10 @@ export default function Home() {
   // Pro Chef Mode State
   const [isProChefMode, setIsProChefMode] = useState(false);
   const [eventTheme, setEventTheme] = useState('');
-  const [numGuests, setNumGuests] = useState<number | ''>('');
+  const [numGuests, setNumGuests] = useState<number | ''>(2); // Default to 2 guests
   const [selectedCourses, setSelectedCourses] = useState<CourseType[]>(['main']); // Default to main course
   const [proPreferences, setProPreferences] = useState('');
+  const [proIngredientsInput, setProIngredientsInput] = useState(''); // Dedicated input for Pro mode ingredients (if any specified)
 
 
   // Get translated UI text based on selected language code
@@ -386,9 +392,10 @@ export default function Home() {
     // Optionally reset Pro inputs when turning off
     if (!checked) {
         setEventTheme('');
-        setNumGuests('');
+        setNumGuests(2);
         setSelectedCourses(['main']);
         setProPreferences('');
+        setProIngredientsInput(''); // Reset pro ingredients
     }
   };
 
@@ -398,32 +405,32 @@ export default function Home() {
         if (checked === true) {
             return [...prev, course];
         } else {
-            return prev.filter(c => c !== course);
+            // Prevent unchecking the last course
+            if (prev.length > 1) {
+                return prev.filter(c => c !== course);
+            }
+            return prev; // Keep the last one checked
         }
     });
   };
 
 
   // Handler for initial recipe generation (now handles both modes)
-  const handleGenerateRecipe = async (ingredientsString: string, preferredType?: string) => {
+  const handleGenerateRecipeOrMenu = async (ingredientsString?: string) => { // Make ingredients optional
     setError(null);
     setRecipeResult(null);
     setRefinedRecipe(null);
     setAlternativeTypes(null);
-    if (!preferredType) {
-        setLatestSubmittedIngredientsString(ingredientsString);
-    }
-
-     if (!ingredientsString) {
-       setError(T.inputErrorNoIngredients);
-       return;
-     }
 
     const languageName = supportedLanguages[selectedLanguage]; // Get full language NAME (e.g., "English")
     const tastePreference = selectedTaste === 'Any' ? undefined : selectedTaste; // Don't pass 'Any'
 
-    // --- Pro Mode Validation ---
+    // --- Validation ---
     if (isProChefMode) {
+        if (!eventTheme.trim()) {
+            setError(T.inputErrorNoTheme);
+            return;
+        }
         if (typeof numGuests !== 'number' || numGuests < 1) {
             setError(T.inputErrorNumGuests);
             return;
@@ -432,8 +439,22 @@ export default function Home() {
              setError(T.inputErrorNoCourses);
              return;
         }
+        // Use proIngredientsInput for Pro Mode's ingredients field
+        ingredientsString = proIngredientsInput.trim();
+        if (!ingredientsString) {
+            setError(T.inputErrorNoIngredients); // Or a more specific pro mode error?
+            return;
+        }
+
+    } else { // Standard Mode Validation
+        if (!ingredientsString || !ingredientsString.trim()) {
+            setError(T.inputErrorNoIngredients);
+            return;
+        }
+        // Save submitted ingredients only for standard mode for potential alternatives
+        setLatestSubmittedIngredientsString(ingredientsString);
     }
-    // --- End Pro Mode Validation ---
+    // --- End Validation ---
 
     startGenerating(async () => {
       try {
@@ -442,8 +463,8 @@ export default function Home() {
         if (isProChefMode) {
             // --- Call Pro Chef Flow ---
             const proInput: GenerateProMenuInput = {
-                ingredients: ingredientsString,
-                eventTheme: eventTheme || 'General Meal', // Provide a default if empty
+                ingredients: ingredientsString!, // We validated it's non-empty above
+                eventTheme: eventTheme,
                 numGuests: numGuests as number, // Cast as number (validated above)
                 courses: selectedCourses,
                 preferences: proPreferences,
@@ -458,14 +479,14 @@ export default function Home() {
         } else {
             // --- Call Standard Recipe Flow ---
             const standardInput = {
-                ingredients: ingredientsString,
-                preferredDishType: preferredType,
-                language: languageName, // Pass the full language NAME
-                tastePreference: tastePreference, // Pass the taste preference
+                ingredients: ingredientsString!, // Validated above
+                // No preferredDishType here for initial generation
+                language: languageName,
+                tastePreference: tastePreference,
             };
              result = await generateRecipe(standardInput);
              // Set alternatives only for standard mode initial generation
-             if (result && 'alternativeDishTypes' in result && !preferredType && result.alternativeDishTypes && result.alternativeDishTypes.length > 0) {
+             if (result && 'alternativeDishTypes' in result && result.alternativeDishTypes && result.alternativeDishTypes.length > 0) {
                  setAlternativeTypes(result.alternativeDishTypes);
              } else {
                  setAlternativeTypes(null);
@@ -502,13 +523,59 @@ export default function Home() {
   };
 
   // Handler to generate a recipe for one of the alternative types (Standard Mode Only)
+  // Needs slight modification to pass the selected type correctly
   const handleGenerateAlternative = (dishType: string) => {
       if (isProChefMode) return; // Should not be called in Pro mode
       if (!latestSubmittedIngredientsString) {
           setError(T.generateAltErrorMissingIngredients);
           return;
       }
-      handleGenerateRecipe(latestSubmittedIngredientsString, dishType);
+
+      // --- Re-trigger generation with the preferred dish type ---
+      setError(null);
+      setRecipeResult(null);
+      setRefinedRecipe(null);
+      setAlternativeTypes(null);
+
+      const languageName = supportedLanguages[selectedLanguage];
+      const tastePreference = selectedTaste === 'Any' ? undefined : selectedTaste;
+
+      startGenerating(async () => {
+          try {
+              const standardInput = {
+                  ingredients: latestSubmittedIngredientsString,
+                  preferredDishType: dishType, // Pass the selected type
+                  language: languageName,
+                  tastePreference: tastePreference,
+              };
+              const result = await generateRecipe(standardInput);
+
+              const recipeNameField = result && 'recipeName' in result ? result.recipeName : null;
+              const notesField = result && 'notes' in result ? result.notes : null;
+
+              if (result && recipeNameField && (recipeNameField.includes("Failed") || recipeNameField.includes("Error") || recipeNameField.includes("Unable"))) {
+                  setError(notesField || T.generateFailedInsufficient);
+                  setRecipeResult(null);
+              } else if (result) {
+                  setRecipeResult(result);
+              } else {
+                  setError(T.generateFailedGeneric);
+              }
+          } catch (e) {
+              console.error(`Error generating alternative recipe:`, e);
+              if (e instanceof Error) {
+                 if (e.message.includes("An error occurred in the Server Components render") || (e as any).digest?.includes('SERVER_RENDER_ERROR')) {
+                     setError(T.serverComponentError);
+                 } else {
+                    setError(T.generateErrorGeneric.replace('{message}', e.message));
+                 }
+              } else {
+                 setError(T.generateErrorUnknown);
+              }
+              setAlternativeTypes(null);
+          }
+      });
+      // --- End re-trigger ---
   };
 
 
@@ -580,7 +647,7 @@ export default function Home() {
       displayData = { type: 'refined', data: refinedRecipe };
       recipeDescription = T.recipeDescriptionRefined;
       if (refinedRecipe.feasibilityNotes) {
-          recipeDescription += ` Note: ${refinedRecipe.feasibilityNotes}`;
+          // recipeDescription += ` ${T.recipeNotePrefix} ${refinedRecipe.feasibilityNotes}`; // Append note prefix
       }
   } else if (recipeResult) {
       if ('menuTitle' in recipeResult) { // Pro Menu Output
@@ -588,14 +655,14 @@ export default function Home() {
           recipeTitle = recipeResult.menuTitle || T.recipeTitle; // Use menu title if available
           recipeDescription = T.recipeDescriptionProMenu;
           if (recipeResult.chefNotes) {
-              recipeDescription += ` Note: ${recipeResult.chefNotes}`;
+             // recipeDescription += ` ${T.recipeNotePrefix} ${recipeResult.chefNotes}`; // Append note prefix
           }
       } else { // Standard Recipe Output
           displayData = { type: 'standard', data: recipeResult };
           recipeTitle = recipeResult.recipeName || T.recipeTitle;
           recipeDescription = T.recipeDescriptionGenerated;
           if (recipeResult.notes) {
-              recipeDescription += ` Note: ${recipeResult.notes}`;
+              // recipeDescription += ` ${T.recipeNotePrefix} ${recipeResult.notes}`; // Append note prefix
           }
           // Show refinement only for standard recipe if additional ingredients exist
           showRefinementOptions = !!(recipeResult.additionalIngredients && recipeResult.additionalIngredients.length > 0);
@@ -679,17 +746,22 @@ export default function Home() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-5 space-y-5">
-            {/* Ingredient Form remains */}
-            <IngredientForm
-                onSubmit={(ingredients) => handleGenerateRecipe(ingredients)}
-                isGenerating={isLoading}
-                language={selectedLanguage}
-             />
+            {/* Standard Ingredient Form (Conditional) */}
+            {!isProChefMode && (
+                <IngredientForm
+                    onSubmit={(ingredients) => handleGenerateRecipeOrMenu(ingredients)}
+                    isGenerating={isLoading}
+                    language={selectedLanguage}
+                 />
+             )}
 
              {/* Pro Chef Mode Inputs (Conditional) */}
              {isProChefMode && (
-                <div className="space-y-4 pt-4 border-t border-border">
-                     <h4 className="text-lg font-medium text-foreground">{T.proChefModeLabel} Details</h4>
+                <div className="space-y-4">
+                     <div className="text-xs text-muted-foreground italic p-2 border border-dashed border-accent/70 rounded-md bg-accent/10 dark:bg-accent/20 flex items-start gap-1.5">
+                         <Info className="h-3 w-3 mr-1 flex-shrink-0 relative top-0.5 text-accent"/>
+                         <span>The AI will suggest ingredients based on your menu plan. You can optionally list key ingredients you *must* use below.</span>
+                     </div>
                      {/* Event Theme */}
                     <div>
                         <Label htmlFor="event-theme" className="text-sm text-muted-foreground">{T.eventThemeLabel}</Label>
@@ -700,6 +772,7 @@ export default function Home() {
                             placeholder={T.eventThemePlaceholder}
                             className="mt-1 bg-background"
                             disabled={isLoading}
+                            required // Make theme required
                         />
                     </div>
                      {/* Number of Guests */}
@@ -714,6 +787,7 @@ export default function Home() {
                             placeholder="e.g., 8"
                             className="mt-1 bg-background"
                             disabled={isLoading}
+                            required // Make guests required
                         />
                     </div>
                      {/* Courses */}
@@ -726,7 +800,7 @@ export default function Home() {
                                         id={`course-${course}`}
                                         checked={selectedCourses.includes(course)}
                                         onCheckedChange={(checked) => handleCourseChange(course, checked)}
-                                        disabled={isLoading}
+                                        disabled={isLoading || selectedCourses.length === 1 && selectedCourses.includes(course)} // Disable unchecking last item
                                     />
                                     <Label htmlFor={`course-${course}`} className="font-normal capitalize cursor-pointer">
                                         {course === 'main' ? T.courseMain : (course === 'starter' ? T.courseStarter : T.courseDessert)}
@@ -735,6 +809,22 @@ export default function Home() {
                             ))}
                         </div>
                     </div>
+                     {/* Optional Key Ingredients for Pro Mode */}
+                      <div>
+                          <Label htmlFor="pro-ingredients-input" className="text-sm text-muted-foreground">
+                              Key Ingredients (Optional)
+                          </Label>
+                          <Textarea
+                              id="pro-ingredients-input"
+                              placeholder="e.g., Salmon, Asparagus, Lemon..."
+                              className="resize-none min-h-[60px] bg-background mt-1"
+                              value={proIngredientsInput}
+                              onChange={(e) => setProIngredientsInput(e.target.value)}
+                              aria-label="Optional key ingredients separated by commas"
+                              disabled={isLoading}
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">List any specific ingredients the chef MUST include in the menu.</p>
+                      </div>
                       {/* Additional Preferences */}
                     <div>
                         <Label htmlFor="pro-preferences" className="text-sm text-muted-foreground">{T.proPreferencesLabel}</Label>
@@ -746,6 +836,28 @@ export default function Home() {
                             className="mt-1 bg-background min-h-[80px]"
                             disabled={isLoading}
                         />
+                    </div>
+                    {/* Submit Button for Pro Mode */}
+                    <div className="pt-4">
+                         <button
+                           type="button"
+                           onClick={() => handleGenerateRecipeOrMenu()} // Call without explicit ingredients here
+                           className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary text-base h-11 shadow-md rounded-md inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+                           disabled={isLoading}
+                           aria-live="polite"
+                         >
+                           {isLoading ? (
+                             <>
+                               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                               {T.generatingProAltText}
+                             </>
+                           ) : (
+                             <>
+                               <BrainCircuit className="mr-2 h-5 w-5" />
+                               Generate Pro Menu
+                             </>
+                           )}
+                         </button>
                     </div>
                 </div>
              )}
@@ -812,3 +924,5 @@ export default function Home() {
     </main>
   );
 }
+
+    

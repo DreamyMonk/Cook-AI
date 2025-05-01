@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from "@/components/ui/switch";
 import { Loader2, ChefHat, Utensils, AlertCircle, Mic, MicOff, Info } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Removed unused Card imports
 import { useSpeechRecognition, useSpeechSynthesis } from '@/hooks/use-speech-recognition';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -199,7 +199,7 @@ const speechRecognitionLangMap: { [key: string]: string } = {
 
 
 interface IngredientFormProps {
-  onSubmit: (ingredientsString: string, preferredType?: string) => void;
+  onSubmit: (ingredientsString: string) => void; // Adjusted onSubmit signature
   isGenerating: boolean;
   language: string; // Receive language code (e.g., 'en', 'es', 'hi', 'bn')
 }
@@ -343,8 +343,8 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
       stopListening();
     }
 
-    // Call onSubmit without preferredType for initial generation
-    onSubmit(nonEmptyIngredients.join(', ')); // Submit the cleaned, comma-separated string
+    // Call onSubmit with the cleaned ingredients string
+    onSubmit(nonEmptyIngredients.join(', '));
   };
 
    const toggleManualListen = () => {
@@ -367,7 +367,6 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
 
   return (
     <div className="space-y-4">
-      {/* This Card wrapper is removed as the content is now directly inside the parent CardContent */}
       <div className="space-y-3">
           <Label htmlFor="ingredients-input" className="text-sm text-muted-foreground">
             {T.ingredientsLabel}
@@ -467,3 +466,5 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
     </div>
   );
 }
+
+    
