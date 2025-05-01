@@ -84,6 +84,7 @@ const uiText = {
         generateErrorUnknown: "An unexpected error occurred while generating the recipe. Please try again later.",
         generateAltErrorMissingIngredients: "Cannot generate alternative - original ingredients list is missing.",
         comingSoonBanner: "Recipe download & Pro Chef features coming soon!", // Added translation
+        serverComponentError: "An unexpected server error occurred. Please try again later. (Details omitted for security)", // Added translation for generic server error
     },
     "es": {
         title: "Cook AI",
@@ -113,6 +114,7 @@ const uiText = {
         generateErrorUnknown: "Ocurrió un error inesperado al generar la receta. Por favor, inténtalo de nuevo más tarde.",
         generateAltErrorMissingIngredients: "No se puede generar alternativa - falta la lista original de ingredientes.",
         comingSoonBanner: "¡Descarga de recetas y funciones Pro Chef próximamente!", // Added translation
+        serverComponentError: "Ocurrió un error inesperado en el servidor. Por favor, inténtalo de nuevo más tarde. (Detalles omitidos por seguridad)", // Added translation
     },
     "fr": {
         title: "Cook AI",
@@ -142,6 +144,7 @@ const uiText = {
         generateErrorUnknown: "Une erreur inattendue s'est produite lors de la génération de la recette. Veuillez réessayer plus tard.",
         generateAltErrorMissingIngredients: "Impossible de générer une alternative - la liste originale des ingrédients est manquante.",
         comingSoonBanner: "Téléchargement de recettes et fonctionnalités Pro Chef bientôt disponibles !", // Added translation
+        serverComponentError: "Une erreur serveur inattendue s'est produite. Veuillez réessayer plus tard. (Détails omis pour la sécurité)", // Added translation
     },
     "de": {
         title: "Cook AI",
@@ -171,6 +174,7 @@ const uiText = {
         generateErrorUnknown: "Beim Generieren des Rezepts ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
         generateAltErrorMissingIngredients: "Alternative kann nicht generiert werden - ursprüngliche Zutatenliste fehlt.",
         comingSoonBanner: "Rezept-Download & Pro Chef-Funktionen bald verfügbar!", // Added translation
+        serverComponentError: "Ein unerwarteter Serverfehler ist aufgetreten. Bitte versuchen Sie es später erneut. (Details aus Sicherheitsgründen weggelassen)", // Added translation
     },
     "hi": {
         title: "Cook AI",
@@ -200,6 +204,7 @@ const uiText = {
         generateErrorUnknown: "रेसिपी बनाते समय एक अप्रत्याशित त्रुटि हुई। कृपया बाद में पुनः प्रयास करें।",
         generateAltErrorMissingIngredients: "विकल्प उत्पन्न नहीं किया जा सकता - मूल सामग्री सूची गायब है।",
         comingSoonBanner: "रेसिपी डाउनलोड और प्रो शेफ सुविधाएँ जल्द ही आ रही हैं!", // Added translation
+        serverComponentError: "एक अप्रत्याशित सर्वर त्रुटि हुई। कृपया बाद में पुनः प्रयास करें। (सुरक्षा कारणों से विवरण छोड़े गए)", // Added translation
     },
     "bn": {
         title: "Cook AI",
@@ -229,6 +234,7 @@ const uiText = {
         generateErrorUnknown: "রেসিপি তৈরি করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
         generateAltErrorMissingIngredients: "বিকল্প তৈরি করা যাবে না - মূল উপকরণ তালিকা অনুপস্থিত।",
         comingSoonBanner: "রেসিপি ডাউনলোড এবং প্রো শেফ বৈশিষ্ট্য শীঘ্রই আসছে!", // Added translation
+        serverComponentError: "একটি অপ্রত্যাশিত সার্ভার ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন। (নিরাপত্তার জন্য বিস্তারিত বাদ দেওয়া হয়েছে)", // Added translation
     },
      // Add more languages as needed
 };
@@ -294,11 +300,16 @@ export default function Home() {
         }
       } catch (e) {
         console.error('Error generating recipe:', e);
-        if (e instanceof Error) {
-          setError(T.generateErrorGeneric.replace('{message}', e.message));
-        } else {
-          setError(T.generateErrorUnknown);
-        }
+         if (e instanceof Error) {
+             // Check for the specific server component render error message or digest
+             if (e.message.includes("An error occurred in the Server Components render") || (e as any).digest?.includes('SERVER_RENDER_ERROR')) {
+                 setError(T.serverComponentError);
+             } else {
+                setError(T.generateErrorGeneric.replace('{message}', e.message));
+             }
+         } else {
+             setError(T.generateErrorUnknown);
+         }
          setAlternativeTypes(null);
       }
     });
@@ -353,8 +364,13 @@ export default function Home() {
 
       } catch (e) {
          console.error('Error refining recipe:', e);
-          if (e instanceof Error) {
-            setError(T.refineErrorGeneric.replace('{message}', e.message));
+           if (e instanceof Error) {
+             // Check for the specific server component render error message or digest
+             if (e.message.includes("An error occurred in the Server Components render") || (e as any).digest?.includes('SERVER_RENDER_ERROR')) {
+                 setError(T.serverComponentError);
+             } else {
+                setError(T.refineErrorGeneric.replace('{message}', e.message));
+             }
           } else {
             setError(T.refineErrorUnknown);
           }
@@ -518,4 +534,3 @@ export default function Home() {
     </main>
   );
 }
-

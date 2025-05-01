@@ -11,11 +11,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Loader2, Sparkles, List, CookingPot, TriangleAlert, CheckSquare, Info, Lightbulb, Download } from 'lucide-react'; // Added Download icon
+import { Loader2, Sparkles, List, CookingPot, TriangleAlert, CheckSquare, Info, Lightbulb, Download } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
 import type { TastePreference } from '@/app/page'; // Import TastePreference type
-import { jsPDF } from "jspdf"; // Import jsPDF
+// Removed direct import: import { jsPDF } from "jspdf";
 
 // Supported languages mapping (Code to Name) - Used for AI flow calls
 const supportedLanguagesMap = {
@@ -503,9 +503,11 @@ export function RecipeDisplay({
     };
 
     // Function to generate and download PDF
-    const handleDownloadPdf = () => {
+    const handleDownloadPdf = async () => {
         setIsDownloading(true);
         try {
+            // Dynamically import jsPDF only on the client-side
+            const { jsPDF } = await import('jspdf');
             const doc = new jsPDF();
             const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
             const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
