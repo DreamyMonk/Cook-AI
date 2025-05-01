@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, ChefHat, Mic, MicOff, Utensils } from 'lucide-react';
+import { Loader2, ChefHat, Mic, MicOff, Utensils, AlertCircle } from 'lucide-react'; // Added AlertCircle
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Added Card components
 
@@ -39,32 +39,46 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
 
 
   const handleGenerateClick = () => {
-    setInputError(null);
+    setInputError(null); // Clear previous errors
     const trimmedInput = ingredientsInput.trim();
-    if (trimmedInput.length < 3) {
+
+    // Validate: Input cannot be empty or too short
+    if (trimmedInput.length === 0) {
       setInputError('Please list at least one ingredient.');
       return;
     }
-     // Basic check for comma separation if multiple items seem present
-    if (trimmedInput.includes(' ') && !trimmedInput.includes(',')) {
-       // Simple heuristic: if there are spaces but no commas, warn the user.
-       // This isn't foolproof but covers common cases.
-       toast({
-            variant: "default",
-            title: "Check Input Format",
-            description: "Did you forget to separate ingredients with commas?",
-       });
-       // Allow submission anyway, but warn.
+    if (trimmedInput.length < 3 && !trimmedInput.includes(',')) { // Consider very short single ingredients valid
+       setInputError('Ingredient name seems too short. Please enter valid ingredients.');
+       return;
     }
 
-    // Filter out potentially empty strings resulting from bad comma usage (e.g., "a,,b")
-    const nonEmptyIngredients = trimmedInput.split(',').map(s => s.trim()).filter(Boolean);
+
+     // Check for spaces without commas - potential user formatting error
+    if (trimmedInput.includes(' ') && !trimmedInput.includes(',')) {
+       // Heuristic: If there are spaces suggesting multiple items, but no commas, warn the user.
+       toast({
+            variant: "default", // Use default variant for non-critical info
+            title: "Check Format",
+            description: "Remember to separate multiple ingredients with commas for best results.",
+            duration: 5000, // Give user time to read
+       });
+       // Allow submission, but the warning might help them next time.
+    }
+
+    // Filter out empty strings resulting from multiple commas (e.g., "a,, b") or leading/trailing commas
+    const nonEmptyIngredients = trimmedInput
+                                .split(',')
+                                .map(s => s.trim()) // Trim whitespace from each potential ingredient
+                                .filter(Boolean); // Remove empty strings
+
+    // Validate: After filtering, there should still be at least one valid ingredient
     if (nonEmptyIngredients.length === 0) {
-        setInputError('No valid ingredients entered. Please list ingredients separated by commas.');
+        setInputError('No valid ingredients found. Please list ingredients separated by commas.');
         return;
     }
 
-    onSubmit(nonEmptyIngredients.join(', ')); // Submit the cleaned-up string
+    // Submit the cleaned-up, comma-separated string
+    onSubmit(nonEmptyIngredients.join(', '));
   };
 
   // Effect to handle recognition events
@@ -73,11 +87,12 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
-      setIngredientsInput(prev => (prev ? `${prev}, ${transcript}` : transcript));
+      // Append with a comma if there's existing text
+      setIngredientsInput(prev => (prev.trim() ? `${prev.trim()}, ${transcript}` : transcript));
       setIsListening(false);
       toast({
-        title: "Transcription complete",
-        description: "Your voice input has been added.",
+        title: "Voice input added",
+        description: "Ingredients added via microphone.",
       });
     };
 
@@ -101,8 +116,7 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
     };
 
     recognition.onend = () => {
-      // Check if still in listening state before setting to false,
-      // avoids potential state update conflicts if stopped manually.
+      // Ensure isListening state reflects that recognition has stopped.
       if (isListening) {
         setIsListening(false);
       }
@@ -112,9 +126,6 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
     return () => {
       if (recognition && isListening) {
         recognition.stop();
-        // Ensure isListening state reflects that recognition has stopped.
-        // Directly setting state here might be problematic if unmounting.
-        // The onend handler should ideally cover this.
       }
     };
   }, [isListening, toast]); // isListening is a dependency
@@ -131,37 +142,31 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
 
     if (isListening) {
       recognition.stop();
-      // No need to manually set isListening to false here, `onend` handles it.
+      // `onend` will set isListening to false
       toast({
         title: "Voice input stopped",
       });
     } else {
-      setSpeechError(null);
+      setSpeechError(null); // Clear previous speech errors
       try {
-        // Ensure recognition isn't already running before starting
         recognition.start();
         setIsListening(true);
         toast({
           title: "Listening...",
-          description: "Speak your ingredients clearly.",
+          description: "Speak your ingredients clearly. Say one or multiple, separated by pauses.",
         });
       } catch (error) {
-        // Catch specific errors if possible (e.g., InvalidStateError if already started)
         console.error("Error starting speech recognition:", error);
         let message = 'Could not start voice recognition.';
         if (error instanceof Error) {
             if (error.name === 'NotAllowedError') {
                  message = 'Microphone access denied. Please allow microphone access.';
             } else if (error.name === 'InvalidStateError') {
-                // Handle case where recognition might already be active
                 message = 'Voice recognition is already active or processing.';
-                setIsListening(false); // Correct state if it failed to start
             }
         }
-
         setSpeechError(message);
-        // Ensure isListening is false if start failed
-        if(isListening) setIsListening(false);
+        setIsListening(false); // Ensure state is correct if start failed
         toast({
           variant: "destructive",
           title: "Voice Recognition Error",
@@ -183,18 +188,18 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
         </CardHeader>
         <CardContent className="space-y-3 pt-0">
           <Label htmlFor="ingredients-input" className="text-sm text-muted-foreground">
-            List ingredients separated by commas, or use the microphone.
+            List ingredients separated by commas (e.g., chicken, rice, broccoli).
           </Label>
           <div className="relative">
             <Textarea
               id="ingredients-input"
-              placeholder="e.g., chicken breast, rice, broccoli, soy sauce..." // Updated placeholder
-              className="resize-none min-h-[80px] bg-background focus:ring-primary pr-12" // Use primary ring
+              placeholder="Type or use the mic..."
+              className={`resize-none min-h-[80px] bg-background focus:ring-primary pr-12 ${inputError ? 'border-destructive focus:ring-destructive' : ''}`} // Add error state styling
               value={ingredientsInput}
               onChange={(e) => { setIngredientsInput(e.target.value); setInputError(null); }} // Clear error on change
               aria-label="Enter available ingredients separated by commas, or use the microphone button"
-              aria-invalid={!!inputError}
-              aria-describedby="input-error-msg"
+              aria-invalid={!!inputError} // Indicate invalid state for accessibility
+              aria-describedby="input-error-msg" // Link error message
             />
             {SpeechRecognition && (
               <Button
@@ -202,7 +207,7 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
                 variant="ghost"
                 size="icon"
                 onClick={handleVoiceInput}
-                className={`absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-1 ${isListening ? 'text-destructive' : 'text-muted-foreground hover:text-primary'}`}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-1 ${isListening ? 'text-destructive animate-pulse' : 'text-muted-foreground hover:text-primary'}`} // Pulse when listening
                 aria-label={isListening ? "Stop listening" : "Start voice input"}
                 disabled={isGenerating} // Disable mic if main generation is happening
               >
@@ -210,17 +215,29 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
               </Button>
             )}
           </div>
-           {inputError && <p id="input-error-msg" className="text-sm font-medium text-destructive mt-1">{inputError}</p>}
-           {speechError && <p className="text-sm font-medium text-destructive mt-1">{speechError}</p>}
+           {/* Input Error Display */}
+           {inputError && (
+                <p id="input-error-msg" className="text-sm font-medium text-destructive flex items-center mt-1">
+                    <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0" />
+                    {inputError}
+                </p>
+            )}
+           {/* Speech Error Display */}
+           {speechError && (
+                <p className="text-sm font-medium text-destructive flex items-center mt-1">
+                     <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0" />
+                    {speechError}
+                </p>
+           )}
         </CardContent>
         <CardFooter>
-           {/* This button now directly triggers generation */}
+           {/* Generate Recipe Button */}
            <Button
              type="button"
              onClick={handleGenerateClick}
              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary" // Use primary color
-             disabled={isGenerating || isListening || !ingredientsInput.trim()} // Disable if listening or generating
-             aria-live="polite"
+             disabled={isGenerating || isListening} // Disable if listening or generating
+             aria-live="polite" // Announce changes for screen readers
            >
              {isGenerating ? (
                <>
@@ -236,8 +253,6 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
            </Button>
         </CardFooter>
       </Card>
-
-      {/* Removed the Parsed Ingredients Checklist section */}
     </div>
   );
 }
