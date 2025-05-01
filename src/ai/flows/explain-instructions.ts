@@ -12,6 +12,7 @@ import { ai } from '@/ai/ai-instance';
 import { z } from 'genkit';
 
 // Input Schema
+// Note: This schema constant is NOT exported
 const ExplainInstructionsInputSchema = z.object({
   recipeName: z.string().describe('The name of the recipe.'),
   originalInstructions: z.string().describe('The original step-by-step instructions that need explanation.'),
@@ -24,6 +25,7 @@ const ExplainInstructionsInputSchema = z.object({
 export type ExplainInstructionsInput = z.infer<typeof ExplainInstructionsInputSchema>;
 
 // Output Schema
+// Note: This schema constant is NOT exported
 const ExplainInstructionsOutputSchema = z.object({
   detailedExplanation: z.string().describe('A detailed, step-by-step explanation of the original instructions, including tips, techniques, and reasoning, formatted clearly (e.g., using markdown lists or numbered steps).'),
 }).describe('The detailed explanation, provided in the requested language (default English).');

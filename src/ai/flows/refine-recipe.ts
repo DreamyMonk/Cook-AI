@@ -12,6 +12,7 @@ import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 
 // Schema for the input to the refinement flow
+// Note: This schema constant is NOT exported
 const RefineRecipeInputSchema = z.object({
   originalRecipeName: z.string().describe('The name of the original recipe generated.'),
   providedIngredients: z.array(z.string()).describe('The list of MAIN ingredients from the original recipe (the ones the AI confirmed it used from *user input*).'),
@@ -30,6 +31,7 @@ const RefineRecipeInputSchema = z.object({
 export type RefineRecipeInput = z.infer<typeof RefineRecipeInputSchema>;
 
 // Schema for the output of the refinement flow
+// Note: This schema constant is NOT exported
 const RefineRecipeOutputSchema = z.object({
   refinedRecipeName: z.string().describe('The name of the refined recipe (can be the same or slightly modified, e.g., "Chicken Stir-Fry (No Broccoli)"). If refinement is impossible, indicate failure clearly (e.g., "Refinement Failed: Missing Key Ingredient").'),
   refinedIngredients: z.string().describe('A CLEARLY FORMATTED string listing the ingredients required for the *refined* recipe. Use Markdown lists or similar structure to differentiate between main (user-provided) and newly required additional ingredients. Example: "**Main:**\\n- Chicken\\n- Rice\\n**Additional:**\\n- Soy Sauce\\n- Oil\\n- Salt, Pepper"'),
@@ -179,4 +181,3 @@ const refineRecipeFlow = ai.defineFlow<
      }
   }
 );
-

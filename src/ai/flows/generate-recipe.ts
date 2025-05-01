@@ -13,6 +13,7 @@ import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 
 // Input schema: Add optional preferred dish type, language, and taste preference
+// Note: This schema constant is NOT exported
 const GenerateRecipeInputSchema = z.object({
   ingredients: z
     .string()
@@ -33,6 +34,7 @@ const GenerateRecipeInputSchema = z.object({
 export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 
 // Output schema: Add optional alternative dish types
+// Note: This schema constant is NOT exported
 const GenerateRecipeOutputSchema = z.object({
   recipeName: z.string().describe('The name of the generated recipe. If no recipe is possible, state that clearly (e.g., "Unable to Create Recipe").'),
   providedIngredients: z.array(z.string()).describe('List of the main ingredients PROVIDED BY THE USER that are actually USED in the recipe. This list MUST be a subset of the user input ingredients.'),
@@ -228,4 +230,3 @@ const generateRecipeFlow = ai.defineFlow<
     }
   }
 );
-

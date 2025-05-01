@@ -2,6 +2,7 @@
 'use client';
 import React, { useState, useEffect, useTransition } from 'react';
 import { type GenerateRecipeOutput } from '@/ai/flows/generate-recipe';
+import { type GenerateProMenuOutput, type ProCourse } from '@/ai/flows/generate-pro-menu'; // Import Pro types
 import { type RefineRecipeOutput } from '@/ai/flows/refine-recipe';
 import { explainInstructions, type ExplainInstructionsInput } from '@/ai/flows/explain-instructions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,11 +12,22 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Loader2, Sparkles, List, CookingPot, TriangleAlert, CheckSquare, Info, Lightbulb, Download } from 'lucide-react';
+import { Loader2, Sparkles, List, CookingPot, TriangleAlert, CheckSquare, Info, Lightbulb, Download, ChefHat, Soup, IceCream, Utensils } from 'lucide-react'; // Added ChefHat, Soup, IceCream, Utensils
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
 import type { TastePreference } from '@/app/page'; // Import TastePreference type
-// Removed direct import: import { jsPDF } from "jspdf";
+
+// --- Types ---
+type StandardRecipe = GenerateRecipeOutput;
+type RefinedRecipe = RefineRecipeOutput;
+type ProMenu = GenerateProMenuOutput;
+
+// Union type for the data to display
+export type RecipeDisplayData =
+    | { type: 'standard'; data: StandardRecipe }
+    | { type: 'refined'; data: RefinedRecipe }
+    | { type: 'pro-menu'; data: ProMenu };
+
 
 // Supported languages mapping (Code to Name) - Used for AI flow calls
 const supportedLanguagesMap = {
@@ -29,7 +41,7 @@ const supportedLanguagesMap = {
 };
 type LanguageCode = keyof typeof supportedLanguagesMap;
 
-// UI Text translations (keyed by LanguageCode)
+// UI Text translations (keyed by LanguageCode) - Add Pro Menu text
 const uiText = {
     "en": {
         recipeNotePrefix: "Note:",
@@ -64,11 +76,17 @@ const uiText = {
         notesUnavailable: "No specific notes provided.",
         ingredientsUnavailablePlaceholder: "Ingredient list unavailable.",
         instructionsUnavailablePlaceholder: "Instructions unavailable.",
-        downloadRecipeButton: "Download Recipe (PDF)", // Added translation
-        downloadingRecipe: "Downloading...", // Added translation
-        pdfGenerationErrorTitle: "PDF Error", // Added translation
-        pdfGenerationErrorDesc: "Could not generate the recipe PDF. Please try again.", // Added translation
+        downloadRecipeButton: "Download Menu/Recipe (PDF)", // Updated text
+        downloadingRecipe: "Downloading...",
+        pdfGenerationErrorTitle: "PDF Error",
+        pdfGenerationErrorDesc: "Could not generate the PDF. Please try again.",
         detailedExplanationTitle: "Detailed Explanation", // Added for PDF
+        proMenuTitle: "Pro Chef Menu", // Pro menu specific text
+        proMenuForGuests: "For {numGuests} Guests",
+        proMenuCourseStarter: "Starter",
+        proMenuCourseMain: "Main Course",
+        proMenuCourseDessert: "Dessert",
+        proMenuChefNotes: "Chef's Notes:",
     },
     "es": {
         recipeNotePrefix: "Nota:",
@@ -103,11 +121,17 @@ const uiText = {
         notesUnavailable: "No se proporcionaron notas específicas.",
         ingredientsUnavailablePlaceholder: "Lista de ingredientes no disponible.",
         instructionsUnavailablePlaceholder: "Instrucciones no disponibles.",
-        downloadRecipeButton: "Descargar Receta (PDF)", // Added translation
-        downloadingRecipe: "Descargando...", // Added translation
-        pdfGenerationErrorTitle: "Error PDF", // Added translation
-        pdfGenerationErrorDesc: "No se pudo generar el PDF de la receta. Por favor, inténtalo de nuevo.", // Added translation
-        detailedExplanationTitle: "Explicación Detallada", // Added for PDF
+        downloadRecipeButton: "Descargar Menú/Receta (PDF)", // Updated text
+        downloadingRecipe: "Descargando...",
+        pdfGenerationErrorTitle: "Error PDF",
+        pdfGenerationErrorDesc: "No se pudo generar el PDF. Por favor, inténtalo de nuevo.",
+        detailedExplanationTitle: "Explicación Detallada",
+        proMenuTitle: "Menú Chef Profesional",
+        proMenuForGuests: "Para {numGuests} Invitados",
+        proMenuCourseStarter: "Entrante",
+        proMenuCourseMain: "Plato Principal",
+        proMenuCourseDessert: "Postre",
+        proMenuChefNotes: "Notas del Chef:",
     },
     "fr": {
         recipeNotePrefix: "Note :",
@@ -142,11 +166,17 @@ const uiText = {
         notesUnavailable: "Aucune note spécifique fournie.",
         ingredientsUnavailablePlaceholder: "Liste d'ingrédients non disponible.",
         instructionsUnavailablePlaceholder: "Instructions non disponibles.",
-        downloadRecipeButton: "Télécharger la Recette (PDF)", // Added translation
-        downloadingRecipe: "Téléchargement...", // Added translation
-        pdfGenerationErrorTitle: "Erreur PDF", // Added translation
-        pdfGenerationErrorDesc: "Impossible de générer le PDF de la recette. Veuillez réessayer.", // Added translation
-        detailedExplanationTitle: "Explication Détaillée", // Added for PDF
+        downloadRecipeButton: "Télécharger Menu/Recette (PDF)", // Updated text
+        downloadingRecipe: "Téléchargement...",
+        pdfGenerationErrorTitle: "Erreur PDF",
+        pdfGenerationErrorDesc: "Impossible de générer le PDF. Veuillez réessayer.",
+        detailedExplanationTitle: "Explication Détaillée",
+        proMenuTitle: "Menu Chef Pro",
+        proMenuForGuests: "Pour {numGuests} Invités",
+        proMenuCourseStarter: "Entrée",
+        proMenuCourseMain: "Plat Principal",
+        proMenuCourseDessert: "Dessert",
+        proMenuChefNotes: "Notes du Chef:",
     },
     "de": {
         recipeNotePrefix: "Hinweis:",
@@ -181,11 +211,17 @@ const uiText = {
         notesUnavailable: "Keine spezifischen Hinweise bereitgestellt.",
         ingredientsUnavailablePlaceholder: "Zutatenliste nicht verfügbar.",
         instructionsUnavailablePlaceholder: "Anweisungen nicht verfügbar.",
-        downloadRecipeButton: "Rezept herunterladen (PDF)", // Added translation
-        downloadingRecipe: "Wird heruntergeladen...", // Added translation
-        pdfGenerationErrorTitle: "PDF-Fehler", // Added translation
-        pdfGenerationErrorDesc: "Das Rezept-PDF konnte nicht generiert werden. Bitte versuchen Sie es erneut.", // Added translation
-        detailedExplanationTitle: "Detaillierte Erklärung", // Added for PDF
+        downloadRecipeButton: "Menü/Rezept herunterladen (PDF)", // Updated text
+        downloadingRecipe: "Wird heruntergeladen...",
+        pdfGenerationErrorTitle: "PDF-Fehler",
+        pdfGenerationErrorDesc: "Das PDF konnte nicht generiert werden. Bitte versuchen Sie es erneut.",
+        detailedExplanationTitle: "Detaillierte Erklärung",
+        proMenuTitle: "Profi-Koch-Menü",
+        proMenuForGuests: "Für {numGuests} Gäste",
+        proMenuCourseStarter: "Vorspeise",
+        proMenuCourseMain: "Hauptgericht",
+        proMenuCourseDessert: "Dessert",
+        proMenuChefNotes: "Anmerkungen des Kochs:",
     },
     "hi": { // Hindi Translations
         recipeNotePrefix: "ध्यान दें:",
@@ -220,11 +256,17 @@ const uiText = {
         notesUnavailable: "कोई विशिष्ट नोट प्रदान नहीं किया गया।",
         ingredientsUnavailablePlaceholder: "सामग्री सूची अनुपलब्ध।",
         instructionsUnavailablePlaceholder: "निर्देश अनुपलब्ध।",
-        downloadRecipeButton: "रेसिपी डाउनलोड करें (PDF)", // Added translation
-        downloadingRecipe: "डाउनलोड हो रहा है...", // Added translation
-        pdfGenerationErrorTitle: "पीडीएफ त्रुटि", // Added translation
-        pdfGenerationErrorDesc: "रेसिपी पीडीएफ उत्पन्न नहीं किया जा सका। कृपया पुन: प्रयास करें।", // Added translation
-        detailedExplanationTitle: "विस्तृत स्पष्टीकरण", // Added for PDF
+        downloadRecipeButton: "मेनू/रेसिपी डाउनलोड करें (PDF)", // Updated text
+        downloadingRecipe: "डाउनलोड हो रहा है...",
+        pdfGenerationErrorTitle: "पीडीएफ त्रुटि",
+        pdfGenerationErrorDesc: "पीडीएफ उत्पन्न नहीं किया जा सका। कृपया पुन: प्रयास करें।",
+        detailedExplanationTitle: "विस्तृत स्पष्टीकरण",
+        proMenuTitle: "प्रो शेफ मेनू",
+        proMenuForGuests: "{numGuests} मेहमानों के लिए",
+        proMenuCourseStarter: "स्टार्टर",
+        proMenuCourseMain: "मुख्य कोर्स",
+        proMenuCourseDessert: "मिठाई",
+        proMenuChefNotes: "शेफ के नोट्स:",
     },
     "bn": { // Bengali Translations
         recipeNotePrefix: "দ্রষ্টব্য:",
@@ -259,25 +301,31 @@ const uiText = {
         notesUnavailable: "কোনো নির্দিষ্ট নোট প্রদান করা হয়নি।",
         ingredientsUnavailablePlaceholder: "উপকরণ তালিকা অনুপলব্ধ।",
         instructionsUnavailablePlaceholder: "নির্দেশাবলী অনুপলব্ধ।",
-        downloadRecipeButton: "রেসিপি ডাউনলোড করুন (PDF)", // Added translation
-        downloadingRecipe: "ডাউনলোড হচ্ছে...", // Added translation
-        pdfGenerationErrorTitle: "পিডিএফ ত্রুটি", // Added translation
-        pdfGenerationErrorDesc: "রেসিপি পিডিএফ তৈরি করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।", // Added translation
-        detailedExplanationTitle: "বিস্তারিত ব্যাখ্যা", // Added for PDF
+        downloadRecipeButton: "মেনু/রেসিপি ডাউনলোড করুন (PDF)", // Updated text
+        downloadingRecipe: "ডাউনলোড হচ্ছে...",
+        pdfGenerationErrorTitle: "পিডিএফ ত্রুটি",
+        pdfGenerationErrorDesc: "পিডিএফ তৈরি করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        detailedExplanationTitle: "বিস্তারিত ব্যাখ্যা",
+        proMenuTitle: "প্রো শেফ মেনু",
+        proMenuForGuests: "{numGuests} অতিথিদের জন্য",
+        proMenuCourseStarter: "স্টার্টার",
+        proMenuCourseMain: "প্রধান কোর্স",
+        proMenuCourseDessert: "ডেজার্ট",
+        proMenuChefNotes: "শেফের নোট:",
     },
      // Add more languages as needed
 };
 
 interface RecipeDisplayProps {
-  recipe: GenerateRecipeOutput; // The originally generated recipe
-  refinedRecipe: RefineRecipeOutput | null; // The result of refinement, if performed
-  alternativeTypes: string[] | null;
-  onRefine: (unavailableAdditional: string[]) => void;
-  onSelectAlternative: (dishType: string) => void;
+  displayData: RecipeDisplayData; // Unified data prop
+  alternativeTypes: string[] | null; // Only relevant for standard initial recipe
+  onRefine: (unavailableAdditional: string[]) => void; // Only for standard recipe
+  onSelectAlternative: (dishType: string) => void; // Only for standard recipe
   isRefining: boolean;
   isGenerating: boolean;
-  language: LanguageCode; // Expect language code (e.g., 'en', 'es')
-  tastePreference?: TastePreference; // Add taste preference prop
+  language: LanguageCode;
+  tastePreference?: TastePreference;
+  showRefinementOptions: boolean; // Explicit prop to control refinement UI
 }
 
 interface AdditionalIngredientItem {
@@ -286,61 +334,60 @@ interface AdditionalIngredientItem {
     available: boolean;
 }
 
+// Mapping course type to icon
+const courseIcons: Record<ProCourse['type'], React.ElementType> = {
+    starter: Soup,
+    main: Utensils,
+    dessert: IceCream,
+};
+
+
 export function RecipeDisplay({
-    recipe,
-    refinedRecipe,
+    displayData,
     alternativeTypes,
     onRefine,
     onSelectAlternative,
     isRefining,
     isGenerating,
-    language, // Receive language code
-    tastePreference // Receive taste preference
+    language,
+    tastePreference,
+    showRefinementOptions, // Use this prop
 }: RecipeDisplayProps) {
   const [additionalIngredientsChecklist, setAdditionalIngredientsChecklist] = useState<AdditionalIngredientItem[]>([]);
-  const [showRefineSection, setShowRefineSection] = useState(false);
   const [refineError, setRefineError] = useState<string | null>(null);
 
   const [detailedInstructions, setDetailedInstructions] = useState<string | null>(null);
   const [isExplaining, startExplaining] = useTransition();
   const [explainError, setExplainError] = useState<string | null>(null);
   const { toast } = useToast();
-  const [isDownloading, setIsDownloading] = useState(false); // State for download button
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  // Get translated UI text based on language code
   const T = uiText[language] || uiText['en'];
-  // Get the full language name for AI calls
   const languageName = supportedLanguagesMap[language] || 'English';
 
 
   useEffect(() => {
-    // Reset explanation when recipe or refinement changes
+    // Reset explanation when data changes
     setDetailedInstructions(null);
     setExplainError(null);
 
-    // Setup checklist based ONLY on the original recipe's additionalIngredients
-    // This section should only appear if there's an original recipe and no refined recipe yet
-    if (recipe && !refinedRecipe && recipe.additionalIngredients && recipe.additionalIngredients.length > 0) {
-      const initialItems = recipe.additionalIngredients.map((name, index) => ({
-        // Use a more robust key combination
-        id: `add-ing-${index}-${recipe.recipeName?.replace(/\s+/g, '-') || 'recipe'}-${Date.now()}`,
+    // Setup checklist ONLY if showRefinementOptions is true and it's a standard recipe
+    if (showRefinementOptions && displayData.type === 'standard' && displayData.data.additionalIngredients && displayData.data.additionalIngredients.length > 0) {
+      const initialItems = displayData.data.additionalIngredients.map((name, index) => ({
+        id: `add-ing-${index}-${displayData.data.recipeName?.replace(/\s+/g, '-') || 'recipe'}-${Date.now()}`,
         name: name,
-        available: true, // Default to available
+        available: true,
       }));
       setAdditionalIngredientsChecklist(initialItems);
-      setShowRefineSection(true); // Show checklist if there are items
       setRefineError(null);
     } else {
-      // Hide checklist if there's a refined recipe or no additional items initially
-      setAdditionalIngredientsChecklist([]);
-      setShowRefineSection(false);
+      setAdditionalIngredientsChecklist([]); // Clear checklist otherwise
     }
 
-    // Clear refinement error if the base recipe changes or gets refined
+    // Clear refinement error if the main data changes
     setRefineError(null);
 
-  // Depend on recipe and refinedRecipe to re-evaluate checklist state
-  }, [recipe, refinedRecipe]);
+  }, [displayData, showRefinementOptions]); // Depend on displayData and showRefinementOptions
 
   const handleAvailabilityChange = (id: string, checked: boolean) => {
     setAdditionalIngredientsChecklist(prev =>
@@ -348,27 +395,24 @@ export function RecipeDisplay({
         ing.id === id ? { ...ing, available: checked } : ing
       )
     );
-     setRefineError(null); // Clear error when user interacts
+     setRefineError(null);
   };
 
   const handleRefineClick = () => {
+    if (!showRefinementOptions) return; // Guard against misuse
     setRefineError(null);
-    // Filter based on the current checklist state
     const unavailable = additionalIngredientsChecklist
       .filter(ing => !ing.available)
       .map(ing => ing.name);
-
-    onRefine(unavailable); // Pass only the names of unavailable items
+    onRefine(unavailable);
   };
 
-   // Formats the ingredients for the INITIAL recipe display
+   // Formats the ingredients for the INITIAL standard recipe display
    const formatInitialIngredientsList = (provided: string[] | undefined, additional: string[] | undefined): string => {
        if (!provided && !additional) return T.ingredientsNotAvailable;
-
        const providedItems = provided && provided.length > 0 ? provided : [];
        const additionalItems = additional && additional.length > 0 ? additional : [];
        let formattedString = "";
-
        if (providedItems.length > 0) {
            formattedString += T.mainIngredientsHeader + "\n" + providedItems.map(item => `- ${item}`).join('\n');
        }
@@ -383,42 +427,36 @@ export function RecipeDisplay({
    };
 
    // Helper function to render text content, handling markdown-like lists and paragraphs
-   const formatTextToComponent = (text: string | null | undefined) => {
-        if (!text) return <p className="text-muted-foreground italic text-base">{T.instructionsUnavailablePlaceholder}</p>; // Increased text size
+   const formatTextToComponent = (text: string | null | undefined, placeholder: string = T.instructionsUnavailablePlaceholder) => {
+        if (!text) return <p className="text-muted-foreground italic text-base">{placeholder}</p>; // Increased text size
 
         const lines = text.split('\n').map(line => line.trim()).filter(line => line !== '');
 
-        if (lines.length === 0) return <p className="text-muted-foreground italic text-base">{T.instructionsUnavailablePlaceholder}</p>; // Increased text size
+        if (lines.length === 0) return <p className="text-muted-foreground italic text-base">{placeholder}</p>; // Increased text size
 
-        // Basic check for numbered lists (e.g., 1., 2))
         const isNumberedList = lines.length > 1 && lines.every(line => /^\d+[\.\)]\s/.test(line));
-        // Basic check for markdown lists (e.g., -, *, +) or bold/headers
         const containsMarkdownFormatting = lines.some(line => /^\s*[-*+]\s/.test(line) || /^(#+|\*\*|__)/.test(line));
 
         if (isNumberedList) {
             return (
                 <ol className="list-decimal list-outside space-y-2 pl-5 text-muted-foreground text-base"> {/* Increased text size and spacing */}
                 {lines.map((line, index) => (
-                    // Use index as key is acceptable here as list order is stable for display
                     <li key={index}>{line.replace(/^\d+[\.\)]\s/, '')}</li>
                 ))}
                 </ol>
             );
         } else if (containsMarkdownFormatting) {
-             // Slightly simplified approach for markdown-like rendering
-             // Using Tailwind's typography plugin (`prose`) can handle more complex markdown automatically
-             // If not using `prose`, manual mapping is needed:
              return (
                  <div className="space-y-2.5 text-muted-foreground text-base"> {/* Increased text size and spacing */}
                     {lines.map((line, index) => {
                         if (/^\s*[-*+]\s/.test(line)) {
                             return <p key={index} className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-accent">{line.replace(/^\s*[-*+]\s/, '')}</p>;
-                        } else if (/^##+\s/.test(line)) { // h3 and lower
+                        } else if (/^##+\s/.test(line)) {
                             const level = (line.match(/^#+/) || [''])[0].length;
                             const Tag = `h${Math.min(level + 2, 6)}` as keyof JSX.IntrinsicElements;
-                            return <Tag key={index} className="font-semibold mt-4 mb-2 text-foreground">{line.replace(/^#+\s/, '')}</Tag>; // Adjusted margin
-                        } else if (/^#\s/.test(line)) { // h2
-                             return <h2 key={index} className="text-lg font-semibold mt-5 mb-2 text-foreground">{line.replace(/^#\s/, '')}</h2>; // Adjusted margin
+                            return <Tag key={index} className="font-semibold mt-4 mb-2 text-foreground">{line.replace(/^#+\s/, '')}</Tag>;
+                        } else if (/^#\s/.test(line)) {
+                             return <h2 key={index} className="text-lg font-semibold mt-5 mb-2 text-foreground">{line.replace(/^#\s/, '')}</h2>;
                          }
                         else if (/^(\*\*|__)(.*?)\1/.test(line)) {
                             return <p key={index}><strong>{line.replace(/^(\*\*|__)(.*?)\1/, '$2')}</strong></p>;
@@ -429,56 +467,53 @@ export function RecipeDisplay({
              );
         }
 
-        // If no specific format detected, render as paragraphs
-        return <div className="space-y-2.5 text-muted-foreground text-base">{lines.map((line, index) => <p key={index}>{line}</p>)}</div>; // Increased text size and spacing
+        return <div className="space-y-2.5 text-muted-foreground text-base">{lines.map((line, index) => <p key={index}>{line}</p>)}</div>;
     };
 
-    // Consolidate display data logic
-    const displayData = refinedRecipe ? {
-        name: refinedRecipe.refinedRecipeName,
-        // Use the formatted string directly from refined output
-        ingredientsText: refinedRecipe.refinedIngredients,
-        instructionsText: refinedRecipe.refinedInstructions,
-        notes: refinedRecipe.feasibilityNotes,
-    } : {
-        name: recipe.recipeName,
-        // Format ingredients based on original structure
-        ingredientsText: formatInitialIngredientsList(recipe.providedIngredients, recipe.additionalIngredients),
-        instructionsText: recipe.instructions,
-        notes: recipe.notes,
-    };
+    // Get ingredients and instructions based on the display data type
+    let currentInstructions: string | undefined | null = null;
+    let currentIngredients: string | undefined | null = null;
+    let currentRecipeName: string | undefined | null = null;
 
-    // Check if instructions are meaningful for enabling the explain button
-    const instructionsAvailable = displayData.instructionsText &&
-                                   displayData.instructionsText.trim() !== T.instructionsUnavailable &&
-                                   displayData.instructionsText.trim() !== T.instructionsUnavailablePlaceholder &&
-                                   displayData.instructionsText.trim() !== "No instructions applicable.";
+    if (displayData.type === 'standard') {
+        currentInstructions = displayData.data.instructions;
+        currentIngredients = formatInitialIngredientsList(displayData.data.providedIngredients, displayData.data.additionalIngredients);
+        currentRecipeName = displayData.data.recipeName;
+    } else if (displayData.type === 'refined') {
+        currentInstructions = displayData.data.refinedInstructions;
+        currentIngredients = displayData.data.refinedIngredients;
+        currentRecipeName = displayData.data.refinedRecipeName;
+    }
+    // No single 'instructions' or 'ingredients' for pro-menu at top level
+
+    // Check if instructions are meaningful for enabling the explain button (only for standard/refined)
+    const instructionsAvailableForExplain = displayData.type !== 'pro-menu' &&
+                                   currentInstructions &&
+                                   currentInstructions.trim() !== T.instructionsUnavailable &&
+                                   currentInstructions.trim() !== T.instructionsUnavailablePlaceholder &&
+                                   currentInstructions.trim() !== "No instructions applicable.";
 
 
     const handleExplainInstructions = () => {
-        // Re-check instructions availability just before calling
-        if (!instructionsAvailable) {
-            toast({
-                variant: "default",
-                title: T.noInstructionsToExplainTitle,
-                description: T.noInstructionsToExplainDesc,
-            });
+        if (!instructionsAvailableForExplain) {
+            toast({ variant: "default", title: T.noInstructionsToExplainTitle, description: T.noInstructionsToExplainDesc });
             return;
         }
-
         setExplainError(null);
         setDetailedInstructions(null);
 
-        // Determine which ingredients list to send (refined if available, otherwise initial)
-        const ingredientsForExplanation = refinedRecipe
-            ? refinedRecipe.refinedIngredients // Use the refined list string
-            : formatInitialIngredientsList(recipe.providedIngredients, recipe.additionalIngredients); // Use the formatted initial list
+        // Ingredients list for context depends on whether it was refined
+        const ingredientsForExplanation = displayData.type === 'refined'
+            ? displayData.data.refinedIngredients
+            : (displayData.type === 'standard' ? formatInitialIngredientsList(displayData.data.providedIngredients, displayData.data.additionalIngredients) : ''); // Should not happen for pro
+
+        const recipeNameForExplanation = displayData.type !== 'pro-menu' ? currentRecipeName || "Recipe" : "Recipe";
 
         const input: ExplainInstructionsInput = {
-            recipeName: displayData.name || "Recipe",
-            originalInstructions: displayData.instructionsText!, // Known to be available due to check above
+            recipeName: recipeNameForExplanation,
+            originalInstructions: currentInstructions!, // Known to be available due to check
             ingredientsList: ingredientsForExplanation,
-            language: languageName // Pass the full language NAME
+            language: languageName
         };
 
         startExplaining(async () => {
@@ -489,51 +524,40 @@ export function RecipeDisplay({
                 } else {
                     const errorMsg = result?.detailedExplanation || T.explanationFailedDesc;
                     setExplainError(errorMsg);
-                    toast({
-                        variant: "destructive",
-                        title: T.explanationFailedTitle,
-                        description: errorMsg,
-                    });
+                    toast({ variant: "destructive", title: T.explanationFailedTitle, description: errorMsg });
                 }
             } catch (e) {
                 console.error("Error explaining instructions:", e);
                 const errorMsg = e instanceof Error ? e.message : T.explanationErrorDesc.replace('{errorMsg}', 'Unknown error');
                 setExplainError(errorMsg);
-                toast({
-                    variant: "destructive",
-                    title: T.explanationErrorTitle,
-                    description: T.explanationErrorDesc.replace('{errorMsg}', errorMsg),
-                });
+                toast({ variant: "destructive", title: T.explanationErrorTitle, description: T.explanationErrorDesc.replace('{errorMsg}', errorMsg) });
             }
         });
     };
 
-    // Function to generate and download PDF
+    // Function to generate and download PDF (updated for menu)
     const handleDownloadPdf = async () => {
         setIsDownloading(true);
         try {
-            // Dynamically import jsPDF only on the client-side
             const { jsPDF } = await import('jspdf');
-            const doc = new jsPDF({
-                unit: "pt", // Use points for better control
-                format: "a4",
-            });
+            const doc = new jsPDF({ unit: "pt", format: "a4" });
 
             const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
             const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-            const margin = 40; // Increased margin
+            const margin = 40;
             const contentWidth = pageWidth - margin * 2;
             let currentY = margin;
-            const lineHeight = 1.4; // Line height multiplier
+            const lineHeight = 1.4;
             const titleFontSize = 20;
             const headingFontSize = 14;
+            const subHeadingFontSize = 12;
             const bodyFontSize = 10;
             const smallFontSize = 8;
 
             // Helper function to add text and handle page breaks
             const addText = (text: string, options: any, size = bodyFontSize, spacing = 5) => {
                  doc.setFontSize(size);
-                 const lines = doc.splitTextToSize(text, contentWidth);
+                 const lines = doc.splitTextToSize(text || '', contentWidth); // Handle null/undefined text
                  lines.forEach((line: string) => {
                      if (currentY + size > pageHeight - margin) {
                          doc.addPage();
@@ -549,332 +573,339 @@ export function RecipeDisplay({
             doc.setDrawColor(200, 200, 200);
             doc.rect(margin / 2, margin / 2, pageWidth - margin, pageHeight - margin);
 
-
             // --- PDF Content ---
+            if (displayData.type === 'pro-menu') {
+                const menuData = displayData.data;
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(40, 40, 40);
+                addText(menuData.menuTitle || T.proMenuTitle, { align: "center" }, titleFontSize, 10);
 
-            // Title
-             doc.setFont("helvetica", "bold");
-             doc.setTextColor(40, 40, 40); // Dark Grey
-             addText(displayData.name || "Recipe", { align: "center" }, titleFontSize, 15);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(100, 100, 100);
+                addText(menuData.eventTheme || '', { align: "center" }, subHeadingFontSize, 5);
+                addText(T.proMenuForGuests.replace('{numGuests}', String(menuData.numGuests)), { align: "center" }, subHeadingFontSize, 15);
 
-             // Optional Note
-             if (displayData.notes) {
-                 doc.setFont("helvetica", "italic");
-                 doc.setTextColor(100, 100, 100); // Grey
-                 addText(`${T.recipeNotePrefix} ${displayData.notes}`, {}, smallFontSize, 10);
-             }
+                if (menuData.chefNotes) {
+                    doc.setFont("helvetica", "italic");
+                     doc.setTextColor(80, 80, 80);
+                     addText(`${T.proMenuChefNotes} ${menuData.chefNotes}`, {}, smallFontSize, 15);
+                }
 
-             // Divider
-             doc.setLineWidth(0.5);
-             doc.setDrawColor(200, 200, 200);
-             doc.line(margin, currentY, pageWidth - margin, currentY);
-             currentY += 10;
-
-             // Ingredients
-             doc.setFont("helvetica", "bold");
-             doc.setTextColor(60, 179, 113); // Medium Sea Green (Primary-like)
-             addText(T.ingredientsTitle, {}, headingFontSize, 8);
-
-             doc.setFont("helvetica", "normal");
-             doc.setTextColor(50, 50, 50); // Near Black
-             // Improved ingredient formatting for PDF
-             const ingredientsContent = (displayData.ingredientsText || T.ingredientsUnavailable)
-                .replace(/\*\*(.*?)\*\*/g, '$1:') // Replace markdown bold with colon
-                .replace(/^- /gm, '  • '); // Replace markdown list item with bullet
-             addText(ingredientsContent, {}, bodyFontSize, 15);
-
-
-             // Divider
-             doc.line(margin, currentY, pageWidth - margin, currentY);
-             currentY += 10;
-
-             // Instructions
-             doc.setFont("helvetica", "bold");
-             doc.setTextColor(60, 179, 113);
-             addText(T.instructionsTitle, {}, headingFontSize, 8);
-
-             doc.setFont("helvetica", "normal");
-             doc.setTextColor(50, 50, 50);
-             const instructionText = displayData.instructionsText || T.instructionsUnavailable;
-             const instructionLinesRaw = instructionText.split('\n').map(l => l.trim()).filter(Boolean);
-             const instructionLinesFormatted: string[] = [];
-             instructionLinesRaw.forEach(line => {
-                 if (/^\d+[\.\)]\s/.test(line)) {
-                     instructionLinesFormatted.push(line); // Keep number for PDF
-                 } else if (/^- /gm.test(line)) {
-                      instructionLinesFormatted.push("  • " + line.replace(/^- /gm, '')); // Add bullet
-                 }
-                 else {
-                     instructionLinesFormatted.push(line);
-                 }
-             });
-             addText(instructionLinesFormatted.join('\n'), {}, bodyFontSize, 15);
-
-
-              // Detailed Explanation (if available)
-              if (detailedInstructions) {
-                    // Divider
+                // Loop through courses
+                menuData.courses?.forEach(course => {
+                    doc.setLineWidth(0.5);
+                    doc.setDrawColor(200, 200, 200);
                     doc.line(margin, currentY, pageWidth - margin, currentY);
                     currentY += 10;
 
                     doc.setFont("helvetica", "bold");
+                    doc.setTextColor(60, 179, 113); // Primary-like
+                    const courseName = course.type === 'main' ? T.proMenuCourseMain : (course.type === 'starter' ? T.proMenuCourseStarter : T.proMenuCourseDessert);
+                    addText(`${courseName}: ${course.recipeName}`, {}, headingFontSize, 8);
+
+                     doc.setFont("helvetica", "normal");
+                     doc.setTextColor(50, 50, 50);
+                     addText(T.ingredientsTitle, {}, subHeadingFontSize, 5);
+                     const ingredientsContent = (course.ingredients || T.ingredientsUnavailable)
+                         .replace(/\*\*(.*?)\*\*/g, '$1:')
+                         .replace(/^- /gm, '  • ');
+                     addText(ingredientsContent, {}, bodyFontSize, 10);
+
+                     addText(T.instructionsTitle, {}, subHeadingFontSize, 5);
+                     const instructionText = course.instructions || T.instructionsUnavailable;
+                     const instructionLinesFormatted = instructionText.split('\n')
+                         .map(l => l.trim())
+                         .filter(Boolean)
+                         .map(line => /^\d+[\.\)]\s/.test(line) ? line : (/^- /gm.test(line) ? "  • " + line.replace(/^- /gm, '') : line));
+                     addText(instructionLinesFormatted.join('\n'), {}, bodyFontSize, 15);
+                });
+
+            } else { // Standard or Refined Recipe
+                const recipeData = displayData.data;
+                const name = displayData.type === 'standard' ? recipeData.recipeName : recipeData.refinedRecipeName;
+                const notes = displayData.type === 'standard' ? recipeData.notes : recipeData.feasibilityNotes;
+                const ingredients = displayData.type === 'standard' ? formatInitialIngredientsList(recipeData.providedIngredients, recipeData.additionalIngredients) : recipeData.refinedIngredients;
+                const instructions = displayData.type === 'standard' ? recipeData.instructions : recipeData.refinedInstructions;
+
+                 doc.setFont("helvetica", "bold");
+                 doc.setTextColor(40, 40, 40);
+                 addText(name || "Recipe", { align: "center" }, titleFontSize, 15);
+
+                 if (notes) {
+                     doc.setFont("helvetica", "italic");
+                     doc.setTextColor(100, 100, 100);
+                     addText(`${T.recipeNotePrefix} ${notes}`, {}, smallFontSize, 10);
+                 }
+
+                 doc.setLineWidth(0.5);
+                 doc.setDrawColor(200, 200, 200);
+                 doc.line(margin, currentY, pageWidth - margin, currentY);
+                 currentY += 10;
+
+                 doc.setFont("helvetica", "bold");
+                 doc.setTextColor(60, 179, 113);
+                 addText(T.ingredientsTitle, {}, headingFontSize, 8);
+
+                 doc.setFont("helvetica", "normal");
+                 doc.setTextColor(50, 50, 50);
+                 const ingredientsContent = (ingredients || T.ingredientsUnavailable)
+                    .replace(/\*\*(.*?)\*\*/g, '$1:')
+                    .replace(/^- /gm, '  • ');
+                 addText(ingredientsContent, {}, bodyFontSize, 15);
+
+                 doc.line(margin, currentY, pageWidth - margin, currentY);
+                 currentY += 10;
+
+                 doc.setFont("helvetica", "bold");
+                 doc.setTextColor(60, 179, 113);
+                 addText(T.instructionsTitle, {}, headingFontSize, 8);
+
+                 doc.setFont("helvetica", "normal");
+                 doc.setTextColor(50, 50, 50);
+                 const instructionText = instructions || T.instructionsUnavailable;
+                 const instructionLinesFormatted = instructionText.split('\n')
+                      .map(l => l.trim())
+                      .filter(Boolean)
+                      .map(line => /^\d+[\.\)]\s/.test(line) ? line : (/^- /gm.test(line) ? "  • " + line.replace(/^- /gm, '') : line));
+                 addText(instructionLinesFormatted.join('\n'), {}, bodyFontSize, 15);
+
+                 // Add detailed explanation if available for standard/refined
+                 if (detailedInstructions) {
+                    doc.line(margin, currentY, pageWidth - margin, currentY);
+                    currentY += 10;
+                    doc.setFont("helvetica", "bold");
                     doc.setTextColor(60, 179, 113);
                     addText(T.detailedExplanationTitle, {}, headingFontSize, 8);
-
                     doc.setFont("helvetica", "normal");
                     doc.setTextColor(50, 50, 50);
-                    // Format explanation similarly to instructions
                     const explanationText = detailedInstructions;
-                    const explanationLinesRaw = explanationText.split('\n').map(l => l.trim()).filter(Boolean);
-                    const explanationLinesFormatted: string[] = [];
-                    explanationLinesRaw.forEach(line => {
-                         if (/^\d+[\.\)]\s/.test(line)) {
-                            explanationLinesFormatted.push(line);
-                         } else if (/^- /gm.test(line)) {
-                            explanationLinesFormatted.push("  • " + line.replace(/^- /gm, ''));
-                         } else if (/^\*\*([^*]+)\*\*/gm.test(line)) { // Basic bold handling
-                            explanationLinesFormatted.push("\n" + line.replace(/^\*\*([^*]+)\*\*/gm, '$1') + ":"); // Treat as sub-heading
-                         }
-                         else {
-                             explanationLinesFormatted.push(line);
-                         }
-                    });
+                    const explanationLinesFormatted = explanationText.split('\n')
+                        .map(l => l.trim()).filter(Boolean)
+                        .map(line => /^\d+[\.\)]\s/.test(line) ? line : (/^- /gm.test(line) ? "  • " + line.replace(/^- /gm, '') : (/^\*\*([^*]+)\*\*/gm.test(line) ? "\n" + line.replace(/^\*\*([^*]+)\*\*/gm, '$1') + ":" : line)));
                     addText(explanationLinesFormatted.join('\n'), {}, bodyFontSize, 15);
-              }
+                 }
+            }
+            // --- End PDF Content ---
 
-             // --- End PDF Content ---
-
-            // Save PDF
-            const fileName = `${(displayData.name || "recipe").replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+            const fileNameBase = (displayData.type === 'pro-menu' ? displayData.data.menuTitle : (displayData.type === 'standard' ? displayData.data.recipeName : displayData.data.refinedRecipeName)) || 'recipe_or_menu';
+            const fileName = `${fileNameBase.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
             doc.save(fileName);
 
         } catch (error) {
             console.error("Error generating PDF:", error);
-            toast({
-                variant: "destructive",
-                title: T.pdfGenerationErrorTitle,
-                description: T.pdfGenerationErrorDesc,
-            });
+            toast({ variant: "destructive", title: T.pdfGenerationErrorTitle, description: T.pdfGenerationErrorDesc });
         } finally {
             setIsDownloading(false);
         }
     };
 
+    // Show alternatives only if NOT refined and alternatives exist and NOT pro mode
+    const showAlternatives = !detailedInstructions && displayData.type === 'standard' && alternativeTypes && alternativeTypes.length > 0;
 
-    // Determine if refinement checklist or alternative types should be shown
-    const showChecklist = showRefineSection; // Relies on state set in useEffect
-    // Show alternatives only if NOT refined and alternatives exist
-    const showAlternatives = !refinedRecipe && alternativeTypes && alternativeTypes.length > 0;
-
-    // Check if the recipe is valid enough to be downloaded
-    const canDownload = (recipe || refinedRecipe) &&
-                        !displayData.name.includes("Failed") &&
-                        !displayData.name.includes("Error") &&
-                        !displayData.name.includes("Unable");
+    // Check if the recipe/menu is valid enough to be downloaded
+    const canDownload = (displayData.type === 'standard' && !displayData.data.recipeName?.includes("Failed") && !displayData.data.recipeName?.includes("Error")) ||
+                        (displayData.type === 'refined' && !displayData.data.refinedRecipeName?.includes("Failed") && !displayData.data.refinedRecipeName?.includes("Error")) ||
+                        (displayData.type === 'pro-menu' && !displayData.data.menuTitle?.includes("Failed") && !displayData.data.menuTitle?.includes("Error"));
 
 
   return (
-    <Card className="w-full border-none shadow-none bg-transparent flex flex-col h-full p-0"> {/* Removed Card padding */}
-      {/* Header is now part of the main page CardHeader */}
+    <Card className="w-full border-none shadow-none bg-transparent flex flex-col h-full p-0">
+       <ScrollArea className="flex-grow pr-3 -mr-3">
+         <CardContent className="p-0 space-y-5 text-base">
 
-       <ScrollArea className="flex-grow pr-3 -mr-3"> {/* Offset scrollbar, adjust padding if needed */}
-         <CardContent className="p-0 space-y-5 text-base"> {/* Increased base text size and spacing */}
-            {/* Ingredients Section */}
-            <div>
-              <h3 className="font-semibold text-foreground mb-2.5 flex items-center text-lg"> {/* Increased text size and margin */}
-                  <List className="h-5 w-5 mr-2 text-accent"/>
-                  {/* Use specific header if refined */}
-                  {refinedRecipe ? T.refinedIngredientsHeader : T.ingredientsTitle}
-              </h3>
-               {formatTextToComponent(displayData.ingredientsText)}
-            </div>
+            {/* --- Conditional Rendering based on displayData.type --- */}
 
-             {/* Alternative Dish Types Section */}
-             {showAlternatives && (
-                 <>
-                 <Separator className="my-4"/> {/* Increased margin */}
-                 <div className="space-y-3 rounded-md border border-dashed border-border p-4 bg-secondary/20"> {/* Increased padding */}
-                      <h3 className="font-semibold text-foreground flex items-center text-lg"> {/* Increased text size */}
-                          <Lightbulb className="h-5 w-5 mr-2 text-accent"/> {T.alternativeIdeasTitle}
-                      </h3>
-                      <p className="text-sm text-muted-foreground"> {/* Adjusted text size */}
-                          {T.alternativeIdeasDescription}
-                      </p>
-                      <div className="flex flex-wrap gap-2.5"> {/* Adjusted gap */}
-                         {alternativeTypes.map((type) => (
-                            <Button
-                                key={type}
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onSelectAlternative(type)}
-                                // Disable if any generation, refinement, or explanation is in progress
-                                disabled={isGenerating || isRefining || isExplaining || isDownloading}
-                                className="border-primary text-primary hover:bg-primary/10 text-sm h-8 px-3" // Adjusted size and text
-                                aria-live="polite"
-                            >
-                                {isGenerating ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null} {/* Adjusted icon size and margin */}
-                                {T.tryAlternativeButton.replace('{type}', type)}
-                            </Button>
-                         ))}
-                      </div>
-                 </div>
-                 </>
-             )}
-
-            {/* Refinement Checklist Section */}
-            {showChecklist && (
-                <>
-                 <Separator className="my-4"/> {/* Increased margin */}
-                 <div className="space-y-3 rounded-md border border-dashed border-border p-4 bg-secondary/20"> {/* Increased padding */}
-                     <h3 className="font-semibold text-foreground flex items-center text-lg"> {/* Increased text size */}
-                         <CheckSquare className="h-5 w-5 mr-2 text-accent"/> {T.reviewAdditionalTitle}
-                     </h3>
-                     <p className="text-sm text-muted-foreground"> {/* Adjusted text size */}
-                         {T.reviewAdditionalDescription}
-                     </p>
-                     <div className="space-y-2.5 max-h-40 overflow-y-auto pr-2"> {/* Increased max-height */}
-                        {additionalIngredientsChecklist.map((ingredient) => (
-                        <div key={ingredient.id} className="flex items-center space-x-3 p-1.5 rounded-md hover:bg-background/50"> {/* Adjusted padding */}
-                            <Checkbox
-                            id={ingredient.id}
-                            checked={ingredient.available}
-                            onCheckedChange={(checked) =>
-                                handleAvailabilityChange(ingredient.id, !!checked)
-                            }
-                            aria-labelledby={`${ingredient.id}-label`}
-                            disabled={isRefining || isExplaining || isGenerating || isDownloading} // Disable if any action is happening
-                            className="h-5 w-5" // Slightly larger checkbox
-                            />
-                            <Label
-                            htmlFor={ingredient.id}
-                            id={`${ingredient.id}-label`}
-                            className={`flex-1 text-base font-medium cursor-pointer ${!ingredient.available ? 'text-muted-foreground line-through' : 'text-foreground'}`} // Increased text size
-                            >
-                            {ingredient.name}
-                            </Label>
-                        </div>
-                        ))}
-                     </div>
-                     {refineError && (
-                        <Alert variant="destructive" className="mt-2 text-sm"> {/* Adjusted text size */}
-                            <TriangleAlert className="h-4 w-4" />
-                            <AlertTitle className="text-sm font-medium">{T.refinementInfoTitle}</AlertTitle>
-                            <AlertDescription className="text-sm">{refineError}</AlertDescription>
-                        </Alert>
-                     )}
-                     <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleRefineClick}
-                        disabled={isRefining || isExplaining || isGenerating || additionalIngredientsChecklist.length === 0 || isDownloading} // Disable if no items or downloading
-                        className="mt-3 border-primary text-primary hover:bg-primary/10 w-full sm:w-auto text-sm h-9 px-4 shadow-sm" // Adjusted size, text, and added shadow
-                        aria-live="polite"
-                     >
-                        {isRefining ? (
-                            <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            {T.refiningButton}
-                            </>
-                        ) : (
-                            <>
-                            <Sparkles className="mr-2 h-4 w-4" />
-                            {T.refineRecipeButton}
-                            </>
-                        )}
-                     </Button>
-                 </div>
-                </>
-            )}
-
-            {/* Instructions Section */}
-            <Separator className="my-4"/> {/* Increased margin */}
-            <div>
-               <div className="flex justify-between items-center mb-2.5 flex-wrap gap-2"> {/* Adjusted margin and added wrap */}
-                   <h3 className="font-semibold text-foreground flex items-center text-lg"><CookingPot className="h-5 w-5 mr-2 text-accent"/>{T.instructionsTitle}</h3>
-                   <div className="flex items-center gap-2">
-                        {/* Show explain button only if instructions are available and not currently explaining/loading */}
-                        {!detailedInstructions && instructionsAvailable && (
-                             <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={handleExplainInstructions}
-                                disabled={isExplaining || isRefining || isGenerating || isDownloading} // Disable if any action happening
-                                className="text-primary hover:bg-primary/10 h-8 px-3 text-sm" // Adjusted size and text
-                            >
-                                {isExplaining ? (
-                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                ) : (
-                                    <Info className="h-4 w-4 mr-1.5" />
-                                )}
-                                 {T.explainStepsButton}
-                            </Button>
-                        )}
-                        {/* Download Button */}
-                        {canDownload && (
+            {/* Pro Menu Display */}
+            {displayData.type === 'pro-menu' && (
+                <div className="space-y-6">
+                    {displayData.data.courses?.map((course, index) => {
+                         const CourseIcon = courseIcons[course.type] || Utensils; // Default icon
+                         const courseName = course.type === 'main' ? T.proMenuCourseMain : (course.type === 'starter' ? T.proMenuCourseStarter : T.proMenuCourseDessert);
+                        return (
+                            <div key={index} className="border-b border-border pb-5 last:border-b-0">
+                                <h3 className="font-semibold text-foreground mb-2.5 flex items-center text-xl gap-2">
+                                    <CourseIcon className="h-5 w-5 text-accent"/>
+                                    {courseName}: {course.recipeName}
+                                </h3>
+                                <div className="pl-4 space-y-4">
+                                    <div>
+                                        <h4 className="font-medium text-foreground/90 mb-1.5 text-lg">{T.ingredientsTitle}</h4>
+                                        {formatTextToComponent(course.ingredients, T.ingredientsUnavailablePlaceholder)}
+                                    </div>
+                                    <div>
+                                         <h4 className="font-medium text-foreground/90 mb-1.5 text-lg">{T.instructionsTitle}</h4>
+                                        {formatTextToComponent(course.instructions)}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {/* Download Button for Pro Menu */}
+                    {canDownload && (
+                        <div className="pt-4">
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={handleDownloadPdf}
                                 disabled={isDownloading || isGenerating || isRefining || isExplaining}
-                                className="border-primary text-primary hover:bg-primary/10 h-8 px-3 text-sm"
+                                className="border-primary text-primary hover:bg-primary/10 h-9 px-4 text-sm w-full"
                             >
-                                {isDownloading ? (
-                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                                ) : (
-                                    <Download className="h-4 w-4 mr-1.5" />
-                                )}
+                                {isDownloading ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Download className="h-4 w-4 mr-1.5" />}
                                 {isDownloading ? T.downloadingRecipe : T.downloadRecipeButton}
                             </Button>
-                        )}
-                   </div>
-               </div>
+                        </div>
+                     )}
+                </div>
+            )}
 
-               <div className="text-muted-foreground">
-                 {formatTextToComponent(displayData.instructionsText)}
-               </div>
+            {/* Standard or Refined Recipe Display */}
+            {(displayData.type === 'standard' || displayData.type === 'refined') && (
+                <>
+                    {/* Ingredients Section */}
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-2.5 flex items-center text-lg">
+                          <List className="h-5 w-5 mr-2 text-accent"/>
+                          {displayData.type === 'refined' ? T.refinedIngredientsHeader : T.ingredientsTitle}
+                      </h3>
+                       {formatTextToComponent(currentIngredients, T.ingredientsUnavailablePlaceholder)}
+                    </div>
 
-                {/* Explanation Accordion */}
-                {(isExplaining || explainError || detailedInstructions) && (
-                     <Accordion type="single" collapsible className="w-full mt-5" defaultValue={detailedInstructions ? "item-1" : undefined}> {/* Increased margin */}
-                        <AccordionItem value="item-1">
-                             <AccordionTrigger
-                                className={`text-primary hover:no-underline text-base py-2.5 ${detailedInstructions ? '' : 'cursor-default pointer-events-none'} [&[data-state=open]>svg]:text-primary`} // Adjusted size, make chevron primary when open
-                                disabled={!detailedInstructions || isExplaining || isDownloading} // Disable trigger if no details, loading or downloading
+                     {/* Alternative Dish Types Section (Only for standard initial) */}
+                     {showAlternatives && (
+                         <>
+                         <Separator className="my-4"/>
+                         <div className="space-y-3 rounded-md border border-dashed border-border p-4 bg-secondary/20">
+                              <h3 className="font-semibold text-foreground flex items-center text-lg">
+                                  <Lightbulb className="h-5 w-5 mr-2 text-accent"/> {T.alternativeIdeasTitle}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                  {T.alternativeIdeasDescription}
+                              </p>
+                              <div className="flex flex-wrap gap-2.5">
+                                 {alternativeTypes.map((type) => (
+                                    <Button
+                                        key={type}
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => onSelectAlternative(type)}
+                                        disabled={isGenerating || isRefining || isExplaining || isDownloading}
+                                        className="border-primary text-primary hover:bg-primary/10 text-sm h-8 px-3"
+                                        aria-live="polite"
+                                    >
+                                        {isGenerating ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
+                                        {T.tryAlternativeButton.replace('{type}', type)}
+                                    </Button>
+                                 ))}
+                              </div>
+                         </div>
+                         </>
+                     )}
+
+                    {/* Refinement Checklist Section (Only if prop allows) */}
+                    {showRefinementOptions && (
+                        <>
+                         <Separator className="my-4"/>
+                         <div className="space-y-3 rounded-md border border-dashed border-border p-4 bg-secondary/20">
+                             <h3 className="font-semibold text-foreground flex items-center text-lg">
+                                 <CheckSquare className="h-5 w-5 mr-2 text-accent"/> {T.reviewAdditionalTitle}
+                             </h3>
+                             <p className="text-sm text-muted-foreground">
+                                 {T.reviewAdditionalDescription}
+                             </p>
+                             <div className="space-y-2.5 max-h-40 overflow-y-auto pr-2">
+                                {additionalIngredientsChecklist.map((ingredient) => (
+                                <div key={ingredient.id} className="flex items-center space-x-3 p-1.5 rounded-md hover:bg-background/50">
+                                    <Checkbox
+                                    id={ingredient.id}
+                                    checked={ingredient.available}
+                                    onCheckedChange={(checked) => handleAvailabilityChange(ingredient.id, !!checked)}
+                                    aria-labelledby={`${ingredient.id}-label`}
+                                    disabled={isRefining || isExplaining || isGenerating || isDownloading}
+                                    className="h-5 w-5"
+                                    />
+                                    <Label
+                                    htmlFor={ingredient.id}
+                                    id={`${ingredient.id}-label`}
+                                    className={`flex-1 text-base font-medium cursor-pointer ${!ingredient.available ? 'text-muted-foreground line-through' : 'text-foreground'}`}
+                                    >
+                                    {ingredient.name}
+                                    </Label>
+                                </div>
+                                ))}
+                             </div>
+                             {refineError && (
+                                <Alert variant="destructive" className="mt-2 text-sm">
+                                    <TriangleAlert className="h-4 w-4" />
+                                    <AlertTitle className="text-sm font-medium">{T.refinementInfoTitle}</AlertTitle>
+                                    <AlertDescription className="text-sm">{refineError}</AlertDescription>
+                                </Alert>
+                             )}
+                             <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleRefineClick}
+                                disabled={isRefining || isExplaining || isGenerating || additionalIngredientsChecklist.length === 0 || isDownloading}
+                                className="mt-3 border-primary text-primary hover:bg-primary/10 w-full sm:w-auto text-sm h-9 px-4 shadow-sm"
+                                aria-live="polite"
                              >
-                                {isExplaining ? (
-                                    <span className="flex items-center"><Loader2 className="h-4 w-4 animate-spin mr-2" />{T.fetchingDetails}</span>
-                                ) : explainError ? (
-                                    <span className="flex items-center text-destructive"><TriangleAlert className="h-4 w-4 mr-2" />{T.explanationError}</span>
-                                ) : (
-                                     <span className="flex items-center"><Info className="h-4 w-4 mr-2" />{T.viewDetailedExplanation}</span>
+                                {isRefining ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />{T.refiningButton}</>)
+                                            : (<><Sparkles className="mr-2 h-4 w-4" />{T.refineRecipeButton}</>)}
+                             </Button>
+                         </div>
+                        </>
+                    )}
+
+                    {/* Instructions Section */}
+                    <Separator className="my-4"/>
+                    <div>
+                       <div className="flex justify-between items-center mb-2.5 flex-wrap gap-2">
+                           <h3 className="font-semibold text-foreground flex items-center text-lg"><CookingPot className="h-5 w-5 mr-2 text-accent"/>{T.instructionsTitle}</h3>
+                           <div className="flex items-center gap-2">
+                                {/* Explain Button (Only for standard/refined) */}
+                                {!detailedInstructions && instructionsAvailableForExplain && (
+                                     <Button variant="ghost" size="sm" onClick={handleExplainInstructions} disabled={isExplaining || isRefining || isGenerating || isDownloading} className="text-primary hover:bg-primary/10 h-8 px-3 text-sm">
+                                        {isExplaining ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Info className="h-4 w-4 mr-1.5" />}
+                                         {T.explainStepsButton}
+                                    </Button>
                                 )}
-                             </AccordionTrigger>
-                            <AccordionContent className="pt-3 pb-1"> {/* Adjusted padding */}
-                                {isExplaining ? (
-                                    <div className="flex items-center text-muted-foreground p-4 text-base"> {/* Increased text size */}
-                                        <Loader2 className="h-5 w-5 animate-spin mr-2.5" /> {T.loadingExplanation}
-                                    </div>
-                                ) : explainError ? (
-                                    <Alert variant="destructive" className="text-sm my-2"> {/* Adjusted text size */}
-                                        <TriangleAlert className="h-4 w-4" />
-                                        <AlertTitle className="text-sm font-medium">{T.errorTitle}</AlertTitle>
-                                        <AlertDescription className="text-sm">{explainError}</AlertDescription>
-                                    </Alert>
-                                ) : detailedInstructions ? (
-                                     <div className="text-muted-foreground text-base"> {/* Increased text size */}
-                                        {formatTextToComponent(detailedInstructions)}
-                                    </div>
-                                ) : null /* Should not happen if trigger is disabled properly */}
-                            </AccordionContent>
-                        </AccordionItem>
-                     </Accordion>
-                )}
-
-            </div>
-
+                                {/* Download Button (Standard/Refined) */}
+                                {canDownload && (
+                                    <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isDownloading || isGenerating || isRefining || isExplaining} className="border-primary text-primary hover:bg-primary/10 h-8 px-3 text-sm">
+                                        {isDownloading ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Download className="h-4 w-4 mr-1.5" />}
+                                        {isDownloading ? T.downloadingRecipe : T.downloadRecipeButton}
+                                    </Button>
+                                )}
+                           </div>
+                       </div>
+                       <div className="text-muted-foreground">
+                         {formatTextToComponent(currentInstructions)}
+                       </div>
+                        {/* Explanation Accordion (Only for standard/refined) */}
+                        {(isExplaining || explainError || detailedInstructions) && (
+                             <Accordion type="single" collapsible className="w-full mt-5" defaultValue={detailedInstructions ? "item-1" : undefined}>
+                                <AccordionItem value="item-1">
+                                     <AccordionTrigger className={`text-primary hover:no-underline text-base py-2.5 ${detailedInstructions ? '' : 'cursor-default pointer-events-none'} [&[data-state=open]>svg]:text-primary`} disabled={!detailedInstructions || isExplaining || isDownloading}>
+                                        {isExplaining ? (<span className="flex items-center"><Loader2 className="h-4 w-4 animate-spin mr-2" />{T.fetchingDetails}</span>)
+                                                     : explainError ? (<span className="flex items-center text-destructive"><TriangleAlert className="h-4 w-4 mr-2" />{T.explanationError}</span>)
+                                                     : (<span className="flex items-center"><Info className="h-4 w-4 mr-2" />{T.viewDetailedExplanation}</span>)}
+                                     </AccordionTrigger>
+                                    <AccordionContent className="pt-3 pb-1">
+                                        {isExplaining ? (<div className="flex items-center text-muted-foreground p-4 text-base"><Loader2 className="h-5 w-5 animate-spin mr-2.5" /> {T.loadingExplanation}</div>)
+                                                      : explainError ? (<Alert variant="destructive" className="text-sm my-2"><TriangleAlert className="h-4 w-4" /><AlertTitle className="text-sm font-medium">{T.errorTitle}</AlertTitle><AlertDescription className="text-sm">{explainError}</AlertDescription></Alert>)
+                                                      : detailedInstructions ? (<div className="text-muted-foreground text-base">{formatTextToComponent(detailedInstructions)}</div>)
+                                                      : null}
+                                    </AccordionContent>
+                                </AccordionItem>
+                             </Accordion>
+                        )}
+                    </div>
+                </>
+            )}
+             {/* --- End Conditional Rendering --- */}
          </CardContent>
        </ScrollArea>
     </Card>
   );
 }
 
+    
