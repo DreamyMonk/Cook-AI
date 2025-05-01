@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -44,20 +45,20 @@ const prompt = ai.definePrompt({
     // Use the same output schema, relying on prompt instructions for content detail.
     schema: GenerateRecipeOutputSchema,
   },
-  prompt: `You are a helpful chef assisting someone with limited ingredients. Your goal is to suggest a simple recipe that primarily uses ONLY the ingredients provided.
+  prompt: `You are a helpful chef assisting someone with the ingredients they have on hand. Your goal is to suggest a simple recipe that primarily uses the main ingredients provided.
 
-Available Ingredients (Confirmed): {{{ingredients}}}
+Main Available Ingredients (Confirmed): {{{ingredients}}}
 
 Instructions for the Chef:
-1.  Analyze the available ingredients provided: {{{ingredients}}}.
-2.  Generate a recipe name, a list of ingredients needed, and step-by-step instructions.
-3.  **Crucially, the recipe MUST prioritize using ONLY the available ingredients provided.**
-4.  You MAY assume common pantry staples like **cooking oil, salt, and pepper** are available, but you MUST explicitly list them in the ingredients section under a heading like "Assumed Staples".
-5.  Do NOT include ingredients in the recipe that are not in the available list OR the assumed staples.
-6.  If you cannot create a reasonable recipe using only the provided ingredients (plus assumed staples), clearly state this. In this case:
-    *   Set 'recipeName' to something like "Recipe Not Possible with Provided Ingredients".
-    *   Explain in the 'ingredients' field why a recipe isn't feasible (e.g., "Missing key components for a balanced meal").
-    *   The 'instructions' field can be brief or empty.
+1.  Analyze the main available ingredients provided: {{{ingredients}}}.
+2.  Generate a recipe name, a list of ingredients needed (including provided and any additional), and step-by-step instructions.
+3.  **Crucially, the recipe should FEATURE the main available ingredients.** Treat them as the core components.
+4.  You MAY incorporate other common ingredients to make a complete dish, but clearly list them.
+5.  You MAY assume common pantry staples like **cooking oil, salt, and pepper** are available, but you MUST explicitly list them in the ingredients section under a heading like "Assumed Staples".
+6.  Try to be creative but realistic. If a reasonable recipe cannot be created even with some additions, state this clearly. In this case:
+    *   Set 'recipeName' to something like "Recipe Idea Blocked".
+    *   Explain in the 'ingredients' field why a recipe isn't feasible (e.g., "Missing key components for a balanced meal, even with staples").
+    *   The 'instructions' field can be brief or suggest simple ways to use individual ingredients.
 
 Respond following the output schema structure.
 `,
@@ -75,11 +76,11 @@ const generateRecipeFlow = ai.defineFlow<
   },
   async input => {
     // Basic input validation (optional, Zod handles schema validation)
-    if (!input.ingredients || input.ingredients.trim().length < 3) {
+    if (!input.ingredients || input.ingredients.trim().length === 0) { // Check for empty string too
         // Return a structured error-like response matching the schema
         return {
             recipeName: "Input Error",
-            ingredients: "No available ingredients provided or input too short.",
+            ingredients: "No available ingredients provided.",
             instructions: "Please list the ingredients you have available and confirm them.",
         };
     }
@@ -105,6 +106,10 @@ const generateRecipeFlow = ai.defineFlow<
          if (error instanceof Error) {
             // Provide more specific error message if available
             errorMessage = `AI Error: ${error.message}`;
+            // Check for specific API errors like overload
+            if (error.message.includes('503 Service Unavailable') || error.message.includes('overloaded')) {
+                 errorMessage = "The AI chef is currently very busy! Please try again in a moment.";
+            }
          }
          return {
             recipeName: "Generation Failed",

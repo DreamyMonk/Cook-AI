@@ -246,7 +246,7 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
              </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 max-h-60 overflow-y-auto pr-2">
-             <p className="text-sm text-muted-foreground">Uncheck any ingredients you don't actually have.</p>
+             <p className="text-sm text-muted-foreground">Confirm which ingredients are currently available (checked = available).</p>
             {parsedIngredients.map((ingredient) => (
               <div key={ingredient.id} className="flex items-center space-x-3 p-2 rounded-md hover:bg-secondary/50">
                 <Checkbox
@@ -273,7 +273,7 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
                type="button"
                onClick={handleGenerateClick}
                className="w-full bg-accent text-accent-foreground hover:bg-accent/90 focus:ring-accent"
-               disabled={isGenerating || isListening}
+               disabled={isGenerating || isListening || !parsedIngredients.some(ing => ing.available)} // Disable if no ingredients are available
                aria-live="polite"
              >
                {isGenerating ? (

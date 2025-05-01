@@ -33,16 +33,9 @@ export default function Home() {
       .map(item => item.name)
       .join(', ');
 
-    // Optional: Add unavailable ingredients for context (adjust prompt if needed)
-    // const unavailableIngredientsString = ingredientsList
-    //   .filter(item => !item.available)
-    //   .map(item => item.name)
-    //   .join(', ');
-    // Input for the flow could be { availableIngredients: ..., unavailableIngredients: ... }
-
     // Basic check if any available ingredients are left
      if (!availableIngredientsString) {
-       setError("No available ingredients selected. Please check some ingredients as available.");
+       setError("No available ingredients selected. Please ensure at least one ingredient is checked as available.");
        return;
      }
 
@@ -51,12 +44,19 @@ export default function Home() {
       try {
          // Pass the formatted string of available ingredients to the flow
         const result = await generateRecipe({ ingredients: availableIngredientsString });
-        if (result) {
+
+        // Check if the AI returned a failure message within the expected structure
+        if (result && (result.recipeName === "Generation Failed" || result.recipeName === "AI Error" || result.recipeName === "Input Error")) {
+             setError(result.ingredients || 'Failed to generate recipe due to an AI or input error.');
+             setRecipe(null);
+        } else if (result) {
            setRecipe(result);
         } else {
-          setError('Could not generate a recipe. The AI might be unavailable or the input was invalid.');
+          // This case might happen if the flow itself throws before returning structured output
+          setError('Could not generate a recipe. The AI might be unavailable or the request failed unexpectedly.');
         }
       } catch (e) {
+        // Catch errors thrown by the generateRecipe function itself (e.g., network issues not caught internally)
         console.error('Error generating recipe:', e);
         if (e instanceof Error) {
           // Display more specific error from AI if available
@@ -86,7 +86,7 @@ export default function Home() {
           <CardHeader>
             <CardTitle className="text-2xl font-semibold text-primary">Your Ingredients</CardTitle>
             <CardDescription>
-              Enter ingredients, then confirm availability below.
+              Enter ingredients, confirm availability, and generate!
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -122,7 +122,7 @@ export default function Home() {
                     width={300}
                     height={200}
                     className="rounded-lg mx-auto"
-                    data-ai-hint="recipe book cooking"
+                    data-ai-hint="recipe book cooking illustration" // Updated hint
                   />
                 <p>Enter ingredients, confirm availability, and click "Generate Recipe"!</p>
               </div>
