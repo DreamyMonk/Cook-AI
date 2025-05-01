@@ -5,38 +5,24 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, ChefHat, Mic, MicOff, Utensils, AlertCircle } from 'lucide-react'; // Added AlertCircle
+import { Switch } from "@/components/ui/switch"; // Import Switch
+import { Loader2, ChefHat, Utensils, AlertCircle } from 'lucide-react'; // Removed Mic, MicOff
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Added Card components
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 
 interface IngredientFormProps {
-  onSubmit: (ingredientsString: string) => void; // Changed onSubmit prop type to accept raw string
+  onSubmit: (ingredientsString: string) => void;
   isGenerating: boolean;
 }
 
-// Check for SpeechRecognition API availability
-const SpeechRecognition =
-  typeof window !== 'undefined'
-    ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    : null;
-let recognition: SpeechRecognition | null = null;
-
-if (SpeechRecognition) {
-  recognition = new SpeechRecognition();
-  recognition.continuous = false;
-  recognition.lang = 'en-US';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-}
+// Removed SpeechRecognition related code
 
 export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) {
   const { toast } = useToast();
   const [ingredientsInput, setIngredientsInput] = useState<string>('');
-  const [isListening, setIsListening] = useState(false);
-  const [speechError, setSpeechError] = useState<string | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
-
+  const [isVoiceChatEnabled, setIsVoiceChatEnabled] = useState(false); // State for the switch
 
   const handleGenerateClick = () => {
     setInputError(null); // Clear previous errors
@@ -81,100 +67,9 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
     onSubmit(nonEmptyIngredients.join(', '));
   };
 
-  // Effect to handle recognition events
-  useEffect(() => {
-    if (!recognition) return;
+  // Removed useEffect hook for speech recognition
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = event.results[0][0].transcript;
-      // Append with a comma if there's existing text
-      setIngredientsInput(prev => (prev.trim() ? `${prev.trim()}, ${transcript}` : transcript));
-      setIsListening(false);
-      toast({
-        title: "Voice input added",
-        description: "Ingredients added via microphone.",
-      });
-    };
-
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      console.error('Speech recognition error:', event.error);
-      let errorMessage = 'Speech recognition error occurred.';
-      if (event.error === 'no-speech') {
-        errorMessage = 'No speech detected. Please try again.';
-      } else if (event.error === 'audio-capture') {
-        errorMessage = 'Audio capture failed. Check microphone permissions.';
-      } else if (event.error === 'not-allowed') {
-        errorMessage = 'Microphone access denied. Please allow microphone access in your browser settings.';
-      }
-      setSpeechError(errorMessage);
-      setIsListening(false);
-      toast({
-        variant: "destructive",
-        title: "Voice Input Error",
-        description: errorMessage,
-      });
-    };
-
-    recognition.onend = () => {
-      // Ensure isListening state reflects that recognition has stopped.
-      if (isListening) {
-        setIsListening(false);
-      }
-    };
-
-    // Cleanup function to stop recognition if component unmounts while listening
-    return () => {
-      if (recognition && isListening) {
-        recognition.stop();
-      }
-    };
-  }, [isListening, toast]); // isListening is a dependency
-
-  const handleVoiceInput = () => {
-    if (!recognition) {
-      toast({
-        variant: "destructive",
-        title: "Browser Not Supported",
-        description: "Your browser does not support voice recognition.",
-      });
-      return;
-    }
-
-    if (isListening) {
-      recognition.stop();
-      // `onend` will set isListening to false
-      toast({
-        title: "Voice input stopped",
-      });
-    } else {
-      setSpeechError(null); // Clear previous speech errors
-      try {
-        recognition.start();
-        setIsListening(true);
-        toast({
-          title: "Listening...",
-          description: "Speak your ingredients clearly. Say one or multiple, separated by pauses.",
-        });
-      } catch (error) {
-        console.error("Error starting speech recognition:", error);
-        let message = 'Could not start voice recognition.';
-        if (error instanceof Error) {
-            if (error.name === 'NotAllowedError') {
-                 message = 'Microphone access denied. Please allow microphone access.';
-            } else if (error.name === 'InvalidStateError') {
-                message = 'Voice recognition is already active or processing.';
-            }
-        }
-        setSpeechError(message);
-        setIsListening(false); // Ensure state is correct if start failed
-        toast({
-          variant: "destructive",
-          title: "Voice Recognition Error",
-          description: message,
-        });
-      }
-    }
-  };
+  // Removed handleVoiceInput function
 
   return (
     <div className="space-y-4"> {/* Reduced spacing */}
@@ -193,27 +88,16 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
           <div className="relative">
             <Textarea
               id="ingredients-input"
-              placeholder="Type or use the mic..."
-              className={`resize-none min-h-[80px] bg-background focus:ring-primary pr-12 ${inputError ? 'border-destructive focus:ring-destructive' : ''}`} // Add error state styling
+              placeholder={isVoiceChatEnabled ? "Voice chat mode active..." : "Type your ingredients..."}
+              className={`resize-none min-h-[80px] bg-background focus:ring-primary ${inputError ? 'border-destructive focus:ring-destructive' : ''}`} // Add error state styling, removed pr-12
               value={ingredientsInput}
               onChange={(e) => { setIngredientsInput(e.target.value); setInputError(null); }} // Clear error on change
-              aria-label="Enter available ingredients separated by commas, or use the microphone button"
+              aria-label="Enter available ingredients separated by commas"
               aria-invalid={!!inputError} // Indicate invalid state for accessibility
-              aria-describedby="input-error-msg" // Link error message
+              aria-describedby="input-error-msg"
+              disabled={isVoiceChatEnabled} // Optionally disable textarea when voice chat is on
             />
-            {SpeechRecognition && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={handleVoiceInput}
-                className={`absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-1 ${isListening ? 'text-destructive animate-pulse' : 'text-muted-foreground hover:text-primary'}`} // Pulse when listening
-                aria-label={isListening ? "Stop listening" : "Start voice input"}
-                disabled={isGenerating} // Disable mic if main generation is happening
-              >
-                {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-              </Button>
-            )}
+            {/* Removed Mic button */}
           </div>
            {/* Input Error Display */}
            {inputError && (
@@ -222,13 +106,28 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
                     {inputError}
                 </p>
             )}
-           {/* Speech Error Display */}
-           {speechError && (
-                <p className="text-sm font-medium text-destructive flex items-center mt-1">
-                     <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0" />
-                    {speechError}
-                </p>
-           )}
+           {/* Removed Speech Error Display */}
+
+           {/* Voice Chat Switch */}
+            <div className="flex items-center space-x-2 pt-2">
+                <Switch
+                    id="voice-chat-switch"
+                    checked={isVoiceChatEnabled}
+                    onCheckedChange={setIsVoiceChatEnabled}
+                    disabled={isGenerating} // Disable if generating recipe
+                    aria-label="Toggle Interactive Voice Chat"
+                />
+                <Label htmlFor="voice-chat-switch" className="text-sm font-medium text-muted-foreground cursor-pointer">
+                    Interactive Voice Chat
+                </Label>
+            </div>
+             {/* Placeholder for Voice Chat UI/Logic */}
+             {isVoiceChatEnabled && (
+                <div className="text-sm text-primary italic p-2 border border-dashed border-primary/50 rounded-md bg-primary/10">
+                    {/* Voice Chat Interface would go here */}
+                    Voice chat interaction elements will appear here when implemented.
+                </div>
+             )}
         </CardContent>
         <CardFooter>
            {/* Generate Recipe Button */}
@@ -236,7 +135,7 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
              type="button"
              onClick={handleGenerateClick}
              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary" // Use primary color
-             disabled={isGenerating || isListening} // Disable if listening or generating
+             disabled={isGenerating || isVoiceChatEnabled} // Disable if voice chat is enabled or generating
              aria-live="polite" // Announce changes for screen readers
            >
              {isGenerating ? (
