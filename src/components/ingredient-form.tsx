@@ -367,14 +367,8 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
 
   return (
     <div className="space-y-4">
-      <Card className="bg-secondary/30 border-border/50">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium text-foreground flex items-center">
-            <Utensils className="h-5 w-5 mr-2 text-primary" />
-            {T.enterIngredientsTitle}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 pt-0">
+      {/* This Card wrapper is removed as the content is now directly inside the parent CardContent */}
+      <div className="space-y-3">
           <Label htmlFor="ingredients-input" className="text-sm text-muted-foreground">
             {T.ingredientsLabel}
           </Label>
@@ -382,7 +376,7 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
             <Textarea
               id="ingredients-input"
               placeholder={getPlaceholder()}
-              className={`resize-none min-h-[80px] bg-background focus:ring-primary ${inputError ? 'border-destructive focus:ring-destructive' : ''} ${isVoiceChatEnabled ? 'pr-12' : ''}`}
+              className={`resize-none min-h-[100px] bg-background focus:ring-primary ${inputError ? 'border-destructive focus:ring-destructive' : ''} ${isVoiceChatEnabled ? 'pr-12' : ''}`} // Increased min-height
               value={ingredientsInput}
               onChange={(e) => {
                 if (!isVoiceChatEnabled) {
@@ -400,12 +394,12 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 ${isListening ? 'text-destructive animate-pulse' : 'text-primary'}`}
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 ${isListening ? 'text-destructive animate-pulse' : 'text-primary'} hover:bg-accent/50 rounded-full`} // Adjusted size and styling
                   onClick={toggleManualListen}
                   aria-label={isListening ? T.ariaLabelStopListening : T.ariaLabelStartListening}
                   disabled={isGenerating}
                 >
-                  {isListening ? <MicOff /> : <Mic />}
+                  {isListening ? <MicOff className="h-5 w-5"/> : <Mic className="h-5 w-5"/>}
                 </Button>
              )}
           </div>
@@ -423,7 +417,7 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
                 </Alert>
              )}
 
-            <div className="flex items-center space-x-2 pt-2">
+            <div className="flex items-center space-x-2 pt-3">
                 <Switch
                     id="voice-chat-switch"
                     checked={isVoiceChatEnabled}
@@ -436,40 +430,40 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
                 </Label>
             </div>
              {isVoiceChatEnabled && voiceSupport && (
-                 <div className="text-xs text-muted-foreground italic p-2 border border-dashed border-primary/50 rounded-md bg-primary/10 flex items-center">
-                    <Info className="h-3 w-3 mr-1.5 flex-shrink-0 text-primary"/>
+                 <div className="text-xs text-muted-foreground italic p-2 border border-dashed border-accent/70 rounded-md bg-accent/10 dark:bg-accent/20 flex items-center mt-2">
+                    <Info className="h-3 w-3 mr-1.5 flex-shrink-0 text-accent"/>
                     {isListening ? T.voiceChatInfoListening : T.voiceChatInfoReady}
                  </div>
              )}
              {isVoiceChatEnabled && !voiceSupport && (
-                  <div className="text-xs text-destructive italic p-2 border border-dashed border-destructive/50 rounded-md bg-destructive/10 flex items-center">
+                  <div className="text-xs text-destructive italic p-2 border border-dashed border-destructive/50 rounded-md bg-destructive/10 dark:bg-destructive/20 flex items-center mt-2">
                      <AlertCircle className="h-3 w-3 mr-1.5 flex-shrink-0"/>
                      {T.voiceChatSupportWarning}
                   </div>
              )}
-        </CardContent>
-        <CardFooter>
+        </div>
+
+        <div className="pt-4"> {/* Added padding top for separation */}
            <Button
              type="button"
              onClick={handleGenerateClick}
-             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary"
+             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary text-base h-11 shadow-md" // Increased size and added shadow
              disabled={isGenerating || (isVoiceChatEnabled && isListening)}
              aria-live="polite"
            >
              {isGenerating ? (
                <>
-                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                 <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {/* Increased icon size */}
                  {T.generatingButtonLabel}
                </>
              ) : (
                <>
-                 <ChefHat className="mr-2 h-4 w-4" />
+                 <ChefHat className="mr-2 h-5 w-5" /> {/* Increased icon size */}
                  {T.generateButtonLabel}
                </>
              )}
            </Button>
-        </CardFooter>
-      </Card>
+        </div>
     </div>
   );
 }

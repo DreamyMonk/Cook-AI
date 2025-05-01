@@ -8,7 +8,7 @@ import { generateRecipe, type GenerateRecipeOutput } from '@/ai/flows/generate-r
 import { refineRecipe, type RefineRecipeInput, type RefineRecipeOutput } from '@/ai/flows/refine-recipe';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, UtensilsCrossed, TriangleAlert, Languages } from 'lucide-react'; // Added Languages icon
+import { Loader2, UtensilsCrossed, TriangleAlert, Languages, ChefHat } from 'lucide-react'; // Added Languages, ChefHat icons
 import Image from 'next/image';
 import {
   Select,
@@ -359,18 +359,18 @@ export default function Home() {
   const isLoading = isGenerating || isRefining;
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-start p-4 md:p-8 lg:p-12 bg-background">
-      <header className="w-full max-w-4xl mb-8 text-center">
-         <div className="flex justify-center items-center gap-4 mb-4">
-          <UtensilsCrossed className="h-10 w-10 text-primary" />
-          <h1 className="text-4xl font-bold text-primary tracking-tight">{T.title}</h1>
+    <main className="flex min-h-screen flex-col items-center justify-start p-4 md:p-8 lg:p-12 bg-gradient-to-br from-background to-secondary/30 dark:from-background dark:to-black/20">
+      <header className="w-full max-w-4xl mb-10 text-center">
+         <div className="flex justify-center items-center gap-3 mb-4">
+          <UtensilsCrossed className="h-10 w-10 text-primary drop-shadow-md" />
+          <h1 className="text-5xl font-bold text-primary tracking-tight drop-shadow-sm">{T.title}</h1>
         </div>
-        <p className="text-lg text-muted-foreground">
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           {T.tagline}
         </p>
-         <div className="mt-4 flex justify-center items-center flex-wrap gap-4">
+         <div className="mt-6 flex justify-center items-center flex-wrap gap-4">
              <Select value={selectedLanguage} onValueChange={(value) => setSelectedLanguage(value as LanguageCode)}>
-                <SelectTrigger className="w-[180px] h-9">
+                <SelectTrigger className="w-[180px] h-10 shadow-sm bg-card">
                      <Languages className="h-4 w-4 mr-2 text-muted-foreground" />
                     <SelectValue placeholder={T.selectLanguagePlaceholder} />
                 </SelectTrigger>
@@ -382,8 +382,8 @@ export default function Home() {
              </Select>
              {/* Taste Preference Dropdown */}
              <Select value={selectedTaste} onValueChange={(value) => setSelectedTaste(value as TastePreference)}>
-                <SelectTrigger className="w-[240px] h-9">
-                    {/* Consider adding a relevant icon like Utensils or similar */}
+                <SelectTrigger className="w-[240px] h-10 shadow-sm bg-card">
+                    <ChefHat className="h-4 w-4 mr-2 text-muted-foreground" />
                     <SelectValue placeholder={T.selectTastePlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
@@ -399,14 +399,16 @@ export default function Home() {
 
       <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Ingredient Form Card */}
-        <Card className="shadow-lg rounded-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl font-semibold text-primary">{T.ingredientsTitle}</CardTitle>
-            <CardDescription>
+        <Card className="shadow-xl rounded-lg overflow-hidden"> {/* Increased shadow, remove border if desired */}
+          <CardHeader className="bg-primary/10 dark:bg-primary/20 p-5">
+            <CardTitle className="text-2xl font-semibold text-primary flex items-center gap-2">
+               <ChefHat className="h-6 w-6"/> {T.ingredientsTitle}
+            </CardTitle>
+            <CardDescription className="text-muted-foreground">
               {T.ingredientsDescription}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5">
             <IngredientForm
                 onSubmit={(ingredients) => handleGenerateRecipe(ingredients)}
                 isGenerating={isLoading}
@@ -416,11 +418,13 @@ export default function Home() {
         </Card>
 
         {/* Recipe Display Card */}
-        <Card className="shadow-lg rounded-lg flex flex-col min-h-[300px] justify-between">
-          <CardHeader>
-            <CardTitle className="text-2xl font-semibold text-primary">{T.recipeTitle}</CardTitle>
+        <Card className="shadow-xl rounded-lg flex flex-col min-h-[350px] overflow-hidden"> {/* Increased shadow */}
+          <CardHeader className="bg-primary/10 dark:bg-primary/20 p-5">
+            <CardTitle className="text-2xl font-semibold text-primary flex items-center gap-2">
+                <UtensilsCrossed className="h-6 w-6"/> {T.recipeTitle}
+            </CardTitle>
              {!isLoading && !error && (recipe || refinedRecipe) && (
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                     {refinedRecipe ? T.recipeDescriptionRefined : (recipe ? T.recipeDescriptionGenerated : "")}
                     {/* Display notes from either refined or original recipe */}
                     {(refinedRecipe?.feasibilityNotes || recipe?.notes) && (
@@ -431,12 +435,12 @@ export default function Home() {
                 </CardDescription>
              )}
              {!recipe && !refinedRecipe && !isLoading && !error && (
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                     {T.recipeDescriptionPlaceholder}
                 </CardDescription>
              )}
              {isLoading && (
-                 <CardDescription>
+                 <CardDescription className="text-muted-foreground">
                     {T.loadingPlaceholder}
                  </CardDescription>
              )}
@@ -446,16 +450,16 @@ export default function Home() {
                  </CardDescription>
              )}
           </CardHeader>
-          <CardContent className="flex-grow flex items-center justify-center">
+          <CardContent className="p-5 flex-grow flex items-center justify-center bg-card"> {/* Use bg-card for content */}
             {isLoading ? (
-              <div className="flex flex-col items-center text-muted-foreground">
-                <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                <p>{isGenerating ? T.generatingAltText : T.refiningAltText}</p>
+              <div className="flex flex-col items-center text-muted-foreground text-center p-8">
+                <Loader2 className="h-16 w-16 animate-spin text-primary mb-6" />
+                <p className="text-lg">{isGenerating ? T.generatingAltText : T.refiningAltText}</p>
               </div>
             ) : error ? (
-               <Alert variant="destructive" className="w-full">
-                  <TriangleAlert className="h-4 w-4" />
-                  <AlertTitle>{T.errorTitle}</AlertTitle>
+               <Alert variant="destructive" className="w-full m-4">
+                  <TriangleAlert className="h-5 w-5" />
+                  <AlertTitle className="text-lg">{T.errorTitle}</AlertTitle>
                   <AlertDescription>{error}</AlertDescription>
                </Alert>
             ) : recipe ? ( // Pass original recipe if available, refinedRecipe overlays parts of it
@@ -472,24 +476,24 @@ export default function Home() {
               />
             ) : (
               // Initial placeholder state
-              <div className="text-center text-muted-foreground space-y-4">
+              <div className="text-center text-muted-foreground space-y-6 p-8">
                  <Image
-                    src="https://picsum.photos/seed/recipebook/300/200"
+                    src="https://picsum.photos/seed/recipebook2/350/230" // Slightly larger placeholder
                     alt="Empty plate waiting for a recipe"
-                    width={300}
-                    height={200}
-                    className="rounded-lg mx-auto shadow-md"
-                    data-ai-hint="recipe book cooking illustration chef"
+                    width={350}
+                    height={230}
+                    className="rounded-lg mx-auto shadow-lg border border-border" // Add border
+                    data-ai-hint="recipe book cooking illustration chef kitchen"
                     priority
                   />
-                <p>{T.recipeDescriptionPlaceholder}</p>
+                <p className="text-lg">{T.recipeDescriptionPlaceholder}</p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
 
-      <footer className="mt-12 text-center text-sm text-muted-foreground">
+      <footer className="mt-16 text-center text-sm text-muted-foreground/80">
         {/* Updated Footer Text */}
         <p>&copy; {new Date().getFullYear()} {T.footerText}</p>
       </footer>

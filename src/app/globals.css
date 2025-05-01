@@ -8,31 +8,31 @@ body {
 
 @layer base {
   :root {
-    --background: 40 50% 98%; /* Light beige */
-    --foreground: 240 10% 3.9%; /* Darker text */
+    --background: 40 50% 98%; /* Light beige - Keep */
+    --foreground: 240 10% 3.9%; /* Darker text - Keep */
     --card: 40 50% 98%; /* Match background */
     --card-foreground: 240 10% 3.9%; /* Match foreground */
     --popover: 40 50% 98%; /* Match background */
     --popover-foreground: 240 10% 3.9%; /* Match foreground */
-    --primary: 145 63% 42%; /* Darker Green for primary interactive elements */
-    --primary-foreground: 40 50% 98%; /* Contrast for primary */
-    --secondary: 145 20% 94%; /* Lighter Green shade */
-    --secondary-foreground: 145 63% 30%; /* Darker Green for text on secondary */
-    --muted: 145 20% 96%; /* Very light green/grey */
-    --muted-foreground: 240 4% 46%; /* Greyish text */
-    --accent: 84 65% 68%; /* Yellow-green #B0E379 */
-    --accent-foreground: 145 63% 20%; /* Dark Green for text on accent */
+    --primary: 145 63% 40%; /* Slightly darken primary green */
+    --primary-foreground: 40 50% 99%; /* Slightly lighter contrast for primary */
+    --secondary: 145 25% 94%; /* Adjust secondary green */
+    --secondary-foreground: 145 63% 28%; /* Darken text on secondary */
+    --muted: 145 25% 96.5%; /* Adjust muted green/grey */
+    --muted-foreground: 240 5% 45%; /* Slightly adjust greyish text */
+    --accent: 84 65% 65%; /* Slightly desaturate accent yellow-green */
+    --accent-foreground: 145 63% 15%; /* Darker Green for text on accent */
     --destructive: 0 84.2% 60.2%; /* Default */
     --destructive-foreground: 0 0% 98%; /* Default */
-    --border: 145 20% 88%; /* Light green border */
-    --input: 145 20% 91%; /* Slightly darker green for input */
-    --ring: 145 63% 49%; /* Main green for focus rings */
+    --border: 145 20% 85%; /* Adjust border color */
+    --input: 145 20% 92%; /* Adjust input background */
+    --ring: 145 63% 45%; /* Adjust focus ring */
     --chart-1: 145 70% 45%;
     --chart-2: 84 65% 60%;
     --chart-3: 40 60% 70%;
     --chart-4: 145 40% 60%;
     --chart-5: 84 40% 50%;
-    --radius: 0.5rem;
+    --radius: 0.75rem; /* Increase radius for softer corners */
     /* Sidebar specific colors (can be adjusted if sidebar is used) */
     --sidebar-background: 145 20% 97%;
     --sidebar-foreground: 145 63% 30%;
@@ -44,24 +44,24 @@ body {
     --sidebar-ring: 145 63% 49%;
   }
   .dark {
-    --background: 145 15% 10%; /* Dark Green/Grey */
-    --foreground: 40 30% 95%; /* Light beige text */
-    --card: 145 15% 12%; /* Slightly lighter dark */
+    --background: 145 15% 10%; /* Dark Green/Grey - Keep */
+    --foreground: 40 30% 95%; /* Light beige text - Keep */
+    --card: 145 15% 12%; /* Slightly lighter dark - Keep */
     --card-foreground: 40 30% 95%;
     --popover: 145 15% 10%;
     --popover-foreground: 40 30% 95%;
-    --primary: 145 63% 55%; /* Brighter Green */
-    --primary-foreground: 145 90% 10%; /* Dark green contrast */
-    --secondary: 145 20% 20%; /* Darker muted green */
-    --secondary-foreground: 145 50% 80%; /* Lighter green text */
-    --muted: 145 15% 15%; /* Very dark muted */
-    --muted-foreground: 240 4% 65%; /* Lighter grey text */
-    --accent: 84 65% 68%; /* Keep accent vibrant */
-    --accent-foreground: 145 63% 20%; /* Dark Green */
-    --destructive: 0 70% 50%; /* Default Dark */
+    --primary: 145 60% 55%; /* Slightly adjust primary green */
+    --primary-foreground: 145 90% 8%; /* Darken contrast for primary */
+    --secondary: 145 20% 18%; /* Adjust secondary dark green */
+    --secondary-foreground: 145 50% 85%; /* Adjust text on secondary */
+    --muted: 145 15% 14%; /* Adjust muted dark */
+    --muted-foreground: 240 4% 60%; /* Adjust grey text */
+    --accent: 84 65% 65%; /* Keep accent vibrant */
+    --accent-foreground: 145 63% 15%; /* Dark Green */
+    --destructive: 0 62.8% 50.6%; /* Default Dark */
     --destructive-foreground: 0 0% 98%; /* Default Dark */
-    --border: 145 20% 25%; /* Darker green border */
-    --input: 145 20% 18%; /* Darker input */
+    --border: 145 20% 22%; /* Adjust border */
+    --input: 145 20% 16%; /* Adjust input */
     --ring: 145 63% 49%; /* Main Green */
     --chart-1: 145 70% 55%;
     --chart-2: 84 65% 70%;

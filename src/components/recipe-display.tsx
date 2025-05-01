@@ -352,11 +352,11 @@ export function RecipeDisplay({
 
    // Helper function to render text content, handling markdown-like lists and paragraphs
    const formatTextToComponent = (text: string | null | undefined) => {
-        if (!text) return <p className="text-muted-foreground italic">{T.instructionsUnavailablePlaceholder}</p>;
+        if (!text) return <p className="text-muted-foreground italic text-base">{T.instructionsUnavailablePlaceholder}</p>; // Increased text size
 
         const lines = text.split('\n').map(line => line.trim()).filter(line => line !== '');
 
-        if (lines.length === 0) return <p className="text-muted-foreground italic">{T.instructionsUnavailablePlaceholder}</p>;
+        if (lines.length === 0) return <p className="text-muted-foreground italic text-base">{T.instructionsUnavailablePlaceholder}</p>; // Increased text size
 
         // Basic check for numbered lists (e.g., 1., 2))
         const isNumberedList = lines.length > 1 && lines.every(line => /^\d+[\.\)]\s/.test(line));
@@ -365,7 +365,7 @@ export function RecipeDisplay({
 
         if (isNumberedList) {
             return (
-                <ol className="list-decimal list-outside space-y-1.5 pl-5 text-muted-foreground">
+                <ol className="list-decimal list-outside space-y-2 pl-5 text-muted-foreground text-base"> {/* Increased text size and spacing */}
                 {lines.map((line, index) => (
                     // Use index as key is acceptable here as list order is stable for display
                     <li key={index}>{line.replace(/^\d+[\.\)]\s/, '')}</li>
@@ -377,16 +377,16 @@ export function RecipeDisplay({
              // Using Tailwind's typography plugin (`prose`) can handle more complex markdown automatically
              // If not using `prose`, manual mapping is needed:
              return (
-                 <div className="space-y-2 text-muted-foreground">
+                 <div className="space-y-2.5 text-muted-foreground text-base"> {/* Increased text size and spacing */}
                     {lines.map((line, index) => {
                         if (/^\s*[-*+]\s/.test(line)) {
                             return <p key={index} className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-accent">{line.replace(/^\s*[-*+]\s/, '')}</p>;
                         } else if (/^##+\s/.test(line)) { // h3 and lower
                             const level = (line.match(/^#+/) || [''])[0].length;
                             const Tag = `h${Math.min(level + 2, 6)}` as keyof JSX.IntrinsicElements;
-                            return <Tag key={index} className="font-semibold mt-3 mb-1 text-foreground">{line.replace(/^#+\s/, '')}</Tag>;
+                            return <Tag key={index} className="font-semibold mt-4 mb-2 text-foreground">{line.replace(/^#+\s/, '')}</Tag>; // Adjusted margin
                         } else if (/^#\s/.test(line)) { // h2
-                             return <h2 key={index} className="text-lg font-semibold mt-4 mb-1 text-foreground">{line.replace(/^#\s/, '')}</h2>;
+                             return <h2 key={index} className="text-lg font-semibold mt-5 mb-2 text-foreground">{line.replace(/^#\s/, '')}</h2>; // Adjusted margin
                          }
                         else if (/^(\*\*|__)(.*?)\1/.test(line)) {
                             return <p key={index}><strong>{line.replace(/^(\*\*|__)(.*?)\1/, '$2')}</strong></p>;
@@ -398,7 +398,7 @@ export function RecipeDisplay({
         }
 
         // If no specific format detected, render as paragraphs
-        return <div className="space-y-2 text-muted-foreground">{lines.map((line, index) => <p key={index}>{line}</p>)}</div>;
+        return <div className="space-y-2.5 text-muted-foreground text-base">{lines.map((line, index) => <p key={index}>{line}</p>)}</div>; // Increased text size and spacing
     };
 
     // Consolidate display data logic
@@ -484,22 +484,15 @@ export function RecipeDisplay({
 
 
   return (
-    <Card className="w-full border-none shadow-none bg-transparent flex flex-col h-full">
-      <CardHeader className="p-0 mb-4">
-        <CardTitle className="text-xl font-semibold text-primary mb-1">{displayData.name}</CardTitle>
-         {displayData.notes && (
-            <CardDescription className="text-xs italic mt-1 text-muted-foreground">
-                {T.recipeNotePrefix} {displayData.notes}
-            </CardDescription>
-         )}
-      </CardHeader>
+    <Card className="w-full border-none shadow-none bg-transparent flex flex-col h-full p-0"> {/* Removed Card padding */}
+      {/* Header is now part of the main page CardHeader */}
 
-       <ScrollArea className="flex-grow pr-3 -mr-3"> {/* Offset scrollbar */}
-         <CardContent className="p-0 space-y-4 text-sm">
+       <ScrollArea className="flex-grow pr-3 -mr-3"> {/* Offset scrollbar, adjust padding if needed */}
+         <CardContent className="p-0 space-y-5 text-base"> {/* Increased base text size and spacing */}
             {/* Ingredients Section */}
             <div>
-              <h3 className="font-semibold text-foreground mb-2 flex items-center">
-                  <List className="h-4 w-4 mr-2 text-accent"/>
+              <h3 className="font-semibold text-foreground mb-2.5 flex items-center text-lg"> {/* Increased text size and margin */}
+                  <List className="h-5 w-5 mr-2 text-accent"/>
                   {/* Use specific header if refined */}
                   {refinedRecipe ? T.refinedIngredientsHeader : T.ingredientsTitle}
               </h3>
@@ -509,15 +502,15 @@ export function RecipeDisplay({
              {/* Alternative Dish Types Section */}
              {showAlternatives && (
                  <>
-                 <Separator className="my-3"/>
-                 <div className="space-y-3 rounded-md border border-dashed border-border p-3 bg-secondary/20">
-                      <h3 className="font-semibold text-foreground flex items-center text-base">
+                 <Separator className="my-4"/> {/* Increased margin */}
+                 <div className="space-y-3 rounded-md border border-dashed border-border p-4 bg-secondary/20"> {/* Increased padding */}
+                      <h3 className="font-semibold text-foreground flex items-center text-lg"> {/* Increased text size */}
                           <Lightbulb className="h-5 w-5 mr-2 text-accent"/> {T.alternativeIdeasTitle}
                       </h3>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-sm text-muted-foreground"> {/* Adjusted text size */}
                           {T.alternativeIdeasDescription}
                       </p>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2.5"> {/* Adjusted gap */}
                          {alternativeTypes.map((type) => (
                             <Button
                                 key={type}
@@ -526,10 +519,10 @@ export function RecipeDisplay({
                                 onClick={() => onSelectAlternative(type)}
                                 // Disable if any generation, refinement, or explanation is in progress
                                 disabled={isGenerating || isRefining || isExplaining}
-                                className="border-primary text-primary hover:bg-primary/10 text-xs h-7 px-2"
+                                className="border-primary text-primary hover:bg-primary/10 text-sm h-8 px-3" // Adjusted size and text
                                 aria-live="polite"
                             >
-                                {isGenerating ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
+                                {isGenerating ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null} {/* Adjusted icon size and margin */}
                                 {T.tryAlternativeButton.replace('{type}', type)}
                             </Button>
                          ))}
@@ -541,17 +534,17 @@ export function RecipeDisplay({
             {/* Refinement Checklist Section */}
             {showChecklist && (
                 <>
-                 <Separator className="my-3"/>
-                 <div className="space-y-3 rounded-md border border-dashed border-border p-3 bg-secondary/20">
-                     <h3 className="font-semibold text-foreground flex items-center text-base">
+                 <Separator className="my-4"/> {/* Increased margin */}
+                 <div className="space-y-3 rounded-md border border-dashed border-border p-4 bg-secondary/20"> {/* Increased padding */}
+                     <h3 className="font-semibold text-foreground flex items-center text-lg"> {/* Increased text size */}
                          <CheckSquare className="h-5 w-5 mr-2 text-accent"/> {T.reviewAdditionalTitle}
                      </h3>
-                     <p className="text-xs text-muted-foreground">
+                     <p className="text-sm text-muted-foreground"> {/* Adjusted text size */}
                          {T.reviewAdditionalDescription}
                      </p>
-                     <div className="space-y-2 max-h-32 overflow-y-auto pr-2">
+                     <div className="space-y-2.5 max-h-40 overflow-y-auto pr-2"> {/* Increased max-height */}
                         {additionalIngredientsChecklist.map((ingredient) => (
-                        <div key={ingredient.id} className="flex items-center space-x-3 p-1 rounded-md hover:bg-background/50">
+                        <div key={ingredient.id} className="flex items-center space-x-3 p-1.5 rounded-md hover:bg-background/50"> {/* Adjusted padding */}
                             <Checkbox
                             id={ingredient.id}
                             checked={ingredient.available}
@@ -560,11 +553,12 @@ export function RecipeDisplay({
                             }
                             aria-labelledby={`${ingredient.id}-label`}
                             disabled={isRefining || isExplaining || isGenerating} // Disable if any action is happening
+                            className="h-5 w-5" // Slightly larger checkbox
                             />
                             <Label
                             htmlFor={ingredient.id}
                             id={`${ingredient.id}-label`}
-                            className={`flex-1 text-sm font-medium cursor-pointer ${!ingredient.available ? 'text-muted-foreground line-through' : 'text-foreground'}`}
+                            className={`flex-1 text-base font-medium cursor-pointer ${!ingredient.available ? 'text-muted-foreground line-through' : 'text-foreground'}`} // Increased text size
                             >
                             {ingredient.name}
                             </Label>
@@ -572,10 +566,10 @@ export function RecipeDisplay({
                         ))}
                      </div>
                      {refineError && (
-                        <Alert variant="destructive" className="mt-2 text-xs">
-                            <TriangleAlert className="h-3 w-3" />
-                            <AlertTitle className="text-xs font-medium">{T.refinementInfoTitle}</AlertTitle>
-                            <AlertDescription className="text-xs">{refineError}</AlertDescription>
+                        <Alert variant="destructive" className="mt-2 text-sm"> {/* Adjusted text size */}
+                            <TriangleAlert className="h-4 w-4" />
+                            <AlertTitle className="text-sm font-medium">{T.refinementInfoTitle}</AlertTitle>
+                            <AlertDescription className="text-sm">{refineError}</AlertDescription>
                         </Alert>
                      )}
                      <Button
@@ -583,7 +577,7 @@ export function RecipeDisplay({
                         size="sm"
                         onClick={handleRefineClick}
                         disabled={isRefining || isExplaining || isGenerating || additionalIngredientsChecklist.length === 0} // Disable if no items
-                        className="mt-2 border-primary text-primary hover:bg-primary/10 w-full sm:w-auto"
+                        className="mt-3 border-primary text-primary hover:bg-primary/10 w-full sm:w-auto text-sm h-9 px-4 shadow-sm" // Adjusted size, text, and added shadow
                         aria-live="polite"
                      >
                         {isRefining ? (
@@ -603,10 +597,10 @@ export function RecipeDisplay({
             )}
 
             {/* Instructions Section */}
-            <Separator className="my-3"/>
+            <Separator className="my-4"/> {/* Increased margin */}
             <div>
-               <div className="flex justify-between items-center mb-2">
-                   <h3 className="font-semibold text-foreground flex items-center"><CookingPot className="h-4 w-4 mr-2 text-accent"/>{T.instructionsTitle}</h3>
+               <div className="flex justify-between items-center mb-2.5"> {/* Adjusted margin */}
+                   <h3 className="font-semibold text-foreground flex items-center text-lg"><CookingPot className="h-5 w-5 mr-2 text-accent"/>{T.instructionsTitle}</h3>
                     {/* Show explain button only if instructions are available and not currently explaining/loading */}
                     {!detailedInstructions && instructionsAvailable && (
                          <Button
@@ -614,12 +608,12 @@ export function RecipeDisplay({
                             size="sm"
                             onClick={handleExplainInstructions}
                             disabled={isExplaining || isRefining || isGenerating} // Disable if any action happening
-                            className="text-primary hover:bg-primary/10 h-7 px-2"
+                            className="text-primary hover:bg-primary/10 h-8 px-3 text-sm" // Adjusted size and text
                         >
                             {isExplaining ? (
-                                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                                <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
                             ) : (
-                                <Info className="h-4 w-4 mr-1" />
+                                <Info className="h-4 w-4 mr-1.5" />
                             )}
                              {T.explainStepsButton}
                         </Button>
@@ -632,10 +626,10 @@ export function RecipeDisplay({
 
                 {/* Explanation Accordion */}
                 {(isExplaining || explainError || detailedInstructions) && (
-                     <Accordion type="single" collapsible className="w-full mt-4" defaultValue={detailedInstructions ? "item-1" : undefined}>
+                     <Accordion type="single" collapsible className="w-full mt-5" defaultValue={detailedInstructions ? "item-1" : undefined}> {/* Increased margin */}
                         <AccordionItem value="item-1">
                              <AccordionTrigger
-                                className={`text-primary hover:no-underline text-sm py-2 ${detailedInstructions ? '' : 'cursor-default pointer-events-none'}`} // Prevent click when no content yet
+                                className={`text-primary hover:no-underline text-base py-2.5 ${detailedInstructions ? '' : 'cursor-default pointer-events-none'} [&[data-state=open]>svg]:text-primary`} // Adjusted size, make chevron primary when open
                                 disabled={!detailedInstructions || isExplaining} // Disable trigger if no details or loading
                              >
                                 {isExplaining ? (
@@ -646,19 +640,19 @@ export function RecipeDisplay({
                                      <span className="flex items-center"><Info className="h-4 w-4 mr-2" />{T.viewDetailedExplanation}</span>
                                 )}
                              </AccordionTrigger>
-                            <AccordionContent className="pt-2 pb-0">
+                            <AccordionContent className="pt-3 pb-1"> {/* Adjusted padding */}
                                 {isExplaining ? (
-                                    <div className="flex items-center text-muted-foreground p-4">
-                                        <Loader2 className="h-4 w-4 animate-spin mr-2" /> {T.loadingExplanation}
+                                    <div className="flex items-center text-muted-foreground p-4 text-base"> {/* Increased text size */}
+                                        <Loader2 className="h-5 w-5 animate-spin mr-2.5" /> {T.loadingExplanation}
                                     </div>
                                 ) : explainError ? (
-                                    <Alert variant="destructive" className="text-xs my-2">
-                                        <TriangleAlert className="h-3 w-3" />
-                                        <AlertTitle className="text-xs font-medium">{T.errorTitle}</AlertTitle>
-                                        <AlertDescription className="text-xs">{explainError}</AlertDescription>
+                                    <Alert variant="destructive" className="text-sm my-2"> {/* Adjusted text size */}
+                                        <TriangleAlert className="h-4 w-4" />
+                                        <AlertTitle className="text-sm font-medium">{T.errorTitle}</AlertTitle>
+                                        <AlertDescription className="text-sm">{explainError}</AlertDescription>
                                     </Alert>
                                 ) : detailedInstructions ? (
-                                     <div className="text-muted-foreground">
+                                     <div className="text-muted-foreground text-base"> {/* Increased text size */}
                                         {formatTextToComponent(detailedInstructions)}
                                     </div>
                                 ) : null /* Should not happen if trigger is disabled properly */}
