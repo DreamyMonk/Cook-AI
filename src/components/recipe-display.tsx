@@ -12,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Loader2, Sparkles, List, CookingPot, TriangleAlert, CheckSquare, Info, Lightbulb, Download, ChefHat, Soup, IceCream, Utensils } from 'lucide-react'; // Added ChefHat, Soup, IceCream, Utensils
+import { Loader2, Sparkles, List, CookingPot, TriangleAlert, CheckSquare, Info, Lightbulb, Download, ChefHat, Soup, IceCream, Utensils, NotebookText } from 'lucide-react'; // Added NotebookText
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
 import type { TastePreference } from '@/app/page'; // Import TastePreference type
@@ -87,6 +87,7 @@ const uiText = {
         proMenuCourseMain: "Main Course",
         proMenuCourseDessert: "Dessert",
         proMenuChefNotes: "Chef's Notes:",
+        proMenuChefNotesPlaceholder: "No additional notes from the chef.",
     },
     "es": {
         recipeNotePrefix: "Nota:",
@@ -132,6 +133,7 @@ const uiText = {
         proMenuCourseMain: "Plato Principal",
         proMenuCourseDessert: "Postre",
         proMenuChefNotes: "Notas del Chef:",
+        proMenuChefNotesPlaceholder: "No hay notas adicionales del chef.",
     },
     "fr": {
         recipeNotePrefix: "Note :",
@@ -177,6 +179,7 @@ const uiText = {
         proMenuCourseMain: "Plat Principal",
         proMenuCourseDessert: "Dessert",
         proMenuChefNotes: "Notes du Chef:",
+        proMenuChefNotesPlaceholder: "Aucune note supplémentaire du chef.",
     },
     "de": {
         recipeNotePrefix: "Hinweis:",
@@ -222,6 +225,7 @@ const uiText = {
         proMenuCourseMain: "Hauptgericht",
         proMenuCourseDessert: "Dessert",
         proMenuChefNotes: "Anmerkungen des Kochs:",
+        proMenuChefNotesPlaceholder: "Keine zusätzlichen Anmerkungen vom Koch.",
     },
     "hi": { // Hindi Translations
         recipeNotePrefix: "ध्यान दें:",
@@ -267,6 +271,7 @@ const uiText = {
         proMenuCourseMain: "मुख्य कोर्स",
         proMenuCourseDessert: "मिठाई",
         proMenuChefNotes: "शेफ के नोट्स:",
+        proMenuChefNotesPlaceholder: "शेफ से कोई अतिरिक्त नोट्स नहीं।",
     },
     "bn": { // Bengali Translations
         recipeNotePrefix: "দ্রষ্টব্য:",
@@ -312,6 +317,7 @@ const uiText = {
         proMenuCourseMain: "প্রধান কোর্স",
         proMenuCourseDessert: "ডেজার্ট",
         proMenuChefNotes: "শেফের নোট:",
+        proMenuChefNotesPlaceholder: "শেফের কাছ থেকে কোনো অতিরিক্ত নোট নেই।",
     },
      // Add more languages as needed
 };
@@ -427,47 +433,41 @@ export function RecipeDisplay({
    };
 
    // Helper function to render text content, handling markdown-like lists and paragraphs
+   // Handles bolding (e.g., **Provided:**) and list items (- Item)
    const formatTextToComponent = (text: string | null | undefined, placeholder: string = T.instructionsUnavailablePlaceholder) => {
-        if (!text) return <p className="text-muted-foreground italic text-base">{placeholder}</p>; // Increased text size
+        if (!text) return <p className="text-muted-foreground italic text-base">{placeholder}</p>;
 
-        const lines = text.split('\n').map(line => line.trim()).filter(line => line !== '');
+        const lines = text.split('\n').map(line => line.trim()); // Keep empty lines for spacing if intended
 
-        if (lines.length === 0) return <p className="text-muted-foreground italic text-base">{placeholder}</p>; // Increased text size
+        if (lines.length === 0 || lines.every(line => line === '')) return <p className="text-muted-foreground italic text-base">{placeholder}</p>;
 
-        const isNumberedList = lines.length > 1 && lines.every(line => /^\d+[\.\)]\s/.test(line));
-        const containsMarkdownFormatting = lines.some(line => /^\s*[-*+]\s/.test(line) || /^(#+|\*\*|__)/.test(line));
-
-        if (isNumberedList) {
-            return (
-                <ol className="list-decimal list-outside space-y-2 pl-5 text-muted-foreground text-base"> {/* Increased text size and spacing */}
-                {lines.map((line, index) => (
-                    <li key={index}>{line.replace(/^\d+[\.\)]\s/, '')}</li>
-                ))}
-                </ol>
-            );
-        } else if (containsMarkdownFormatting) {
-             return (
-                 <div className="space-y-2.5 text-muted-foreground text-base"> {/* Increased text size and spacing */}
-                    {lines.map((line, index) => {
-                        if (/^\s*[-*+]\s/.test(line)) {
-                            return <p key={index} className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-accent">{line.replace(/^\s*[-*+]\s/, '')}</p>;
-                        } else if (/^##+\s/.test(line)) {
-                            const level = (line.match(/^#+/) || [''])[0].length;
-                            const Tag = `h${Math.min(level + 2, 6)}` as keyof JSX.IntrinsicElements;
-                            return <Tag key={index} className="font-semibold mt-4 mb-2 text-foreground">{line.replace(/^#+\s/, '')}</Tag>;
-                        } else if (/^#\s/.test(line)) {
-                             return <h2 key={index} className="text-lg font-semibold mt-5 mb-2 text-foreground">{line.replace(/^#\s/, '')}</h2>;
-                         }
-                        else if (/^(\*\*|__)(.*?)\1/.test(line)) {
-                            return <p key={index}><strong>{line.replace(/^(\*\*|__)(.*?)\1/, '$2')}</strong></p>;
-                        }
-                        return <p key={index}>{line}</p>;
-                    })}
-                 </div>
-             );
-        }
-
-        return <div className="space-y-2.5 text-muted-foreground text-base">{lines.map((line, index) => <p key={index}>{line}</p>)}</div>;
+        return (
+            <div className="space-y-1.5 text-muted-foreground text-base">
+                {lines.map((line, index) => {
+                    // Match **Bold Header:**
+                    if (line.startsWith('**') && line.endsWith(':**')) {
+                        return <p key={index} className="font-semibold text-foreground mt-3 mb-1">{line.slice(2, -3)}:</p>;
+                    }
+                    // Match - List Item or * List Item or 1. List Item
+                    if (/^[-*]\s/.test(line)) {
+                        return <p key={index} className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-accent">{line.slice(2)}</p>;
+                    }
+                     if (/^\d+[\.\)]\s/.test(line)) {
+                         return <p key={index} className="pl-4 relative before:content-[attr(data-number)] before:absolute before:left-0 before:font-medium before:text-foreground/80" data-number={line.match(/^\d+[\.\)]/)?.[0]}>{line.replace(/^\d+[\.\)]\s/, '')}</p>;
+                     }
+                    // Match ## Subheading or # Heading
+                    if (/^##+\s/.test(line)) {
+                        const level = (line.match(/^#+/) || [''])[0].length;
+                        const Tag = `h${Math.min(level + 2, 6)}` as keyof JSX.IntrinsicElements;
+                        return <Tag key={index} className="font-semibold mt-4 mb-2 text-foreground">{line.replace(/^#+\s/, '')}</Tag>;
+                    } else if (/^#\s/.test(line)) {
+                         return <h2 key={index} className="text-lg font-semibold mt-5 mb-2 text-foreground">{line.replace(/^#\s/, '')}</h2>;
+                     }
+                    // Default paragraph
+                    return <p key={index}>{line}</p>;
+                })}
+            </div>
+        );
     };
 
     // Get ingredients and instructions based on the display data type
@@ -481,6 +481,7 @@ export function RecipeDisplay({
         currentRecipeName = displayData.data.recipeName;
     } else if (displayData.type === 'refined') {
         currentInstructions = displayData.data.refinedInstructions;
+        // Refined ingredients are already formatted, just pass them through
         currentIngredients = displayData.data.refinedIngredients;
         currentRecipeName = displayData.data.refinedRecipeName;
     }
@@ -504,7 +505,7 @@ export function RecipeDisplay({
 
         // Ingredients list for context depends on whether it was refined
         const ingredientsForExplanation = displayData.type === 'refined'
-            ? displayData.data.refinedIngredients
+            ? displayData.data.refinedIngredients // Already formatted string
             : (displayData.type === 'standard' ? formatInitialIngredientsList(displayData.data.providedIngredients, displayData.data.additionalIngredients) : ''); // Should not happen for pro
 
         const recipeNameForExplanation = displayData.type !== 'pro-menu' ? currentRecipeName || "Recipe" : "Recipe";
@@ -562,6 +563,9 @@ export function RecipeDisplay({
                      if (currentY + size > pageHeight - margin) {
                          doc.addPage();
                          currentY = margin;
+                         // Re-add border on new page
+                         doc.setDrawColor(200, 200, 200);
+                         doc.rect(margin / 2, margin / 2, pageWidth - margin, pageHeight - margin);
                      }
                      doc.text(line, margin, currentY, options);
                      currentY += size * lineHeight;
@@ -585,39 +589,58 @@ export function RecipeDisplay({
                 addText(menuData.eventTheme || '', { align: "center" }, subHeadingFontSize, 5);
                 addText(T.proMenuForGuests.replace('{numGuests}', String(menuData.numGuests)), { align: "center" }, subHeadingFontSize, 15);
 
+                // Chef Notes first for pro menu
                 if (menuData.chefNotes) {
-                    doc.setFont("helvetica", "italic");
-                     doc.setTextColor(80, 80, 80);
-                     addText(`${T.proMenuChefNotes} ${menuData.chefNotes}`, {}, smallFontSize, 15);
-                }
-
-                // Loop through courses
-                menuData.courses?.forEach(course => {
+                    doc.setFont("helvetica", "bold");
+                    doc.setTextColor(60, 179, 113); // Primary-like color
+                    addText(T.proMenuChefNotes, {}, headingFontSize, 8);
+                    doc.setFont("helvetica", "normal");
+                    doc.setTextColor(50, 50, 50);
+                    addText(menuData.chefNotes, {}, bodyFontSize, 15);
                     doc.setLineWidth(0.5);
                     doc.setDrawColor(200, 200, 200);
                     doc.line(margin, currentY, pageWidth - margin, currentY);
                     currentY += 10;
+                }
+
+
+                // Loop through courses
+                menuData.courses?.forEach(course => {
 
                     doc.setFont("helvetica", "bold");
                     doc.setTextColor(60, 179, 113); // Primary-like
                     const courseName = course.type === 'main' ? T.proMenuCourseMain : (course.type === 'starter' ? T.proMenuCourseStarter : T.proMenuCourseDessert);
                     addText(`${courseName}: ${course.recipeName}`, {}, headingFontSize, 8);
 
-                     doc.setFont("helvetica", "normal");
-                     doc.setTextColor(50, 50, 50);
+                     doc.setFont("helvetica", "bold"); // Make ingredient title bold
+                     doc.setTextColor(80, 80, 80); // Slightly darker grey
                      addText(T.ingredientsTitle, {}, subHeadingFontSize, 5);
+                     doc.setFont("helvetica", "normal"); // Reset font for list
+                     doc.setTextColor(50, 50, 50);
                      const ingredientsContent = (course.ingredients || T.ingredientsUnavailable)
-                         .replace(/\*\*(.*?)\*\*/g, '$1:')
-                         .replace(/^- /gm, '  • ');
+                         .replace(/\*\*(.*?)\*\*/g, '$1:') // Keep bold formatting for Provided/Additional
+                         .replace(/^- /gm, '  • '); // Indent list items
                      addText(ingredientsContent, {}, bodyFontSize, 10);
 
+                     doc.setFont("helvetica", "bold"); // Make instructions title bold
+                     doc.setTextColor(80, 80, 80);
                      addText(T.instructionsTitle, {}, subHeadingFontSize, 5);
+                     doc.setFont("helvetica", "normal"); // Reset font for steps
+                     doc.setTextColor(50, 50, 50);
                      const instructionText = course.instructions || T.instructionsUnavailable;
                      const instructionLinesFormatted = instructionText.split('\n')
                          .map(l => l.trim())
                          .filter(Boolean)
                          .map(line => /^\d+[\.\)]\s/.test(line) ? line : (/^- /gm.test(line) ? "  • " + line.replace(/^- /gm, '') : line));
                      addText(instructionLinesFormatted.join('\n'), {}, bodyFontSize, 15);
+
+                     // Add separator between courses
+                     if (menuData.courses && menuData.courses.indexOf(course) < menuData.courses.length - 1) {
+                        doc.setLineWidth(0.5);
+                        doc.setDrawColor(200, 200, 200);
+                        doc.line(margin, currentY, pageWidth - margin, currentY);
+                        currentY += 10;
+                     }
                 });
 
             } else { // Standard or Refined Recipe
@@ -679,15 +702,21 @@ export function RecipeDisplay({
                     doc.setFont("helvetica", "normal");
                     doc.setTextColor(50, 50, 50);
                     const explanationText = detailedInstructions;
+                    // Format explanation text similarly to instructions
                     const explanationLinesFormatted = explanationText.split('\n')
                         .map(l => l.trim()).filter(Boolean)
-                        .map(line => /^\d+[\.\)]\s/.test(line) ? line : (/^- /gm.test(line) ? "  • " + line.replace(/^- /gm, '') : (/^\*\*([^*]+)\*\*/gm.test(line) ? "\n" + line.replace(/^\*\*([^*]+)\*\*/gm, '$1') + ":" : line)));
+                        .map(line => {
+                             if (/^\d+[\.\)]\s/.test(line)) return line; // Keep numbered list
+                             if (/^- /gm.test(line)) return "  • " + line.replace(/^- /gm, ''); // Indent bullet points
+                             if (/^\*\*([^*]+)\*\*/gm.test(line)) return "\n" + line.replace(/^\*\*([^*]+)\*\*/gm, '$1') + ":"; // Bold headers
+                             return line;
+                         });
                     addText(explanationLinesFormatted.join('\n'), {}, bodyFontSize, 15);
                  }
             }
             // --- End PDF Content ---
 
-            const fileNameBase = (displayData.type === 'pro-menu' ? displayData.data.menuTitle : (displayData.type === 'standard' ? displayData.data.recipeName : displayData.data.refinedRecipeName)) || 'recipe_or_menu';
+            const fileNameBase = (displayData.type === 'pro-menu' ? menuData.menuTitle : (displayData.type === 'standard' ? recipeData.recipeName : recipeData.refinedRecipeName)) || 'recipe_or_menu';
             const fileName = `${fileNameBase.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
             doc.save(fileName);
 
@@ -718,6 +747,16 @@ export function RecipeDisplay({
             {/* Pro Menu Display */}
             {displayData.type === 'pro-menu' && (
                 <div className="space-y-6">
+                     {/* Chef Notes First */}
+                     {displayData.data.chefNotes && (
+                        <div className="border border-dashed border-accent/70 rounded-md p-4 bg-accent/10 dark:bg-accent/20">
+                            <h3 className="font-semibold text-foreground/90 mb-2 flex items-center text-lg gap-2">
+                                <NotebookText className="h-5 w-5 text-accent"/> {T.proMenuChefNotes}
+                            </h3>
+                            {formatTextToComponent(displayData.data.chefNotes, T.proMenuChefNotesPlaceholder)}
+                        </div>
+                     )}
+
                     {displayData.data.courses?.map((course, index) => {
                          const CourseIcon = courseIcons[course.type] || Utensils; // Default icon
                          const courseName = course.type === 'main' ? T.proMenuCourseMain : (course.type === 'starter' ? T.proMenuCourseStarter : T.proMenuCourseDessert);
@@ -734,7 +773,7 @@ export function RecipeDisplay({
                                     </div>
                                     <div>
                                          <h4 className="font-medium text-foreground/90 mb-1.5 text-lg">{T.instructionsTitle}</h4>
-                                        {formatTextToComponent(course.instructions)}
+                                        {formatTextToComponent(course.instructions, T.instructionsUnavailablePlaceholder)}
                                     </div>
                                 </div>
                             </div>
@@ -878,7 +917,7 @@ export function RecipeDisplay({
                            </div>
                        </div>
                        <div className="text-muted-foreground">
-                         {formatTextToComponent(currentInstructions)}
+                         {formatTextToComponent(currentInstructions, T.instructionsUnavailablePlaceholder)}
                        </div>
                         {/* Explanation Accordion (Only for standard/refined) */}
                         {(isExplaining || explainError || detailedInstructions) && (
@@ -907,5 +946,3 @@ export function RecipeDisplay({
     </Card>
   );
 }
-
-    
