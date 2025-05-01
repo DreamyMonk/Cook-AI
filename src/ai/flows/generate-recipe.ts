@@ -24,7 +24,7 @@ export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 const GenerateRecipeOutputSchema = z.object({
   recipeName: z.string().describe('The name of the generated recipe. If no recipe is possible, state that clearly (e.g., "Unable to Create Recipe").'),
   providedIngredients: z.array(z.string()).describe('List of the main ingredients PROVIDED BY THE USER that are actually USED in the recipe. This list might be a subset of the user input.'),
-  additionalIngredients: z.array(z.string()).describe('List of additional ingredients needed for the recipe, including common staples (like oil, salt, pepper) and any other suggested items. If no recipe is possible, this list should be empty.'),
+  additionalIngredients: z.array(z.string()).describe('List of additional ingredients needed for the recipe, including common staples (like oil, salt, pepper, onion, garlic, basic spices) OR other items that significantly enhance the dish based on the provided ingredients. If no recipe is possible, this list should be empty.'),
   instructions: z.string().describe('Step-by-step instructions for preparing the recipe. If no recipe is possible, this field should be empty or state "No instructions applicable."'),
   notes: z.string().optional().describe('Optional brief notes about the recipe, substitutions, or why it might be simple/complex. If no recipe is possible, explain why here (e.g., "Missing essential components for a cohesive dish.").')
 });
@@ -61,7 +61,7 @@ Chef's Instructions:
 1.  Analyze the user's ingredients: {{{ingredients}}}. These are the CORE components.
 2.  Generate a suitable recipe name.
 3.  Determine which of the USER'S ingredients will actually be USED in the recipe. List ONLY these used ingredients under 'providedIngredients'.
-4.  Identify any NECESSARY additional ingredients to make a sensible dish. Include common staples like **cooking oil, salt, and pepper** if needed. List all required extras under 'additionalIngredients'. Keep this list minimal.
+4.  Identify any NECESSARY additional ingredients to make a sensible dish. This can include **common kitchen staples** (like cooking oil, salt, pepper, onion, garlic, basic spices like paprika or cumin if appropriate) or other ingredients that logically complement the 'providedIngredients' (e.g., soy sauce for chicken and rice, if suitable). **List these under 'additionalIngredients'. Keep this list reasonably minimal** – focus on essentials to complete the dish based on the core items.
 5.  Write clear, step-by-step 'instructions'.
 6.  **Crucially, the recipe MUST prominently feature the user's ingredients listed in 'providedIngredients'.** Do not suggest complex recipes if the core ingredients are very basic.
 7.  **If a reasonable recipe cannot be created** (e.g., only 'salt' provided, or ingredients are completely incompatible), then:
@@ -69,7 +69,7 @@ Chef's Instructions:
     *   Keep 'providedIngredients' and 'additionalIngredients' as empty arrays ([]).
     *   Set 'instructions' to "No instructions applicable.".
     *   Explain *why* a recipe isn't feasible in the 'notes' field (e.g., "The provided ingredients lack a core component for a meal.").
-8. Add brief, optional 'notes' for suggestions (e.g., "Add garlic if available", "Simple dish due to limited items") or explanations.
+8. Add brief, optional 'notes' for suggestions (e.g., "Add chili flakes for heat if available", "Simple dish due to limited items") or explanations.
 
 Respond strictly following the output schema structure: {recipeName: string, providedIngredients: string[], additionalIngredients: string[], instructions: string, notes?: string}. Ensure 'providedIngredients' and 'additionalIngredients' are ALWAYS arrays of strings, even if empty.
 `,
