@@ -496,12 +496,12 @@ export default function Home() {
               // Initial placeholder state
               <div className="text-center text-muted-foreground space-y-6 p-8">
                  <Image
-                    src="https://picsum.photos/seed/recipebook2/350/230" // Slightly larger placeholder
-                    alt="Empty plate waiting for a recipe"
+                    src="https://picsum.photos/seed/deliciousfood/350/230" // Updated seed for food
+                    alt="Delicious food placeholder" // Updated alt text
                     width={350}
                     height={230}
                     className="rounded-lg mx-auto shadow-lg border border-border" // Add border
-                    data-ai-hint="recipe book cooking illustration chef kitchen"
+                    data-ai-hint="delicious food plate tasty dish gourmet" // Updated hint
                     priority
                   />
                 <p className="text-lg">{T.recipeDescriptionPlaceholder}</p>
