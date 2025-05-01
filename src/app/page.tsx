@@ -9,7 +9,7 @@ import { generateProMenu, type GenerateProMenuInput, type GenerateProMenuOutput 
 import { refineRecipe, type RefineRecipeInput, type RefineRecipeOutput } from '@/ai/flows/refine-recipe';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, UtensilsCrossed, TriangleAlert, Languages, ChefHat, PartyPopper, BrainCircuit, Info } from 'lucide-react'; // Added BrainCircuit, Info
+import { Loader2, UtensilsCrossed, TriangleAlert, Languages, ChefHat, PartyPopper, BrainCircuit, Info, NotebookText } from 'lucide-react'; // Added BrainCircuit, Info, NotebookText
 import Image from 'next/image';
 import {
   Select,
@@ -77,12 +77,14 @@ const uiText = {
         proChefModeDescription: "Plan a multi-course menu for an event!",
         eventThemeLabel: "Event Theme/Name",
         eventThemePlaceholder: "e.g., Summer BBQ, Birthday Dinner",
+        eventDetailsLabel: "Describe Your Event", // New Label
+        eventDetailsPlaceholder: "e.g., 'Casual outdoor gathering, want simple but impressive dishes', 'Formal dinner, focus on presentation', 'Need kid-friendly options'...", // New Placeholder
         numGuestsLabel: "Number of Guests",
         coursesLabel: "Select Courses",
         courseStarter: "Starter",
         courseMain: "Main Course",
         courseDessert: "Dessert",
-        proPreferencesLabel: "Menu Preferences & Details", // Updated Label
+        proPreferencesLabel: "Menu Preferences & Dietary Needs", // Updated Label
         proPreferencesPlaceholder: "e.g., Vegetarian options, avoid nuts, Italian cuisine focus, feature salmon...", // Updated Placeholder
         proOptionalIngredientsLabel: "Key Ingredients (Optional)", // Added label
         proOptionalIngredientsPlaceholder: "e.g., Salmon, Asparagus, Lemon...", // Added placeholder
@@ -103,7 +105,7 @@ const uiText = {
         selectTastePlaceholder: "Taste Preference (Optional)",
         inputErrorNoIngredients: "No ingredients provided. Please list the ingredients you have.",
         generateFailedGeneric: "Could not generate a recipe/menu. The AI might be unavailable or the request failed unexpectedly.", // Updated
-        generateFailedInsufficient: "Could not generate a recipe/menu. The provided input may be insufficient or conflicting for a complete dish/menu.", // Updated
+        generateFailedInsufficient: "Could not generate a recipe/menu. The provided input may be insufficient, conflicting, or unsuitable for a complete dish/menu.", // Updated
         refineFailedGeneric: "Could not refine the recipe. The AI might be unavailable or the request failed unexpectedly.",
         refineErrorNoRecipe: "Cannot refine recipe - no initial single recipe generated.", // Clarified
         refineErrorGeneric: "An unexpected error occurred during refinement: {message}. Please try again later.",
@@ -130,12 +132,14 @@ const uiText = {
         proChefModeDescription: "¡Planifica un menú de varios platos para un evento!",
         eventThemeLabel: "Tema/Nombre del Evento",
         eventThemePlaceholder: "ej., Barbacoa de Verano, Cena de Cumpleaños",
+        eventDetailsLabel: "Describe tu Evento", // New Label
+        eventDetailsPlaceholder: "ej., 'Reunión informal al aire libre, quiero platos simples pero impresionantes', 'Cena formal, centrarse en la presentación', 'Necesito opciones para niños'...", // New Placeholder
         numGuestsLabel: "Número de Invitados",
         coursesLabel: "Seleccionar Platos",
         courseStarter: "Entrante",
         courseMain: "Plato Principal",
         courseDessert: "Postre",
-        proPreferencesLabel: "Preferencias y Detalles del Menú",
+        proPreferencesLabel: "Preferencias del Menú y Necesidades Dietéticas",
         proPreferencesPlaceholder: "ej., Opciones vegetarianas, evitar nueces, enfoque cocina italiana, destacar salmón...",
         proOptionalIngredientsLabel: "Ingredientes Clave (Opcional)",
         proOptionalIngredientsPlaceholder: "ej., Salmón, Espárragos, Limón...",
@@ -156,7 +160,7 @@ const uiText = {
         selectTastePlaceholder: "Preferencia de Sabor (Opcional)",
         inputErrorNoIngredients: "No se proporcionaron ingredientes. Por favor, enumera los ingredientes que tienes.",
         generateFailedGeneric: "No se pudo generar una receta/menú. La IA podría no estar disponible o la solicitud falló inesperadamente.",
-        generateFailedInsufficient: "No se pudo generar una receta/menú. La entrada proporcionada puede ser insuficiente o conflictiva para un plato/menú completo.",
+        generateFailedInsufficient: "No se pudo generar una receta/menú. La entrada proporcionada puede ser insuficiente, conflictiva o inadecuada para un plato/menú completo.",
         refineFailedGeneric: "No se pudo refinar la receta. La IA podría no estar disponible o la solicitud falló inesperadamente.",
         refineErrorNoRecipe: "No se puede refinar la receta - no se generó ninguna receta inicial individual.",
         refineErrorGeneric: "Ocurrió un error inesperado durante el refinamiento: {message}. Por favor, inténtalo de nuevo más tarde.",
@@ -183,12 +187,14 @@ const uiText = {
         proChefModeDescription: "Planifiez un menu à plusieurs plats pour un événement !",
         eventThemeLabel: "Thème/Nom de l'événement",
         eventThemePlaceholder: "ex: BBQ d'été, Dîner d'anniversaire",
+        eventDetailsLabel: "Décrivez Votre Événement", // New Label
+        eventDetailsPlaceholder: "ex: 'Rassemblement extérieur décontracté, je veux des plats simples mais impressionnants', 'Dîner formel, focus sur la présentation', 'Besoin d'options pour enfants'...", // New Placeholder
         numGuestsLabel: "Nombre d'invités",
         coursesLabel: "Sélectionner les plats",
         courseStarter: "Entrée",
         courseMain: "Plat principal",
         courseDessert: "Dessert",
-        proPreferencesLabel: "Préférences et Détails du Menu",
+        proPreferencesLabel: "Préférences du Menu et Besoins Alimentaires",
         proPreferencesPlaceholder: "ex: Options végétariennes, éviter les noix, focus cuisine italienne, mettre en avant le saumon...",
         proOptionalIngredientsLabel: "Ingrédients Clés (Facultatif)",
         proOptionalIngredientsPlaceholder: "ex: Saumon, Asperges, Citron...",
@@ -209,7 +215,7 @@ const uiText = {
         selectTastePlaceholder: "Préférence Gustative (Facultatif)",
         inputErrorNoIngredients: "Aucun ingrédient fourni. Veuillez lister les ingrédients dont vous disposez.",
         generateFailedGeneric: "Impossible de générer une recette/menu. L'IA est peut-être indisponible ou la requête a échoué.",
-        generateFailedInsufficient: "Impossible de générer une recette/menu. L'entrée fournie peut être insuffisante ou conflictuelle pour un plat/menu complet.",
+        generateFailedInsufficient: "Impossible de générer une recette/menu. L'entrée fournie peut être insuffisante, conflictuelle ou inadaptée pour un plat/menu complet.",
         refineFailedGeneric: "Impossible d'affiner la recette. L'IA est peut-être indisponible ou la requête a échoué.",
         refineErrorNoRecipe: "Impossible d'affiner la recette - aucune recette initiale unique générée.",
         refineErrorGeneric: "Une erreur inattendue s'est produite lors de l'affinage : {message}. Veuillez réessayer plus tard.",
@@ -236,12 +242,14 @@ const uiText = {
         proChefModeDescription: "Planen Sie ein mehrgängiges Menü für eine Veranstaltung!",
         eventThemeLabel: "Veranstaltungsthema/Name",
         eventThemePlaceholder: "z.B. Sommergrillen, Geburtstagsessen",
+        eventDetailsLabel: "Beschreiben Sie Ihre Veranstaltung", // New Label
+        eventDetailsPlaceholder: "z.B. 'Lockeres Treffen im Freien, einfache, aber eindrucksvolle Gerichte erwünscht', 'Formelles Abendessen, Fokus auf Präsentation', 'Kinderfreundliche Optionen benötigt'...", // New Placeholder
         numGuestsLabel: "Anzahl der Gäste",
         coursesLabel: "Gänge auswählen",
         courseStarter: "Vorspeise",
         courseMain: "Hauptgericht",
         courseDessert: "Dessert",
-        proPreferencesLabel: "Menü-Vorlieben & Details",
+        proPreferencesLabel: "Menü-Vorlieben & Ernährungsbedürfnisse",
         proPreferencesPlaceholder: "z.B. Vegetarische Optionen, Nüsse vermeiden, Fokus italienische Küche, Lachs hervorheben...",
         proOptionalIngredientsLabel: "Schlüsselzutaten (Optional)",
         proOptionalIngredientsPlaceholder: "z.B. Lachs, Spargel, Zitrone...",
@@ -262,7 +270,7 @@ const uiText = {
         selectTastePlaceholder: "Geschmackspräferenz (Optional)",
         inputErrorNoIngredients: "Keine Zutaten angegeben. Bitte listen Sie die vorhandenen Zutaten auf.",
         generateFailedGeneric: "Rezept/Menü konnte nicht generiert werden. Die KI ist möglicherweise nicht verfügbar oder die Anfrage ist fehlgeschlagen.",
-        generateFailedInsufficient: "Rezept/Menü konnte nicht generiert werden. Die bereitgestellte Eingabe reicht möglicherweise nicht aus oder widerspricht einem vollständigen Gericht/Menü.",
+        generateFailedInsufficient: "Rezept/Menü konnte nicht generiert werden. Die bereitgestellte Eingabe ist möglicherweise unzureichend, widersprüchlich oder für ein vollständiges Gericht/Menü ungeeignet.",
         refineFailedGeneric: "Rezept konnte nicht verfeinert werden. Die KI ist möglicherweise nicht verfügbar oder die Anfrage ist fehlgeschlagen.",
         refineErrorNoRecipe: "Rezept kann nicht verfeinert werden - kein ursprüngliches Einzelrezept generiert.",
         refineErrorGeneric: "Beim Verfeinern ist ein unerwarteter Fehler aufgetreten: {message}. Bitte versuchen Sie es später erneut.",
@@ -289,12 +297,14 @@ const uiText = {
         proChefModeDescription: "एक कार्यक्रम के लिए बहु-कोर्स मेनू की योजना बनाएं!",
         eventThemeLabel: "कार्यक्रम थीम/नाम",
         eventThemePlaceholder: "उदा., समर BBQ, जन्मदिन का खाना",
+        eventDetailsLabel: "अपने कार्यक्रम का वर्णन करें", // New Label
+        eventDetailsPlaceholder: "उदा., 'आकस्मिक बाहरी सभा, सरल लेकिन प्रभावशाली व्यंजन चाहते हैं', 'औपचारिक रात्रिभोज, प्रस्तुति पर ध्यान दें', 'बच्चों के अनुकूल विकल्पों की आवश्यकता है'...", // New Placeholder
         numGuestsLabel: "मेहमानों की संख्या",
         coursesLabel: "कोर्स चुनें",
         courseStarter: "स्टार्टर",
         courseMain: "मुख्य कोर्स",
         courseDessert: "मिठाई",
-        proPreferencesLabel: "मेनू प्राथमिकताएं और विवरण",
+        proPreferencesLabel: "मेनू प्राथमिकताएं और आहार संबंधी आवश्यकताएँ",
         proPreferencesPlaceholder: "उदा., शाकाहारी विकल्प, नट्स से बचें, इतालवी व्यंजन फोकस, सामन सुविधा...",
         proOptionalIngredientsLabel: "मुख्य सामग्री (वैकल्पिक)",
         proOptionalIngredientsPlaceholder: "उदा., सामन, शतावरी, नींबू...",
@@ -315,7 +325,7 @@ const uiText = {
         selectTastePlaceholder: "स्वाद वरीयता (वैकल्पिक)",
         inputErrorNoIngredients: "कोई सामग्री प्रदान नहीं की गई। कृपया आपके पास उपलब्ध सामग्री सूचीबद्ध करें।",
         generateFailedGeneric: "रेसिपी/मेनू बनाने में विफल। एआई अनुपलब्ध हो सकती है या अनुरोध अप्रत्याशित रूप से विफल हो गया।",
-        generateFailedInsufficient: "रेसिपी/मेनू बनाने में विफल। प्रदान की गई इनपुट पूरी डिश/मेनू के लिए अपर्याप्त या विरोधाभासी हो सकती है।",
+        generateFailedInsufficient: "रेसिपी/मेनू बनाने में विफल। प्रदान की गई इनपुट अपर्याप्त, विरोधाभासी या पूरी डिश/मेनू के लिए अनुपयुक्त हो सकती है।",
         refineFailedGeneric: "रेसिपी को परिष्कृत करने में विफल। एआई अनुपलब्ध हो सकती है या अनुरोध अप्रत्याशित रूप से विफल हो गया।",
         refineErrorNoRecipe: "रेसिपी परिष्कृत नहीं की जा सकती - कोई प्रारंभिक एकल रेसिपी नहीं बनाई गई।",
         refineErrorGeneric: "परिष्करण के दौरान एक अप्रत्याशित त्रुटि हुई: {message}। कृपया बाद में पुनः प्रयास करें।",
@@ -342,12 +352,14 @@ const uiText = {
         proChefModeDescription: "একটি অনুষ্ঠানের জন্য বহু-কোর্স মেনু পরিকল্পনা করুন!",
         eventThemeLabel: "অনুষ্ঠানের থিম/নাম",
         eventThemePlaceholder: "যেমন, গ্রীষ্মকালীন BBQ, জন্মদিনের ডিনার",
+        eventDetailsLabel: "আপনার অনুষ্ঠান বর্ণনা করুন", // New Label
+        eventDetailsPlaceholder: "যেমন, 'সাধারণ বহিরঙ্গন সমাবেশ, সহজ কিন্তু চিত্তাকর্ষক ডিশ চাই', 'আনুষ্ঠানিক ডিনার, উপস্থাপনার উপর ফোকাস', 'বাচ্চাদের জন্য উপযুক্ত বিকল্প প্রয়োজন'...", // New Placeholder
         numGuestsLabel: "অতিথির সংখ্যা",
         coursesLabel: "কোর্স নির্বাচন করুন",
         courseStarter: "স্টার্টার",
         courseMain: "প্রধান কোর্স",
         courseDessert: "ডেজার্ট",
-        proPreferencesLabel: "মেনু পছন্দ ও বিবরণ",
+        proPreferencesLabel: "মেনু পছন্দ ও ডায়েটারি চাহিদা",
         proPreferencesPlaceholder: "যেমন, নিরামিষ বিকল্প, বাদাম এড়িয়ে চলুন, ইতালীয় রন্ধনশৈলী ফোকাস, স্যামন বৈশিষ্ট্য...",
         proOptionalIngredientsLabel: "প্রধান উপকরণ (ঐচ্ছিক)",
         proOptionalIngredientsPlaceholder: "যেমন, স্যামন, অ্যাস্পারাগাস, লেবু...",
@@ -368,7 +380,7 @@ const uiText = {
         selectTastePlaceholder: "স্বাদের পছন্দ (ঐচ্ছিক)",
         inputErrorNoIngredients: "কোন উপকরণ প্রদান করা হয়নি। আপনার কাছে উপলব্ধ উপকরণ তালিকাভুক্ত করুন।",
         generateFailedGeneric: "একটি রেসিপি/মেনু তৈরি করা যায়নি। এআই অনুপলব্ধ হতে পারে বা অনুরোধ অপ্রত্যাশিতভাবে ব্যর্থ হয়েছে।",
-        generateFailedInsufficient: "একটি রেসিপি/মেনু তৈরি করা যায়নি। প্রদত্ত ইনপুট একটি সম্পূর্ণ ডিশ/মেনুর জন্য অপর্যাপ্ত বা পরস্পরবিরোধী হতে পারে।",
+        generateFailedInsufficient: "একটি রেসিপি/মেনু তৈরি করা যায়নি। প্রদত্ত ইনপুট অপর্যাপ্ত, পরস্পরবিরোধী বা একটি সম্পূর্ণ ডিশ/মেনুর জন্য অনুপযুক্ত হতে পারে।",
         refineFailedGeneric: "রেসিপি পরিমার্জন করা যায়নি। এআই অনুপলব্ধ হতে পারে বা অনুরোধ অপ্রত্যাশিতভাবে ব্যর্থ হয়েছে।",
         refineErrorNoRecipe: "রেসিপি পরিমার্জন করা যাবে না - কোনো প্রাথমিক একক রেসিপি তৈরি হয়নি।",
         refineErrorGeneric: "পরিমার্জনের সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে: {message}। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
@@ -400,6 +412,7 @@ export default function Home() {
   // Pro Chef Mode State
   const [isProChefMode, setIsProChefMode] = useState(false);
   const [eventTheme, setEventTheme] = useState('');
+  const [eventDetails, setEventDetails] = useState(''); // State for event description
   const [numGuests, setNumGuests] = useState<number | ''>(2); // Default to 2 guests
   const [selectedCourses, setSelectedCourses] = useState<CourseType[]>(['main']); // Default to main course
   const [proPreferences, setProPreferences] = useState('');
@@ -422,6 +435,7 @@ export default function Home() {
     // Optionally reset Pro inputs when turning off
     if (!checked) {
         setEventTheme('');
+        setEventDetails(''); // Reset event details
         setNumGuests(2);
         setSelectedCourses(['main']);
         setProPreferences('');
@@ -494,6 +508,7 @@ export default function Home() {
             const proInput: GenerateProMenuInput = {
                 ingredients: ingredientsString || '', // Pass empty string if no optional ingredients provided
                 eventTheme: eventTheme,
+                eventDetails: eventDetails, // Pass event details
                 numGuests: numGuests as number, // Cast as number (validated above)
                 courses: selectedCourses,
                 preferences: proPreferences,
@@ -804,6 +819,18 @@ export default function Home() {
                             required // Make theme required
                         />
                     </div>
+                     {/* Event Details */}
+                    <div>
+                        <Label htmlFor="event-details" className="text-sm text-muted-foreground">{T.eventDetailsLabel}</Label>
+                        <Textarea
+                            id="event-details"
+                            value={eventDetails}
+                            onChange={(e) => setEventDetails(e.target.value)}
+                            placeholder={T.eventDetailsPlaceholder}
+                            className="mt-1 bg-background min-h-[80px]"
+                            disabled={isLoading}
+                        />
+                    </div>
                      {/* Number of Guests */}
                     <div>
                         <Label htmlFor="num-guests" className="text-sm text-muted-foreground">{T.numGuestsLabel}</Label>
@@ -953,5 +980,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
