@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview An AI agent to generate recipes based on available ingredients.
+ * @fileOverview An AI agent to generate recipes based on available ingredients and preferred language.
  *
  * - generateRecipe - A function that handles the recipe generation process.
  * - GenerateRecipeInput - The input type for the generateRecipe function.
@@ -12,7 +12,7 @@
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 
-// Input schema: Add optional preferred dish type
+// Input schema: Add optional preferred dish type and language
 const GenerateRecipeInputSchema = z.object({
   ingredients: z
     .string()
@@ -21,6 +21,10 @@ const GenerateRecipeInputSchema = z.object({
     .string()
     .optional()
     .describe('If specified, guides the AI to generate a recipe matching this type (e.g., "soup", "stir-fry", "salad", "baked dish").'),
+  language: z
+    .string()
+    .optional()
+    .describe('The desired language for the recipe output (e.g., "Spanish", "French", "German"). Default is English.'),
 });
 export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 
@@ -32,17 +36,27 @@ const GenerateRecipeOutputSchema = z.object({
   instructions: z.string().describe('Step-by-step instructions for preparing the recipe. If no recipe is possible, this field should be empty or state "No instructions applicable."'),
   alternativeDishTypes: z.array(z.string()).optional().describe('If the main ingredients are versatile, lists other distinct types of dishes (e.g., "Soup", "Salad", "Stir-fry") that could potentially be made. Omit if only one clear type is suitable or if input is too limited.'),
   notes: z.string().optional().describe('Optional brief notes about the recipe, substitutions, or why it might be simple/complex. If no recipe is possible, explain why here (e.g., "Missing essential components for a cohesive dish.").')
-});
+}).describe('The generated recipe details, provided in the requested language (default English).');
 export type GenerateRecipeOutput = z.infer<typeof GenerateRecipeOutputSchema>;
 
 export async function generateRecipe(input: GenerateRecipeInput): Promise<GenerateRecipeOutput> {
   if (!input.ingredients || input.ingredients.trim().length === 0) {
+      const lang = input.language || "English";
+      const messages = {
+          "English": { title: "Input Error: No Ingredients", instructions: "No instructions applicable.", notes: "Please list the ingredients you have available." },
+          "Spanish": { title: "Error de Entrada: Sin Ingredientes", instructions: "No hay instrucciones aplicables.", notes: "Por favor, enumera los ingredientes que tienes disponibles." },
+          "French": { title: "Erreur d'Entrée : Aucun Ingrédient", instructions: "Aucune instruction applicable.", notes: "Veuillez lister les ingrédients dont vous disposez." },
+          "German": { title: "Eingabefehler: Keine Zutaten", instructions: "Keine Anweisungen anwendbar.", notes: "Bitte listen Sie die verfügbaren Zutaten auf." },
+          // Add more languages as needed
+      };
+      const msg = messages[lang as keyof typeof messages] || messages["English"];
       return {
-          recipeName: "Input Error: No Ingredients",
+          recipeName: msg.title,
           providedIngredients: [],
           additionalIngredients: [],
-          instructions: "No instructions applicable.",
-          notes: "Please list the ingredients you have available."
+          instructions: msg.instructions,
+          notes: msg.notes,
+          alternativeDishTypes: [],
       };
   }
   return generateRecipeFlow(input);
@@ -57,6 +71,7 @@ const prompt = ai.definePrompt({
     schema: GenerateRecipeOutputSchema,
   },
   prompt: `You are an expert chef tasked with creating a sensible recipe using ingredients provided by a user.
+{{#if language}}Generate the entire response (recipeName, instructions, notes, etc.) in {{language}}.{{else}}Generate the entire response in English.{{/if}}
 
 User's Available Ingredients: {{{ingredients}}}
 {{#if preferredDishType}}User's Preferred Dish Type: {{{preferredDishType}}}{{/if}}
@@ -82,13 +97,13 @@ Chef's Instructions:
     *   Be realistic; only suggest plausible alternatives. Do not list minor variations of the main recipe. Omit this field if the ingredients are not versatile or too limited.
 {{/unless}}
 7.  **Failure Condition:** If a reasonable recipe cannot be created (even considering the preferred type, if any, or common additions):
-    *   Set 'recipeName' to "Unable to Create Recipe".
+    *   Set 'recipeName' to indicate failure (e.g., "Unable to Create Recipe" or its translation).
     *   Keep 'providedIngredients', 'additionalIngredients', and 'alternativeDishTypes' as empty arrays ([] or undefined).
-    *   Set 'instructions' to "No instructions applicable.".
+    *   Set 'instructions' to indicate no instructions (e.g., "No instructions applicable." or its translation).
     *   Explain *why* in the 'notes' field.
 8. Add brief, optional 'notes' for suggestions or explanations.
 
-Respond strictly following the output schema structure. Ensure 'providedIngredients', 'additionalIngredients', and 'alternativeDishTypes' (if present) are ALWAYS arrays of strings, even if empty.
+Respond strictly following the output schema structure, ensuring all text fields are in the requested language ({{#if language}}{{language}}{{else}}English{{/if}}). Ensure 'providedIngredients', 'additionalIngredients', and 'alternativeDishTypes' (if present) are ALWAYS arrays of strings, even if empty.
 `,
 });
 
@@ -103,13 +118,25 @@ const generateRecipeFlow = ai.defineFlow<
     outputSchema: GenerateRecipeOutputSchema,
   },
   async input => {
+    const lang = input.language || "English";
+    const errorMessages = {
+          "English": { noIngredientsTitle: "Input Error: No Ingredients", noIngredientsNotes: "No ingredients were provided to the recipe generator.", aiErrorTitle: "AI Error: No Response", aiErrorNotes: "The AI model did not return a valid recipe response. Please try again.", unexpectedErrorNotes: "An unexpected error occurred while generating the recipe.", busyNotes: "The AI chef is currently very busy with requests! Please try again in a moment.", busyTitle: "AI Busy", configErrorNotes: "There seems to be an issue with the AI configuration. Please contact support.", configErrorTitle: "Configuration Error", aiErrorGenericNotes: "AI Error: {message}. Please check your input or try again later.", aiErrorGenericTitle: "AI Error", defaultInstructions: "No instructions applicable.", defaultFailTitle: "Generation Failed", defaultFailInstructions: "No instructions available due to error."},
+          "Spanish": { noIngredientsTitle: "Error de Entrada: Sin Ingredientes", noIngredientsNotes: "No se proporcionaron ingredientes al generador de recetas.", aiErrorTitle: "Error de IA: Sin Respuesta", aiErrorNotes: "El modelo de IA no devolvió una respuesta de receta válida. Inténtalo de nuevo.", unexpectedErrorNotes: "Ocurrió un error inesperado al generar la receta.", busyNotes: "¡El chef de IA está muy ocupado con las solicitudes! Inténtalo de nuevo en un momento.", busyTitle: "IA Ocupada", configErrorNotes: "Parece haber un problema con la configuración de la IA. Contacta al soporte.", configErrorTitle: "Error de Configuración", aiErrorGenericNotes: "Error de IA: {message}. Revisa tu entrada o inténtalo más tarde.", aiErrorGenericTitle: "Error de IA", defaultInstructions: "No hay instrucciones aplicables.", defaultFailTitle: "Generación Fallida", defaultFailInstructions: "Instrucciones no disponibles debido a error."},
+          "French": { noIngredientsTitle: "Erreur d'Entrée : Aucun Ingrédient", noIngredientsNotes: "Aucun ingrédient n'a été fourni au générateur de recettes.", aiErrorTitle: "Erreur IA : Pas de Réponse", aiErrorNotes: "Le modèle IA n'a pas renvoyé de réponse de recette valide. Veuillez réessayer.", unexpectedErrorNotes: "Une erreur inattendue s'est produite lors de la génération de la recette.", busyNotes: "Le chef IA est actuellement très occupé par les demandes ! Veuillez réessayer dans un instant.", busyTitle: "IA Occupée", configErrorNotes: "Il semble y avoir un problème avec la configuration de l'IA. Veuillez contacter le support.", configErrorTitle: "Erreur de Configuration", aiErrorGenericNotes: "Erreur IA : {message}. Veuillez vérifier votre saisie ou réessayer plus tard.", aiErrorGenericTitle: "Erreur IA", defaultInstructions: "Aucune instruction applicable.", defaultFailTitle: "Échec de la Génération", defaultFailInstructions: "Instructions non disponibles en raison d'une erreur."},
+          "German": { noIngredientsTitle: "Eingabefehler: Keine Zutaten", noIngredientsNotes: "Dem Rezeptgenerator wurden keine Zutaten zur Verfügung gestellt.", aiErrorTitle: "KI-Fehler: Keine Antwort", aiErrorNotes: "Das KI-Modell hat keine gültige Rezeptantwort zurückgegeben. Bitte versuchen Sie es erneut.", unexpectedErrorNotes: "Beim Generieren des Rezepts ist ein unerwarteter Fehler aufgetreten.", busyNotes: "Der KI-Koch ist derzeit sehr beschäftigt! Bitte versuchen Sie es in einem Moment erneut.", busyTitle: "KI beschäftigt", configErrorNotes: "Es scheint ein Problem mit der KI-Konfiguration zu geben. Bitte kontaktieren Sie den Support.", configErrorTitle: "Konfigurationsfehler", aiErrorGenericNotes: "KI-Fehler: {message}. Bitte überprüfen Sie Ihre Eingabe oder versuchen Sie es später erneut.", aiErrorGenericTitle: "KI-Fehler", defaultInstructions: "Keine Anweisungen anwendbar.", defaultFailTitle: "Generierung fehlgeschlagen", defaultFailInstructions: "Anweisungen aufgrund eines Fehlers nicht verfügbar."},
+           // Add more languages as needed
+      };
+     const msg = errorMessages[lang as keyof typeof errorMessages] || errorMessages["English"];
+
+
     if (!input.ingredients || input.ingredients.trim().length === 0) {
         return {
-            recipeName: "Input Error: No Ingredients",
+            recipeName: msg.noIngredientsTitle,
             providedIngredients: [],
             additionalIngredients: [],
-            instructions: "No instructions applicable.",
-            notes: "No ingredients were provided to the recipe generator."
+            instructions: msg.defaultInstructions,
+            notes: msg.noIngredientsNotes,
+            alternativeDishTypes: [],
         };
     }
 
@@ -121,42 +148,44 @@ const generateRecipeFlow = ai.defineFlow<
              output.providedIngredients = output.providedIngredients ?? [];
              output.additionalIngredients = output.additionalIngredients ?? [];
              output.alternativeDishTypes = output.alternativeDishTypes ?? undefined; // Keep as undefined if not generated
-             output.instructions = output.instructions || "No instructions generated."; // Provide default if empty
+             output.instructions = output.instructions || (msg.defaultInstructions + " (Generated)"); // Provide default if empty
              return output;
         } else {
              // Handle unexpected null/undefined output from the prompt
              console.error("AI prompt returned null/undefined output for input:", input);
              return {
-                recipeName: "AI Error: No Response",
+                recipeName: msg.aiErrorTitle,
                 providedIngredients: [],
                 additionalIngredients: [],
-                instructions: "Failed to get recipe instructions.",
-                notes: "The AI model did not return a valid recipe response. Please try again."
+                instructions: msg.defaultInstructions + " (AI Error)",
+                notes: msg.aiErrorNotes,
+                alternativeDishTypes: [],
              };
         }
     } catch (error) {
         console.error("Error in generateRecipeFlow:", error);
-         let errorMessage = "An unexpected error occurred while generating the recipe.";
-         let errorTitle = "Generation Failed";
+         let errorMessage = msg.unexpectedErrorNotes;
+         let errorTitle = msg.defaultFailTitle;
 
          if (error instanceof Error) {
             if (error.message.includes('503') || error.message.includes('overloaded')) {
-                 errorMessage = "The AI chef is currently very busy with requests! Please try again in a moment.";
-                 errorTitle = "AI Busy";
+                 errorMessage = msg.busyNotes;
+                 errorTitle = msg.busyTitle;
             } else if (error.message.includes('API key')) {
-                 errorMessage = "There seems to be an issue with the AI configuration. Please contact support.";
-                 errorTitle = "Configuration Error";
+                 errorMessage = msg.configErrorNotes;
+                 errorTitle = msg.configErrorTitle;
             } else {
-                 errorMessage = `AI Error: ${error.message}. Please check your input or try again later.`;
-                 errorTitle = "AI Error";
+                 errorMessage = msg.aiErrorGenericNotes.replace('{message}', error.message);
+                 errorTitle = msg.aiErrorGenericTitle;
             }
          }
          return {
             recipeName: errorTitle,
             providedIngredients: [],
             additionalIngredients: [],
-            instructions: "No instructions available due to error.",
-            notes: errorMessage
+            instructions: msg.defaultFailInstructions,
+            notes: errorMessage,
+            alternativeDishTypes: [],
          };
     }
   }

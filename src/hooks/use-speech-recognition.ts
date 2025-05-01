@@ -11,6 +11,7 @@ interface SpeechRecognitionHook {
   startListening: () => void;
   stopListening: () => void;
   resetTranscript: () => void;
+  setLanguage: (lang: string) => void; // Added setter
 }
 
 // Type guard for SpeechRecognition
@@ -36,6 +37,7 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
   const [error, setError] = useState<string | null>(null);
   const [isSupported, setIsSupported] = useState(false);
   const [finalTranscriptBuffer, setFinalTranscriptBuffer] = useState('');
+  const [currentLanguage, setCurrentLanguage] = useState('en-US'); // State for language
 
   useEffect(() => {
     if (!SpeechRecognition) {
@@ -48,13 +50,13 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
     recognitionRef.current = new SpeechRecognition();
     const recognition = recognitionRef.current;
 
-    recognition.continuous = true; // Keep listening even after pauses
-    recognition.interimResults = true; // Get results as they come in
-    recognition.lang = 'en-US'; // Set language
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = currentLanguage; // Use state for language
 
     recognition.onresult = (event) => {
       let interimTranscript = '';
-      let finalTranscript = finalTranscriptBuffer; // Start with the accumulated final transcript
+      let finalTranscript = finalTranscriptBuffer;
 
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
@@ -63,9 +65,9 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
           interimTranscript += event.results[i][0].transcript;
         }
       }
-      setFinalTranscriptBuffer(finalTranscript); // Update the buffer
-      setTranscript(finalTranscript + interimTranscript); // Show final + interim
-      setError(null); // Clear previous errors on new results
+      setFinalTranscriptBuffer(finalTranscript);
+      setTranscript(finalTranscript + interimTranscript);
+      setError(null);
     };
 
     recognition.onerror = (event) => {
@@ -79,9 +81,11 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
            errorMessage = 'Network error during speech recognition. Please check your connection.';
        } else if (event.error === 'audio-capture') {
            errorMessage = 'Could not capture audio. Is your microphone working?';
+       } else if (event.error === 'language-not-supported') {
+            errorMessage = `The selected language (${currentLanguage}) is not supported by speech recognition.`;
        }
       setError(errorMessage);
-      setIsListening(false); // Stop listening state on error
+      setIsListening(false);
     };
 
     recognition.onstart = () => {
@@ -91,36 +95,51 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
 
     recognition.onend = () => {
       setIsListening(false);
-      // Don't clear transcript or buffer here, it might be a temporary stop
     };
 
-    // Cleanup function
     return () => {
-      recognition.stop();
-      recognition.onresult = null;
-      recognition.onerror = null;
-      recognition.onstart = null;
-      recognition.onend = null;
-      recognitionRef.current = null;
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current = null;
+      }
     };
-  }, [SpeechRecognition, finalTranscriptBuffer]); // Re-run if buffer changes (though unlikely needed)
+  // Re-initialize recognition if language changes
+  }, [SpeechRecognition, finalTranscriptBuffer, currentLanguage]);
+
+  const setLanguage = useCallback((lang: string) => {
+      if (lang !== currentLanguage) {
+          console.log("Setting speech recognition language to:", lang);
+          // Stop current recognition if running
+          if (isListening && recognitionRef.current) {
+              recognitionRef.current.stop();
+          }
+          setCurrentLanguage(lang);
+          // The useEffect will handle re-initialization
+      }
+  }, [currentLanguage, isListening]);
+
 
   const startListening = useCallback(() => {
     if (!isSupported || !recognitionRef.current || isListening) {
       return;
     }
     try {
-        setFinalTranscriptBuffer(''); // Clear buffer on new start
-        setTranscript(''); // Clear visible transcript
+        setFinalTranscriptBuffer('');
+        setTranscript('');
         setError(null);
+        // Ensure language is set before starting
+        recognitionRef.current.lang = currentLanguage;
         recognitionRef.current.start();
     } catch (err) {
-        // Catch potential DOMException if start() is called improperly
         console.error("Error starting recognition:", err);
         setError("Could not start voice recognition. Please try again.");
         setIsListening(false);
     }
-  }, [isSupported, recognitionRef, isListening]);
+  }, [isSupported, recognitionRef, isListening, currentLanguage]); // Add currentLanguage dependency
 
   const stopListening = useCallback(() => {
     if (!isSupported || !recognitionRef.current || !isListening) {
@@ -130,9 +149,7 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
         recognitionRef.current.stop();
      } catch (err) {
         console.error("Error stopping recognition:", err);
-        // Less critical, but log it
      }
-    // isListening state is handled by the onend event
   }, [isSupported, recognitionRef, isListening]);
 
   const resetTranscript = useCallback(() => {
@@ -148,24 +165,47 @@ export function useSpeechRecognition(): SpeechRecognitionHook {
     startListening,
     stopListening,
     resetTranscript,
+    setLanguage, // Expose setter
   };
 }
 
-// Add SpeechSynthesis related types if needed later
+// --- Speech Synthesis ---
 declare global {
     interface Window {
         speechSynthesis: SpeechSynthesis;
     }
 }
 
-export function useSpeechSynthesis(): { speak: (text: string) => void; isSupported: boolean } {
+interface SpeechSynthesisHook {
+    speak: (text: string) => void;
+    isSupported: boolean;
+    setLanguage: (lang: string) => void; // Added setter
+}
+
+export function useSpeechSynthesis(): SpeechSynthesisHook {
     const [isSupported, setIsSupported] = useState(false);
+    const [currentLanguage, setCurrentLanguage] = useState('en-US'); // State for language
 
     useEffect(() => {
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
             setIsSupported(true);
+            // Optional: Log available voices on mount
+            // window.speechSynthesis.onvoiceschanged = () => {
+            //     console.log("Available voices:", window.speechSynthesis.getVoices());
+            // };
         }
     }, []);
+
+    const setLanguage = useCallback((lang: string) => {
+        if (lang !== currentLanguage) {
+            console.log("Setting speech synthesis language to:", lang);
+            setCurrentLanguage(lang);
+             // Cancel any ongoing speech when language changes
+             if (isSupported && window.speechSynthesis) {
+                 window.speechSynthesis.cancel();
+             }
+        }
+    }, [currentLanguage, isSupported]);
 
     const speak = useCallback((text: string) => {
         if (!isSupported || !window.speechSynthesis) {
@@ -173,15 +213,25 @@ export function useSpeechSynthesis(): { speak: (text: string) => void; isSupport
             return;
         }
         try {
-            // Cancel any previous utterance
-            window.speechSynthesis.cancel();
+            window.speechSynthesis.cancel(); // Cancel previous utterance
+
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
+            utterance.lang = currentLanguage; // Use state language
+
+             // Optional: Find a specific voice for the language if needed
+             // const voices = window.speechSynthesis.getVoices();
+             // const voice = voices.find(v => v.lang === currentLanguage);
+             // if (voice) {
+             //     utterance.voice = voice;
+             // } else {
+             //     console.warn(`No specific voice found for language: ${currentLanguage}. Using default.`);
+             // }
+
             window.speechSynthesis.speak(utterance);
         } catch (e) {
             console.error("Error speaking:", e);
         }
-    }, [isSupported]);
+    }, [isSupported, currentLanguage]); // Add currentLanguage dependency
 
-    return { speak, isSupported };
+    return { speak, isSupported, setLanguage }; // Expose setter
 }
