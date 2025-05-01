@@ -16,14 +16,27 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
 import type { TastePreference } from '@/app/page'; // Import TastePreference type
 
-// UI Text translations
+// Supported languages mapping (Code to Name) - Used for AI flow calls
+const supportedLanguagesMap = {
+    "en": "English",
+    "es": "Spanish",
+    "fr": "French",
+    "de": "German",
+    "hi": "Hindi",
+    "bn": "Bengali",
+    // Add more as needed
+};
+type LanguageCode = keyof typeof supportedLanguagesMap;
+
+// UI Text translations (keyed by LanguageCode)
 const uiText = {
     "en": {
         recipeNotePrefix: "Note:",
         ingredientsTitle: "Ingredients",
         ingredientsNotAvailable: "No ingredients listed.",
-        mainIngredientsHeader: "**Main Ingredients:**",
-        additionalIngredientsHeader: "**Additional Ingredients:**",
+        mainIngredientsHeader: "**Main Ingredients (Provided):**", // Clarify source
+        additionalIngredientsHeader: "**Additional Ingredients (Suggested):**", // Clarify source
+        refinedIngredientsHeader: "**Refined Ingredients:**", // Header for refined list
         alternativeIdeasTitle: "Alternative Ideas",
         alternativeIdeasDescription: "These ingredients could also make other types of dishes. Click one to generate a different recipe:",
         tryAlternativeButton: "Try {type}",
@@ -55,8 +68,9 @@ const uiText = {
         recipeNotePrefix: "Nota:",
         ingredientsTitle: "Ingredientes",
         ingredientsNotAvailable: "No hay ingredientes listados.",
-        mainIngredientsHeader: "**Ingredientes Principales:**",
-        additionalIngredientsHeader: "**Ingredientes Adicionales:**",
+        mainIngredientsHeader: "**Ingredientes Principales (Proporcionados):**",
+        additionalIngredientsHeader: "**Ingredientes Adicionales (Sugeridos):**",
+        refinedIngredientsHeader: "**Ingredientes Refinados:**",
         alternativeIdeasTitle: "Ideas Alternativas",
         alternativeIdeasDescription: "Estos ingredientes también podrían usarse para otros tipos de platos. Haz clic en uno para generar una receta diferente:",
         tryAlternativeButton: "Probar {type}",
@@ -88,8 +102,9 @@ const uiText = {
         recipeNotePrefix: "Note :",
         ingredientsTitle: "Ingrédients",
         ingredientsNotAvailable: "Aucun ingrédient listé.",
-        mainIngredientsHeader: "**Ingrédients Principaux :**",
-        additionalIngredientsHeader: "**Ingrédients Additionnels :**",
+        mainIngredientsHeader: "**Ingrédients Principaux (Fournis) :**",
+        additionalIngredientsHeader: "**Ingrédients Additionnels (Suggérés) :**",
+        refinedIngredientsHeader: "**Ingrédients Affinés :**",
         alternativeIdeasTitle: "Idées Alternatives",
         alternativeIdeasDescription: "Ces ingrédients pourraient aussi servir à d'autres types de plats. Cliquez sur un pour générer une recette différente :",
         tryAlternativeButton: "Essayer {type}",
@@ -121,8 +136,9 @@ const uiText = {
         recipeNotePrefix: "Hinweis:",
         ingredientsTitle: "Zutaten",
         ingredientsNotAvailable: "Keine Zutaten aufgelistet.",
-        mainIngredientsHeader: "**Hauptzutaten:**",
-        additionalIngredientsHeader: "**Zusätzliche Zutaten:**",
+        mainIngredientsHeader: "**Hauptzutaten (Bereitgestellt):**",
+        additionalIngredientsHeader: "**Zusätzliche Zutaten (Vorgeschlagen):**",
+        refinedIngredientsHeader: "**Verfeinerte Zutaten:**",
         alternativeIdeasTitle: "Alternative Ideen",
         alternativeIdeasDescription: "Diese Zutaten könnten auch für andere Gerichte verwendet werden. Klicken Sie auf eines, um ein anderes Rezept zu generieren:",
         tryAlternativeButton: "{type} versuchen",
@@ -154,8 +170,9 @@ const uiText = {
         recipeNotePrefix: "ध्यान दें:",
         ingredientsTitle: "सामग्री",
         ingredientsNotAvailable: "कोई सामग्री सूचीबद्ध नहीं है।",
-        mainIngredientsHeader: "**मुख्य सामग्री:**",
-        additionalIngredientsHeader: "**अतिरिक्त सामग्री:**",
+        mainIngredientsHeader: "**मुख्य सामग्री (प्रदान की गई):**",
+        additionalIngredientsHeader: "**अतिरिक्त सामग्री (सुझाई गई):**",
+        refinedIngredientsHeader: "**परिष्कृत सामग्री:**",
         alternativeIdeasTitle: "वैकल्पिक विचार",
         alternativeIdeasDescription: "इन सामग्रियों से अन्य प्रकार के व्यंजन भी बन सकते हैं। एक अलग रेसिपी बनाने के लिए किसी एक पर क्लिक करें:",
         tryAlternativeButton: "{type} आज़माएँ",
@@ -187,8 +204,9 @@ const uiText = {
         recipeNotePrefix: "দ্রষ্টব্য:",
         ingredientsTitle: "উপকরণ",
         ingredientsNotAvailable: "কোনো উপকরণ তালিকাভুক্ত নেই।",
-        mainIngredientsHeader: "**প্রধান উপকরণ:**",
-        additionalIngredientsHeader: "**অতিরিক্ত উপকরণ:**",
+        mainIngredientsHeader: "**প্রধান উপকরণ (প্রদান করা):**",
+        additionalIngredientsHeader: "**অতিরিক্ত উপকরণ (প্রস্তাবিত):**",
+        refinedIngredientsHeader: "**পরিমার্জিত উপকরণ:**",
         alternativeIdeasTitle: "বিকল্প ধারণা",
         alternativeIdeasDescription: "এই উপকরণগুলি দিয়ে অন্য ধরনের খাবারও তৈরি করা যেতে পারে। একটি ভিন্ন রেসিপি তৈরি করতে যেকোনো একটিতে ক্লিক করুন:",
         tryAlternativeButton: "{type} চেষ্টা করুন",
@@ -219,26 +237,15 @@ const uiText = {
      // Add more languages as needed
 };
 
-// Supported languages mapping for language prop
-const supportedLanguages = {
-    "en": "English",
-    "es": "Spanish",
-    "fr": "French",
-    "de": "German",
-    "hi": "Hindi",
-    "bn": "Bengali",
-    // Add more as needed
-};
-
 interface RecipeDisplayProps {
-  recipe: GenerateRecipeOutput;
-  refinedRecipe: RefineRecipeOutput | null;
+  recipe: GenerateRecipeOutput; // The originally generated recipe
+  refinedRecipe: RefineRecipeOutput | null; // The result of refinement, if performed
   alternativeTypes: string[] | null;
   onRefine: (unavailableAdditional: string[]) => void;
   onSelectAlternative: (dishType: string) => void;
   isRefining: boolean;
   isGenerating: boolean;
-  language: string; // Receive language code (e.g., 'en', 'es')
+  language: LanguageCode; // Expect language code (e.g., 'en', 'es')
   tastePreference?: TastePreference; // Add taste preference prop
 }
 
@@ -268,35 +275,37 @@ export function RecipeDisplay({
   const [explainError, setExplainError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Get translated UI text
-  const T = uiText[language as keyof typeof uiText] || uiText['en'];
-  const languageName = supportedLanguages[language as keyof typeof supportedLanguages] || 'English';
+  // Get translated UI text based on language code
+  const T = uiText[language] || uiText['en'];
+  // Get the full language name for AI calls
+  const languageName = supportedLanguagesMap[language] || 'English';
 
 
   useEffect(() => {
+    // Reset explanation when recipe or refinement changes
     setDetailedInstructions(null);
     setExplainError(null);
 
-    // Reset checklist when recipe changes or refinement occurs
+    // Setup checklist based ONLY on the original recipe's additionalIngredients
+    // This section should only appear if there's an original recipe and no refined recipe yet
     if (recipe && !refinedRecipe && recipe.additionalIngredients && recipe.additionalIngredients.length > 0) {
       const initialItems = recipe.additionalIngredients.map((name, index) => ({
         // Use a more robust key combination
         id: `add-ing-${index}-${recipe.recipeName?.replace(/\s+/g, '-') || 'recipe'}-${Date.now()}`,
         name: name,
-        available: true,
+        available: true, // Default to available
       }));
       setAdditionalIngredientsChecklist(initialItems);
       setShowRefineSection(true); // Show checklist if there are items
       setRefineError(null);
     } else {
+      // Hide checklist if there's a refined recipe or no additional items initially
       setAdditionalIngredientsChecklist([]);
-      setShowRefineSection(false); // Hide checklist if no items or refined
+      setShowRefineSection(false);
     }
 
-    // Clear refinement error if the base recipe changes or is refined
-    if (!refinedRecipe) {
-        setRefineError(null);
-    }
+    // Clear refinement error if the base recipe changes or gets refined
+    setRefineError(null);
 
   // Depend on recipe and refinedRecipe to re-evaluate checklist state
   }, [recipe, refinedRecipe]);
@@ -312,6 +321,7 @@ export function RecipeDisplay({
 
   const handleRefineClick = () => {
     setRefineError(null);
+    // Filter based on the current checklist state
     const unavailable = additionalIngredientsChecklist
       .filter(ing => !ing.available)
       .map(ing => ing.name);
@@ -319,7 +329,8 @@ export function RecipeDisplay({
     onRefine(unavailable); // Pass only the names of unavailable items
   };
 
-   const formatIngredientsList = (provided: string[] | undefined, additional: string[] | undefined): string => {
+   // Formats the ingredients for the INITIAL recipe display
+   const formatInitialIngredientsList = (provided: string[] | undefined, additional: string[] | undefined): string => {
        if (!provided && !additional) return T.ingredientsNotAvailable;
 
        const providedItems = provided && provided.length > 0 ? provided : [];
@@ -356,32 +367,34 @@ export function RecipeDisplay({
             return (
                 <ol className="list-decimal list-outside space-y-1.5 pl-5 text-muted-foreground">
                 {lines.map((line, index) => (
+                    // Use index as key is acceptable here as list order is stable for display
                     <li key={index}>{line.replace(/^\d+[\.\)]\s/, '')}</li>
                 ))}
                 </ol>
             );
         } else if (containsMarkdownFormatting) {
-            // Use Tailwind typography for basic markdown styling
-            return (
-                 <div className="space-y-2 prose prose-sm max-w-none prose-li:my-0.5 prose-p:my-1 prose-headings:font-semibold prose-headings:mt-3 prose-headings:mb-1 prose-strong:font-semibold text-muted-foreground prose-headings:text-foreground">
+             // Slightly simplified approach for markdown-like rendering
+             // Using Tailwind's typography plugin (`prose`) can handle more complex markdown automatically
+             // If not using `prose`, manual mapping is needed:
+             return (
+                 <div className="space-y-2 text-muted-foreground">
                     {lines.map((line, index) => {
                         if (/^\s*[-*+]\s/.test(line)) {
-                            // Render as list item (prose handles styling)
-                            return <li key={index}>{line.replace(/^\s*[-*+]\s/, '')}</li>;
-                        } else if (/^#+\s/.test(line)) {
-                            // Render headers (adjusting level for nesting, prose handles styling)
+                            return <p key={index} className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-accent">{line.replace(/^\s*[-*+]\s/, '')}</p>;
+                        } else if (/^##+\s/.test(line)) { // h3 and lower
                             const level = (line.match(/^#+/) || [''])[0].length;
-                            const Tag = `h${Math.min(level + 2, 6)}` as keyof JSX.IntrinsicElements; // Ensure valid heading level
-                            return <Tag key={index}>{line.replace(/^#+\s/, '')}</Tag>;
-                        } else if (/^(\*\*|__)(.*?)\1/.test(line)) {
-                            // Render bold text
+                            const Tag = `h${Math.min(level + 2, 6)}` as keyof JSX.IntrinsicElements;
+                            return <Tag key={index} className="font-semibold mt-3 mb-1 text-foreground">{line.replace(/^#+\s/, '')}</Tag>;
+                        } else if (/^#\s/.test(line)) { // h2
+                             return <h2 key={index} className="text-lg font-semibold mt-4 mb-1 text-foreground">{line.replace(/^#\s/, '')}</h2>;
+                         }
+                        else if (/^(\*\*|__)(.*?)\1/.test(line)) {
                             return <p key={index}><strong>{line.replace(/^(\*\*|__)(.*?)\1/, '$2')}</strong></p>;
                         }
-                        // Default to paragraph
                         return <p key={index}>{line}</p>;
                     })}
                  </div>
-            );
+             );
         }
 
         // If no specific format detected, render as paragraphs
@@ -391,18 +404,28 @@ export function RecipeDisplay({
     // Consolidate display data logic
     const displayData = refinedRecipe ? {
         name: refinedRecipe.refinedRecipeName,
-        ingredientsText: refinedRecipe.refinedIngredients, // Assumes formatted string from AI
+        // Use the formatted string directly from refined output
+        ingredientsText: refinedRecipe.refinedIngredients,
         instructionsText: refinedRecipe.refinedInstructions,
         notes: refinedRecipe.feasibilityNotes,
     } : {
         name: recipe.recipeName,
-        ingredientsText: formatIngredientsList(recipe.providedIngredients, recipe.additionalIngredients),
+        // Format ingredients based on original structure
+        ingredientsText: formatInitialIngredientsList(recipe.providedIngredients, recipe.additionalIngredients),
         instructionsText: recipe.instructions,
         notes: recipe.notes,
     };
 
+    // Check if instructions are meaningful for enabling the explain button
+    const instructionsAvailable = displayData.instructionsText &&
+                                   displayData.instructionsText.trim() !== T.instructionsUnavailable &&
+                                   displayData.instructionsText.trim() !== T.instructionsUnavailablePlaceholder &&
+                                   displayData.instructionsText.trim() !== "No instructions applicable.";
+
+
     const handleExplainInstructions = () => {
-        if (!displayData.instructionsText || displayData.instructionsText.trim() === T.instructionsUnavailable || displayData.instructionsText.trim() === T.instructionsUnavailablePlaceholder || displayData.instructionsText.trim() === "No instructions applicable.") {
+        // Re-check instructions availability just before calling
+        if (!instructionsAvailable) {
             toast({
                 variant: "default",
                 title: T.noInstructionsToExplainTitle,
@@ -414,12 +437,16 @@ export function RecipeDisplay({
         setExplainError(null);
         setDetailedInstructions(null);
 
+        // Determine which ingredients list to send (refined if available, otherwise initial)
+        const ingredientsForExplanation = refinedRecipe
+            ? refinedRecipe.refinedIngredients // Use the refined list string
+            : formatInitialIngredientsList(recipe.providedIngredients, recipe.additionalIngredients); // Use the formatted initial list
+
         const input: ExplainInstructionsInput = {
             recipeName: displayData.name || "Recipe",
-            originalInstructions: displayData.instructionsText,
-            ingredientsList: displayData.ingredientsText || T.ingredientsUnavailable,
-            language: languageName // Pass the full language name
-            // Taste preference is not directly used by explain flow, but could be added if needed
+            originalInstructions: displayData.instructionsText!, // Known to be available due to check above
+            ingredientsList: ingredientsForExplanation,
+            language: languageName // Pass the full language NAME
         };
 
         startExplaining(async () => {
@@ -451,9 +478,9 @@ export function RecipeDisplay({
 
 
     // Determine if refinement checklist or alternative types should be shown
-    const showChecklist = !refinedRecipe && showRefineSection && additionalIngredientsChecklist.length > 0;
+    const showChecklist = showRefineSection; // Relies on state set in useEffect
+    // Show alternatives only if NOT refined and alternatives exist
     const showAlternatives = !refinedRecipe && alternativeTypes && alternativeTypes.length > 0;
-    const instructionsAvailable = displayData.instructionsText && displayData.instructionsText.trim() !== T.instructionsUnavailable && displayData.instructionsText.trim() !== T.instructionsUnavailablePlaceholder && displayData.instructionsText.trim() !== "No instructions applicable.";
 
 
   return (
@@ -471,7 +498,11 @@ export function RecipeDisplay({
          <CardContent className="p-0 space-y-4 text-sm">
             {/* Ingredients Section */}
             <div>
-              <h3 className="font-semibold text-foreground mb-2 flex items-center"><List className="h-4 w-4 mr-2 text-accent"/>{T.ingredientsTitle}</h3>
+              <h3 className="font-semibold text-foreground mb-2 flex items-center">
+                  <List className="h-4 w-4 mr-2 text-accent"/>
+                  {/* Use specific header if refined */}
+                  {refinedRecipe ? T.refinedIngredientsHeader : T.ingredientsTitle}
+              </h3>
                {formatTextToComponent(displayData.ingredientsText)}
             </div>
 
@@ -551,7 +582,7 @@ export function RecipeDisplay({
                         variant="outline"
                         size="sm"
                         onClick={handleRefineClick}
-                        disabled={isRefining || isExplaining || isGenerating} // Disable if any action is happening
+                        disabled={isRefining || isExplaining || isGenerating || additionalIngredientsChecklist.length === 0} // Disable if no items
                         className="mt-2 border-primary text-primary hover:bg-primary/10 w-full sm:w-auto"
                         aria-live="polite"
                      >
@@ -576,6 +607,7 @@ export function RecipeDisplay({
             <div>
                <div className="flex justify-between items-center mb-2">
                    <h3 className="font-semibold text-foreground flex items-center"><CookingPot className="h-4 w-4 mr-2 text-accent"/>{T.instructionsTitle}</h3>
+                    {/* Show explain button only if instructions are available and not currently explaining/loading */}
                     {!detailedInstructions && instructionsAvailable && (
                          <Button
                             variant="ghost"
@@ -594,16 +626,17 @@ export function RecipeDisplay({
                     )}
                </div>
 
-               <div className="text-muted-foreground"> {/* Removed prose here, applying in formatTextToComponent */}
+               <div className="text-muted-foreground">
                  {formatTextToComponent(displayData.instructionsText)}
                </div>
 
+                {/* Explanation Accordion */}
                 {(isExplaining || explainError || detailedInstructions) && (
                      <Accordion type="single" collapsible className="w-full mt-4" defaultValue={detailedInstructions ? "item-1" : undefined}>
                         <AccordionItem value="item-1">
                              <AccordionTrigger
                                 className={`text-primary hover:no-underline text-sm py-2 ${detailedInstructions ? '' : 'cursor-default pointer-events-none'}`} // Prevent click when no content yet
-                                disabled={!detailedInstructions} // Disable trigger if no details loaded
+                                disabled={!detailedInstructions || isExplaining} // Disable trigger if no details or loading
                              >
                                 {isExplaining ? (
                                     <span className="flex items-center"><Loader2 className="h-4 w-4 animate-spin mr-2" />{T.fetchingDetails}</span>
@@ -625,10 +658,10 @@ export function RecipeDisplay({
                                         <AlertDescription className="text-xs">{explainError}</AlertDescription>
                                     </Alert>
                                 ) : detailedInstructions ? (
-                                     <div className="text-muted-foreground"> {/* Removed prose here */}
+                                     <div className="text-muted-foreground">
                                         {formatTextToComponent(detailedInstructions)}
                                     </div>
-                                ) : null}
+                                ) : null /* Should not happen if trigger is disabled properly */}
                             </AccordionContent>
                         </AccordionItem>
                      </Accordion>

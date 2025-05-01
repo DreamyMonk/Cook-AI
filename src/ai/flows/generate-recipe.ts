@@ -35,8 +35,8 @@ export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 // Output schema: Add optional alternative dish types
 const GenerateRecipeOutputSchema = z.object({
   recipeName: z.string().describe('The name of the generated recipe. If no recipe is possible, state that clearly (e.g., "Unable to Create Recipe").'),
-  providedIngredients: z.array(z.string()).describe('List of the main ingredients PROVIDED BY THE USER that are actually USED in the recipe. This list might be a subset of the user input.'),
-  additionalIngredients: z.array(z.string()).describe('List of additional ingredients needed for the recipe. Include common staples (like oil, salt, pepper) AND commonly found vegetables (like onion, garlic, carrots, bell peppers, celery) or other fridge staples (like eggs, soy sauce) if they logically complement the main ingredients to create a more complete dish. If no recipe is possible, this list should be empty.'),
+  providedIngredients: z.array(z.string()).describe('List of the main ingredients PROVIDED BY THE USER that are actually USED in the recipe. This list MUST be a subset of the user input ingredients.'),
+  additionalIngredients: z.array(z.string()).describe('List of ALL additional ingredients needed for the recipe that were NOT provided by the user. Include common staples (like oil, salt, pepper), common vegetables/aromatics (like onion, garlic, carrots, bell peppers, celery), fridge/pantry staples (like eggs, soy sauce, canned tomatoes), AND any other ingredients required to make a sensible dish, considering the taste preference. If no recipe is possible, this list should be empty.'),
   instructions: z.string().describe('Step-by-step instructions for preparing the recipe. If no recipe is possible, this field should be empty or state "No instructions applicable."'),
   alternativeDishTypes: z.array(z.string()).optional().describe('If the main ingredients are versatile, lists other distinct types of dishes (e.g., "Soup", "Salad", "Stir-fry") that could potentially be made. Omit if only one clear type is suitable or if input is too limited.'),
   notes: z.string().optional().describe('Optional brief notes about the recipe, substitutions, or why it might be simple/complex. Include notes if the taste preference could not be fully met. If no recipe is possible, explain why here (e.g., "Missing essential components for a cohesive dish.").')
@@ -85,7 +85,7 @@ User's Available Ingredients: {{{ingredients}}}
 {{#if tastePreference}}User's Preferred Taste/Cuisine: {{{tastePreference}}}{{/if}}
 
 Chef's Instructions:
-1.  Analyze the user's ingredients: {{{ingredients}}}. These are the CORE components.
+1.  Analyze the user's ingredients: {{{ingredients}}}. These are the CORE components the user *claims* to have.
 {{#if preferredDishType}}
 2.  Prioritize creating a recipe that fits the '{{{preferredDishType}}}' category, using the core ingredients.
 {{else}}
@@ -96,17 +96,17 @@ Chef's Instructions:
 {{else}}
 3.  **Taste Preference:** No specific preference mentioned; create a generally appealing recipe.
 {{/if}}
-4.  Determine which of the USER'S ingredients will actually be USED in the recipe. List ONLY these used ingredients under 'providedIngredients'.
-5.  Identify any NECESSARY or highly complementary additional ingredients to make a sensible and more complete dish, considering the target taste preference. Include:
-    *   Basic Staples: Cooking oil, salt, pepper.
-    *   Common Aromatics/Vegetables: **onion, garlic, carrots, celery, bell peppers**.
-    *   Other Common Fridge Items: **eggs, milk, butter, soy sauce, basic canned tomatoes, potatoes**.
+4.  **Identify USED User Ingredients:** Determine which of the USER'S ingredients (from {{{ingredients}}}) will actually be USED in the recipe. List ONLY these used ingredients under 'providedIngredients'. This MUST be a subset of the user's input.
+5.  **Identify ALL Additional Ingredients:** Identify ALL other ingredients NECESSARY or highly complementary to make a sensible and complete dish, considering the target taste preference, that were NOT in the user's original list ({{{ingredients}}}). Include:
+    *   Basic Staples: Cooking oil, salt, pepper, water.
+    *   Common Aromatics/Vegetables: **onion, garlic, carrots, celery, bell peppers, potatoes, tomatoes (fresh or basic canned)**.
+    *   Other Common Fridge/Pantry Items: **eggs, milk, butter, flour, sugar, soy sauce, vinegar**.
     *   Cuisine-Specific Staples (if taste preference is given): Consider items like ginger, chili, specific spices (cumin, coriander, turmeric for Indian; soy sauce, sesame oil for Chinese), herbs (oregano, basil for Mediterranean), etc., ONLY if they fit the core ingredients and taste preference.
-    *   Only include items that logically fit the main ingredients and the dish type/taste.
-    *   List these under 'additionalIngredients'.
-6.  Write clear, step-by-step 'instructions', adapted for the taste preference if applicable. The recipe MUST prominently feature the ingredients in 'providedIngredients'.
+    *   **Crucially, ANY ingredient required for the recipe that wasn't explicitly listed by the user in '{{{ingredients}}}' MUST go into this 'additionalIngredients' list.**
+    *   List ALL these items under 'additionalIngredients'. This list is for user review.
+6.  Write clear, step-by-step 'instructions', adapted for the taste preference if applicable. The recipe MUST prominently feature the ingredients listed in 'providedIngredients' and use items from 'additionalIngredients'.
 {{#unless preferredDishType}}
-7.  **Assess Versatility:** After devising the primary recipe, consider if the CORE ingredients ({{{ingredients}}}) could *also* be used to make other *distinctly different types* of dishes (e.g., if you made a stir-fry, could they also make a soup or a casserole?), potentially fitting other taste preferences.
+7.  **Assess Versatility:** After devising the primary recipe, consider if the CORE USER ingredients ({{{ingredients}}}) could *also* be used to make other *distinctly different types* of dishes (e.g., if you made a stir-fry, could they also make a soup or a casserole?), potentially fitting other taste preferences.
     *   If yes, list these alternative dish types (e.g., "Soup", "Salad", "Baked Dish") in the 'alternativeDishTypes' array.
     *   Be realistic; only suggest plausible alternatives. Do not list minor variations of the main recipe. Omit this field if the ingredients are not versatile or too limited.
 {{/unless}}
@@ -114,8 +114,8 @@ Chef's Instructions:
     *   Set 'recipeName' to indicate failure (e.g., "Unable to Create Recipe" or its translation).
     *   Keep 'providedIngredients', 'additionalIngredients', and 'alternativeDishTypes' as empty arrays ([]).
     *   Set 'instructions' to indicate no instructions (e.g., "No instructions applicable." or its translation).
-    *   Explain *why* in the 'notes' field (e.g., "Cannot create a '{{{tastePreference}}}' dish with these ingredients.").
-9. Add brief, optional 'notes' for suggestions, explanations, or limitations (especially regarding taste preference).
+    *   Explain *why* in the 'notes' field (e.g., "Cannot create a '{{{tastePreference}}}' dish with these ingredients." or "Input ingredients are insufficient for a complete meal.").
+9. Add brief, optional 'notes' for suggestions, explanations, or limitations (especially regarding taste preference or why certain additional items were included).
 
 Respond strictly following the output schema structure, ensuring all text fields are in the requested language ({{#if language}}{{language}}{{else}}English{{/if}}). Ensure 'providedIngredients', 'additionalIngredients', and 'alternativeDishTypes' (if present) are ALWAYS arrays of strings, even if empty.
 `,
@@ -165,15 +165,22 @@ const generateRecipeFlow = ai.defineFlow<
              output.additionalIngredients = output.additionalIngredients ?? [];
              output.alternativeDishTypes = output.alternativeDishTypes ?? undefined; // Keep as undefined if not generated
              output.instructions = output.instructions || (msg.defaultInstructions + ` (${lang})`); // Provide default if empty
+             output.notes = output.notes || undefined; // Ensure notes is undefined if empty string
+
+             // Post-processing check: If AI failed to generate despite instructions, return a clear error
+             if ((output.recipeName.includes("Unable") || output.recipeName.includes("Failed") || output.recipeName.includes("Error")) && !output.notes) {
+                output.notes = msg.aiErrorNotes; // Add a default error note if AI indicates failure but doesn't provide one
+             }
+
              return output;
         } else {
              // Handle unexpected null/undefined output from the prompt
              console.error("AI prompt returned null/undefined output for input:", input);
              return {
-                recipeName: msg.aiErrorTitle,
+                recipeName: msg.aiErrorTitle + ` (${lang})`,
                 providedIngredients: [],
                 additionalIngredients: [],
-                instructions: msg.defaultInstructions + ` (AI Error - ${lang})`,
+                instructions: msg.defaultInstructions,
                 notes: msg.aiErrorNotes,
                 alternativeDishTypes: [],
              };
@@ -190,13 +197,18 @@ const generateRecipeFlow = ai.defineFlow<
             } else if (error.message.includes('API key')) {
                  errorMessage = msg.configErrorNotes;
                  errorTitle = msg.configErrorTitle;
-            } else {
+            } else if (error.message.includes('insufficient for a complete meal')) {
+                 // Catch specific failure case mentioned in prompt
+                 errorTitle = msg.defaultFailTitle + ` (${lang})`;
+                 errorMessage = error.message; // Use the AI's specific reason
+            }
+            else {
                  errorMessage = msg.aiErrorGenericNotes.replace('{message}', error.message);
-                 errorTitle = msg.aiErrorGenericTitle;
+                 errorTitle = msg.aiErrorGenericTitle + ` (${lang})`;
             }
          }
          return {
-            recipeName: errorTitle + ` (${lang})`,
+            recipeName: errorTitle,
             providedIngredients: [],
             additionalIngredients: [],
             instructions: msg.defaultFailInstructions,

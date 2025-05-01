@@ -24,7 +24,7 @@ type RecipeState = GenerateRecipeOutput | null;
 // State for the refined recipe result
 type RefinedRecipeState = RefineRecipeOutput | null;
 
-// Supported languages mapping
+// Supported languages mapping (Code to Name)
 const supportedLanguages = {
     "en": "English",
     "es": "Spanish",
@@ -54,7 +54,7 @@ export const supportedTastePreferences = [
 export type TastePreference = typeof supportedTastePreferences[number];
 
 
-// UI Text translations
+// UI Text translations (keyed by LanguageCode)
 const uiText = {
     "en": {
         title: "FridgeChef",
@@ -232,7 +232,7 @@ export default function Home() {
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>('en'); // Default to English
   const [selectedTaste, setSelectedTaste] = useState<TastePreference>('Any'); // State for taste preference
 
-  // Get translated UI text
+  // Get translated UI text based on selected language code
   const T = uiText[selectedLanguage] || uiText['en'];
 
   // Handler for initial recipe generation (and handling alternatives)
@@ -250,7 +250,7 @@ export default function Home() {
        return;
      }
 
-    const languageName = supportedLanguages[selectedLanguage]; // Get full language name
+    const languageName = supportedLanguages[selectedLanguage]; // Get full language NAME (e.g., "English")
     const tastePreference = selectedTaste === 'Any' ? undefined : selectedTaste; // Don't pass 'Any'
 
     startGenerating(async () => {
@@ -258,7 +258,7 @@ export default function Home() {
         const result = await generateRecipe({
             ingredients: ingredientsString,
             preferredDishType: preferredType,
-            language: languageName, // Pass the full language name
+            language: languageName, // Pass the full language NAME
             tastePreference: tastePreference, // Pass the taste preference
         });
 
@@ -309,7 +309,7 @@ export default function Home() {
     setError(null);
     setRefinedRecipe(null);
 
-    const languageName = supportedLanguages[selectedLanguage]; // Get full language name
+    const languageName = supportedLanguages[selectedLanguage]; // Get full language NAME (e.g., "English")
     const tastePreference = selectedTaste === 'Any' ? undefined : selectedTaste; // Don't pass 'Any'
 
     const refineInput: RefineRecipeInput = {
@@ -318,7 +318,7 @@ export default function Home() {
       originalAdditionalIngredients: recipe.additionalIngredients || [],
       unavailableAdditionalIngredients: unavailableAdditional,
       originalInstructions: recipe.instructions,
-      language: languageName, // Pass the full language name
+      language: languageName, // Pass the full language NAME
       tastePreference: tastePreference, // Pass the taste preference
     };
 
@@ -331,7 +331,7 @@ export default function Home() {
            setRefinedRecipe(null);
         } else if (result) {
           setRefinedRecipe(result);
-          setAlternativeTypes(null);
+          setAlternativeTypes(null); // Clear alternatives after refinement
         } else {
            setError(T.refineFailedGeneric);
         }
@@ -359,7 +359,7 @@ export default function Home() {
         <p className="text-lg text-muted-foreground">
           {T.tagline}
         </p>
-         <div className="mt-4 flex justify-center gap-4">
+         <div className="mt-4 flex justify-center items-center flex-wrap gap-4">
              <Select value={selectedLanguage} onValueChange={(value) => setSelectedLanguage(value as LanguageCode)}>
                 <SelectTrigger className="w-[180px] h-9">
                      <Languages className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -413,6 +413,7 @@ export default function Home() {
              {!isLoading && !error && (recipe || refinedRecipe) && (
                 <CardDescription>
                     {refinedRecipe ? T.recipeDescriptionRefined : (recipe ? T.recipeDescriptionGenerated : "")}
+                    {/* Display notes from either refined or original recipe */}
                     {(refinedRecipe?.feasibilityNotes || recipe?.notes) && (
                          <span className="block mt-1 text-xs italic">
                             Note: {refinedRecipe?.feasibilityNotes || recipe?.notes}
@@ -448,10 +449,10 @@ export default function Home() {
                   <AlertTitle>{T.errorTitle}</AlertTitle>
                   <AlertDescription>{error}</AlertDescription>
                </Alert>
-            ) : recipe ? (
+            ) : recipe ? ( // Pass original recipe if available, refinedRecipe overlays parts of it
               <RecipeDisplay
-                recipe={recipe}
-                refinedRecipe={refinedRecipe}
+                recipe={recipe} // Always pass the base recipe
+                refinedRecipe={refinedRecipe} // Pass refinement results if available
                 alternativeTypes={alternativeTypes}
                 onRefine={handleRefineRecipe}
                 onSelectAlternative={handleGenerateAlternative}

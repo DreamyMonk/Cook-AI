@@ -31,7 +31,7 @@ export type ExplainInstructionsOutput = z.infer<typeof ExplainInstructionsOutput
 
 // Exported function calling the flow
 export async function explainInstructions(input: ExplainInstructionsInput): Promise<ExplainInstructionsOutput> {
-  const lang = input.language || "English";
+  const lang = input.language || "English"; // Use language name
   // Define messages based on language name
   const messages: { [key: string]: { noInstructions: string } } = {
       "English": { noInstructions: "No instructions provided to explain." },
@@ -90,7 +90,7 @@ const explainInstructionsFlow = ai.defineFlow<
     outputSchema: ExplainInstructionsOutputSchema,
   },
   async (input) => {
-    const lang = input.language || "English";
+    const lang = input.language || "English"; // Use language name
     // Define messages based on language name
     const errorMessages: { [key: string]: { errorDefault: string; unexpectedError: string; busyError: string; configError: string; aiError: string; } } = {
          "English": { errorDefault: "Error: The AI instructor didn't provide an explanation. Please try again.", unexpectedError: "An unexpected error occurred while generating the explanation.", busyError: "The AI instructor is currently busy! Please try again in a moment.", configError: "There seems to be an issue with the AI configuration. Please contact support.", aiError: "AI Error: {message}." },
@@ -101,14 +101,21 @@ const explainInstructionsFlow = ai.defineFlow<
          "Bengali": { errorDefault: "ত্রুটি: এআই প্রশিক্ষক একটি ব্যাখ্যা প্রদান করেনি। অনুগ্রহ করে আবার চেষ্টা করুন।", unexpectedError: "ব্যাখ্যা তৈরি করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।", busyError: "এআই প্রশিক্ষক বর্তমানে ব্যস্ত! অনুগ্রহ করে কিছুক্ষণ পরে আবার চেষ্টা করুন।", configError: "এআই কনফিগারেশনে সমস্যা আছে বলে মনে হচ্ছে। অনুগ্রহ করে সহায়তার সাথে যোগাযোগ করুন।", aiError: "এআই ত্রুটি: {message}।" },
           // Add more languages as needed
     };
-    const msg = errorMessages[lang] || errorMessages["English"];
+    const msg = errorMessages[lang] || errorMessages["English"]; // Use lang (name) to get messages
 
     try {
       const { output } = await prompt(input);
-      if (output) {
+      if (output && output.detailedExplanation) {
+        // Ensure the explanation isn't just an error message itself
+        if (output.detailedExplanation.startsWith("Error:")) {
+             console.error("AI prompt (explainInstructions) returned an error message in output:", output.detailedExplanation);
+             return {
+                detailedExplanation: `${msg.errorDefault} (Received: ${output.detailedExplanation})`
+             };
+        }
         return output;
       } else {
-        console.error("AI prompt (explainInstructions) returned null/undefined output for input:", input);
+        console.error("AI prompt (explainInstructions) returned null/undefined or empty explanation for input:", input);
         // Return a structured error within the expected schema
         return {
           detailedExplanation: msg.errorDefault,
@@ -128,7 +135,7 @@ const explainInstructionsFlow = ai.defineFlow<
       }
       // Return a structured error within the expected schema
       return {
-        detailedExplanation: `Error (${lang}): ${errorMessage}`, // Keep "Error:" prefix in English? Or translate too? Updated to include lang
+        detailedExplanation: `Error (${lang}): ${errorMessage}`, // Use lang (name) in the error message
       };
     }
   }

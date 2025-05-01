@@ -14,8 +14,8 @@ import {z} from 'genkit';
 // Schema for the input to the refinement flow
 const RefineRecipeInputSchema = z.object({
   originalRecipeName: z.string().describe('The name of the original recipe generated.'),
-  providedIngredients: z.array(z.string()).describe('The list of MAIN ingredients from the original recipe (the ones the AI confirmed it used from user input).'),
-  originalAdditionalIngredients: z.array(z.string()).describe('The full list of ADDITIONAL ingredients originally suggested by the AI.'),
+  providedIngredients: z.array(z.string()).describe('The list of MAIN ingredients from the original recipe (the ones the AI confirmed it used from *user input*).'),
+  originalAdditionalIngredients: z.array(z.string()).describe('The full list of ADDITIONAL ingredients originally suggested by the AI (items *not* in the user input).'),
   unavailableAdditionalIngredients: z.array(z.string()).describe('The subset of ADDITIONAL ingredients the user marked as unavailable.'),
   originalInstructions: z.string().describe('The original step-by-step recipe instructions.'),
   language: z
@@ -32,9 +32,9 @@ export type RefineRecipeInput = z.infer<typeof RefineRecipeInputSchema>;
 // Schema for the output of the refinement flow
 const RefineRecipeOutputSchema = z.object({
   refinedRecipeName: z.string().describe('The name of the refined recipe (can be the same or slightly modified, e.g., "Chicken Stir-Fry (No Broccoli)"). If refinement is impossible, indicate failure clearly (e.g., "Refinement Failed: Missing Key Ingredient").'),
-  refinedIngredients: z.string().describe('A CLEARLY FORMATTED string listing the ingredients required for the *refined* recipe. Use Markdown lists or similar structure to differentiate between main and newly required additional ingredients. Example: "**Main:**\\n- Chicken\\n- Rice\\n**Additional:**\\n- Soy Sauce\\n- Oil\\n- Salt, Pepper"'),
+  refinedIngredients: z.string().describe('A CLEARLY FORMATTED string listing the ingredients required for the *refined* recipe. Use Markdown lists or similar structure to differentiate between main (user-provided) and newly required additional ingredients. Example: "**Main:**\\n- Chicken\\n- Rice\\n**Additional:**\\n- Soy Sauce\\n- Oil\\n- Salt, Pepper"'),
   refinedInstructions: z.string().describe('The updated step-by-step instructions for the refined recipe. If refinement is impossible, state "No instructions applicable."'),
-  feasibilityNotes: z.string().describe('Notes explaining the changes, substitutions, impact of omissions, or confirming the original is fine. If refinement is impossible, EXPLAIN CLEARLY why (e.g., "Cannot make [Taste] sauce without [ingredient].").'),
+  feasibilityNotes: z.string().describe('Notes explaining the changes, substitutions, impact of omissions (including impact on taste preference), or confirming the original is fine. If refinement is impossible, EXPLAIN CLEARLY why (e.g., "Cannot make [Taste] sauce without [ingredient].").'),
 }).describe('The refined recipe details, provided in the requested language (default English).');
 export type RefineRecipeOutput = z.infer<typeof RefineRecipeOutputSchema>;
 
@@ -71,12 +71,12 @@ const prompt = ai.definePrompt({
   name: 'refineRecipePrompt',
   input: { schema: RefineRecipeInputSchema },
   output: { schema: RefineRecipeOutputSchema },
-  prompt: `You are a helpful recipe assistant. A user received a recipe ('{{{originalRecipeName}}}'{{#if tastePreference}} intended to be '{{{tastePreference}}}' style{{/if}}) but indicated some *additional* ingredients are unavailable. Your task is to adapt the recipe or explain why it's not possible, maintaining the original style if specified.
+  prompt: `You are a helpful recipe assistant. A user received a recipe ('{{{originalRecipeName}}}'{{#if tastePreference}} intended to be '{{{tastePreference}}}' style{{/if}}) but indicated some *additional* ingredients (items NOT in their original input) are unavailable. Your task is to adapt the recipe or explain why it's not possible, maintaining the original style if specified.
 {{#if language}}Generate the entire response (refinedRecipeName, refinedIngredients, refinedInstructions, feasibilityNotes) in {{language}}.{{else}}Generate the entire response in English.{{/if}}
 
 Original Recipe Details:
-- Main Ingredients Used (from user's input): {{#each providedIngredients}}- {{{this}}}{{/each}}
-- Originally Suggested Additional Ingredients: {{#each originalAdditionalIngredients}}- {{{this}}}{{/each}}
+- Main Ingredients Used (from USER's input): {{#each providedIngredients}}- {{{this}}}{{/each}}
+- Originally Suggested Additional Ingredients (NOT from user's input): {{#each originalAdditionalIngredients}}- {{{this}}}{{/each}}
 - Original Instructions: {{{originalInstructions}}}
 {{#if tastePreference}}- Original Taste Preference: {{{tastePreference}}}{{/if}}
 
@@ -88,17 +88,17 @@ Refinement Instructions:
 2.  **Assess Feasibility:** Can the recipe work without them? Can simple substitutions (using common staples like oil, salt, pepper, water, maybe basic flour/sugar) be made, while trying to maintain the {{#if tastePreference}}'{{{tastePreference}}}' style{{else}}original style{{/if}}?
 3.  **If Feasible (or no changes needed):**
     *   Modify 'originalInstructions' to remove or substitute unavailable items, creating 'refinedInstructions'. Try to preserve the {{#if tastePreference}}'{{{tastePreference}}}' flavor profile{{else}}original flavor profile{{/if}}.
-    *   Generate 'refinedIngredients': a **clearly formatted string** (use Markdown lists like "**Main:**\\n- Item 1\\n**Additional:**\\n- Item 2" or translations) listing ONLY the ingredients *now* required. Include the original 'providedIngredients' and the *remaining* available 'originalAdditionalIngredients' (and any simple substitutes used).
+    *   Generate 'refinedIngredients': a **clearly formatted string** (use Markdown lists like "**Main:**\\n- Item 1\\n**Additional:**\\n- Item 2" or translations) listing ONLY the ingredients *now* required. Include the original 'providedIngredients' (user-provided) and the *remaining* available 'originalAdditionalIngredients' (and any simple substitutes used).
     *   Keep 'refinedRecipeName' similar or add a note (e.g., "{{{originalRecipeName}}} (No Onion)" or its translation).
-    *   Write 'feasibilityNotes' explaining the changes (e.g., "Removed onion, flavour profile slightly changed.", "Substituted X for Y.") or confirming sufficiency ("All needed items available!"). Mention any impact on the {{#if tastePreference}}'{{{tastePreference}}}' style{{else}}original style{{/if}}.
+    *   Write 'feasibilityNotes' explaining the changes (e.g., "Removed onion, flavour profile slightly changed.", "Substituted X for Y.") or confirming sufficiency ("All needed items available!"). Mention any impact on the {{#if tastePreference}}'{{{tastePreference}}}' style/taste{{else}}original style/taste{{/if}}.
 4.  **If Not Feasible:**
     *   Set 'refinedRecipeName' to indicate failure (e.g., "Refinement Failed: {{{originalRecipeName}}} - Missing Crucial Item" or its translation).
-    *   Explain clearly in 'feasibilityNotes' *why* it fails (e.g., "[Unavailable item] is essential for the {{#if tastePreference}}'{{{tastePreference}}}' sauce/structure{{else}}sauce/structure{{/if}}.").
+    *   Explain clearly in 'feasibilityNotes' *why* it fails (e.g., "[Unavailable item] is essential for the {{#if tastePreference}}'{{{tastePreference}}}' sauce/structure{{else}}sauce/structure{{/if}} and cannot be easily substituted.").
     *   Set 'refinedIngredients' to a message like "Refinement not possible." or its translation.
     *   Set 'refinedInstructions' to indicate no instructions (e.g., "No instructions applicable." or its translation).
 5.  **If NO items were marked unavailable:**
     *   Set 'refinedRecipeName' to "{{{originalRecipeName}}} (Confirmed)" or its translation.
-    *   Format the complete original ingredient list (provided + additional) clearly in 'refinedIngredients' using Markdown lists.
+    *   Format the complete original ingredient list (provided + additional) clearly in 'refinedIngredients' using Markdown lists like "**Main:**\\n- Item 1\\n**Additional:**\\n- Item 2".
     *   Copy 'originalInstructions' to 'refinedInstructions'.
     *   Set 'feasibilityNotes' to "Great! All suggested ingredients are available. Proceed with the original recipe." or its translation.
 
