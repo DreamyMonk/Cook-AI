@@ -11,68 +11,79 @@
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 
-// Define schema internally, but don't export it
+// Schema for the input to the refinement flow
 const RefineRecipeInputSchema = z.object({
-  originalRecipeName: z.string().describe('The name of the original recipe.'),
-  providedIngredients: z.array(z.string()).describe('The main ingredients the user initially provided.'),
-  originalAdditionalIngredients: z.array(z.string()).describe('The full list of additional ingredients originally suggested.'),
-  unavailableAdditionalIngredients: z.array(z.string()).describe('The subset of additional ingredients the user marked as unavailable.'),
-  originalInstructions: z.string().describe('The original recipe instructions.'),
+  originalRecipeName: z.string().describe('The name of the original recipe generated.'),
+  providedIngredients: z.array(z.string()).describe('The list of MAIN ingredients from the original recipe (the ones the AI confirmed it used from user input).'),
+  originalAdditionalIngredients: z.array(z.string()).describe('The full list of ADDITIONAL ingredients originally suggested by the AI.'),
+  unavailableAdditionalIngredients: z.array(z.string()).describe('The subset of ADDITIONAL ingredients the user marked as unavailable.'),
+  originalInstructions: z.string().describe('The original step-by-step recipe instructions.'),
 });
 export type RefineRecipeInput = z.infer<typeof RefineRecipeInputSchema>;
 
-// Define schema internally, but don't export it
+// Schema for the output of the refinement flow
 const RefineRecipeOutputSchema = z.object({
-  refinedRecipeName: z.string().describe('The name of the refined recipe (can be the same or slightly modified).'),
-  refinedIngredients: z.string().describe('A formatted list of ingredients required for the *refined* recipe.'),
-  refinedInstructions: z.string().describe('The updated step-by-step instructions for the refined recipe.'),
-  feasibilityNotes: z.string().describe('Notes on the feasibility of the refinement, suggested substitutions for unavailable items, or confirmation that the recipe works without them. If refinement is impossible, explain why.'),
+  refinedRecipeName: z.string().describe('The name of the refined recipe (can be the same or slightly modified, e.g., "Chicken Stir-Fry (No Broccoli)"). If refinement is impossible, indicate failure clearly (e.g., "Refinement Failed: Missing Key Ingredient").'),
+  refinedIngredients: z.string().describe('A CLEARLY FORMATTED string listing the ingredients required for the *refined* recipe. Use Markdown lists or similar structure to differentiate between main and newly required additional ingredients. Example: "**Main:**\\n- Chicken\\n- Rice\\n**Additional:**\\n- Soy Sauce\\n- Oil\\n- Salt, Pepper"'),
+  refinedInstructions: z.string().describe('The updated step-by-step instructions for the refined recipe. If refinement is impossible, state "No instructions applicable."'),
+  feasibilityNotes: z.string().describe('Notes explaining the changes, substitutions, impact of omissions, or confirming the original is fine. If refinement is impossible, EXPLAIN CLEARLY why (e.g., "Cannot make sauce without soy sauce.").'),
 });
 export type RefineRecipeOutput = z.infer<typeof RefineRecipeOutputSchema>;
 
+
+// Exported function that wraps the Genkit flow
 export async function refineRecipe(input: RefineRecipeInput): Promise<RefineRecipeOutput> {
-  // Add basic validation if needed, though Zod handles schema
-  if (input.unavailableAdditionalIngredients.length === 0 && input.originalAdditionalIngredients.length > 0) {
-    // If nothing is marked unavailable, maybe just return the original slightly formatted?
-    // Or just let the AI confirm it's fine. Let's let the AI handle it for consistency.
+  // Basic validation (though Zod handles schema)
+  if (!input.originalRecipeName || !input.originalInstructions) {
+     return {
+        refinedRecipeName: "Refinement Failed: Input Missing",
+        refinedIngredients: "Missing original recipe details.",
+        refinedInstructions: "No instructions applicable.",
+        feasibilityNotes: "Cannot refine recipe without original name and instructions.",
+     }
   }
   return refineRecipeFlow(input);
 }
 
+// Genkit Prompt definition
 const prompt = ai.definePrompt({
   name: 'refineRecipePrompt',
   input: { schema: RefineRecipeInputSchema },
   output: { schema: RefineRecipeOutputSchema },
-  prompt: `You are a helpful recipe assistant. A user was given a recipe based on ingredients they have, but they've indicated some of the *additional* suggested ingredients are unavailable. Your task is to refine the recipe or provide guidance.
+  prompt: `You are a helpful recipe assistant. A user received a recipe ('{{{originalRecipeName}}}') but indicated some *additional* ingredients are unavailable. Your task is to adapt the recipe or explain why it's not possible.
 
-Original Recipe Name: {{{originalRecipeName}}}
-User's Main Ingredients: {{#each providedIngredients}}- {{{this}}}{{/each}}
-Originally Suggested Additional Ingredients: {{#each originalAdditionalIngredients}}- {{{this}}}{{/each}}
-User-Marked UNAVAILABLE Additional Ingredients: {{#if unavailableAdditionalIngredients}}{{#each unavailableAdditionalIngredients}}- {{{this}}}{{/each}}{{else}}None{{/if}}
-Original Instructions:
-{{{originalInstructions}}}
+Original Recipe Details:
+- Main Ingredients Used (from user's input): {{#each providedIngredients}}- {{{this}}}{{/each}}
+- Originally Suggested Additional Ingredients: {{#each originalAdditionalIngredients}}- {{{this}}}{{/each}}
+- Original Instructions: {{{originalInstructions}}}
 
-Instructions for Refinement:
-1.  Analyze the unavailable ingredients.
-2.  Determine if the recipe can still be made without them, or with simple substitutions using common staples (oil, salt, pepper, water, maybe flour/sugar if appropriate context).
-3.  **If Feasible:**
-    *   Update the instructions ('refinedInstructions') to reflect the changes or omissions.
-    *   Create a new ingredient list ('refinedIngredients') reflecting ONLY the required items for the modified recipe. Clearly separate the user's main ingredients and the *now-needed* additional ones. Use markdown or newlines for formatting.
-    *   Keep the recipe name ('refinedRecipeName') similar or the same.
-    *   Add notes ('feasibilityNotes') explaining the changes (e.g., "Recipe adjusted to omit [unavailable ingredient]. Taste might be slightly different.", "Substituted [unavailable] with [staple].").
-4.  **If Not Feasible (or significantly compromised):**
-    *   Set 'refinedRecipeName' to indicate failure (e.g., "Refinement Difficult: {{{originalRecipeName}}}").
-    *   Explain clearly in 'feasibilityNotes' why it's not possible or highly discouraged (e.g., "[Unavailable ingredient] is crucial for this dish.").
-    *   Keep 'refinedIngredients' and 'refinedInstructions' brief, perhaps suggesting alternative simple uses for the user's main ingredients.
-5.  **If NO additional ingredients were marked unavailable:**
-    *   Simply confirm this in 'feasibilityNotes' (e.g., "Great! All suggested ingredients are available. Proceed with the original recipe.").
-    *   Return the original recipe details formatted for the 'refined*' fields. The 'refinedIngredients' list should contain both provided and additional ingredients, clearly marked. Use markdown or newlines for formatting.
+User Feedback:
+- UNAVAILABLE Additional Ingredients: {{#if unavailableAdditionalIngredients}}{{#each unavailableAdditionalIngredients}}- {{{this}}}{{/each}}{{else}}None marked as unavailable.{{/if}}
 
-Respond strictly following the output schema structure. Ensure 'refinedIngredients' and 'refinedInstructions' are formatted clearly for display (e.g., using markdown lists or line breaks).
+Refinement Instructions:
+1.  **Analyze:** Identify the 'unavailableAdditionalIngredients'.
+2.  **Assess Feasibility:** Can the recipe work without them? Can simple substitutions (using common staples like oil, salt, pepper, water, maybe basic flour/sugar if contextually appropriate) be made?
+3.  **If Feasible (or no changes needed):**
+    *   Modify 'originalInstructions' to remove or substitute unavailable items, creating 'refinedInstructions'.
+    *   Generate 'refinedIngredients': a **clearly formatted string** (use Markdown lists like "**Main:**\\n- Item 1\\n**Additional:**\\n- Item 2") listing ONLY the ingredients *now* required. Include the original 'providedIngredients' and the *remaining* 'additionalIngredients'.
+    *   Keep 'refinedRecipeName' similar or add a note (e.g., "{{{originalRecipeName}}} (No Onion)").
+    *   Write 'feasibilityNotes' explaining the changes (e.g., "Removed onion, flavour profile slightly changed.", "Substituted X for Y.") or confirming sufficiency ("All needed items available!").
+4.  **If Not Feasible:**
+    *   Set 'refinedRecipeName' to indicate failure (e.g., "Refinement Failed: {{{originalRecipeName}}} - Missing Crucial Item").
+    *   Explain clearly in 'feasibilityNotes' *why* it fails (e.g., "[Unavailable item] is essential for the sauce/structure.").
+    *   Set 'refinedIngredients' to a message like "Refinement not possible."
+    *   Set 'refinedInstructions' to "No instructions applicable."
+5.  **If NO items were marked unavailable:**
+    *   Set 'refinedRecipeName' to "{{{originalRecipeName}}} (Confirmed)".
+    *   Format the complete original ingredient list (provided + additional) clearly in 'refinedIngredients' using Markdown lists.
+    *   Copy 'originalInstructions' to 'refinedInstructions'.
+    *   Set 'feasibilityNotes' to "Great! All suggested ingredients are available. Proceed with the original recipe.".
+
+**Output Format:** Respond strictly following the output schema: {refinedRecipeName: string, refinedIngredients: string (formatted markdown), refinedInstructions: string, feasibilityNotes: string}.
 `,
 });
 
-
+// Genkit Flow definition
 const refineRecipeFlow = ai.defineFlow<
   typeof RefineRecipeInputSchema,
   typeof RefineRecipeOutputSchema
@@ -86,32 +97,43 @@ const refineRecipeFlow = ai.defineFlow<
      try {
         const {output} = await prompt(input);
         if (output) {
+            // Ensure required fields are present (Zod should handle this)
+             output.refinedIngredients = output.refinedIngredients || "Ingredient list unavailable.";
+             output.refinedInstructions = output.refinedInstructions || "Instructions unavailable.";
+             output.feasibilityNotes = output.feasibilityNotes || "No specific notes provided.";
             return output;
         } else {
-            console.error("AI prompt (refineRecipe) returned null output for input:", input);
+            console.error("AI prompt (refineRecipe) returned null/undefined output for input:", input);
              return {
-                refinedRecipeName: "AI Error",
-                refinedIngredients: "Failed to get a response from the AI model.",
-                refinedInstructions: "Please try again later.",
-                feasibilityNotes: "AI model did not return valid output during refinement."
+                refinedRecipeName: "AI Error: No Response",
+                refinedIngredients: "Failed to get refined ingredients from the AI model.",
+                refinedInstructions: "Failed to get refined instructions.",
+                feasibilityNotes: "AI model did not return valid output during refinement. Please try again."
              };
         }
      } catch (error) {
         console.error("Error in refineRecipeFlow:", error);
         let errorMessage = "An unexpected error occurred while refining the recipe.";
+        let errorTitle = "Refinement Failed";
+
          if (error instanceof Error) {
-            errorMessage = `AI Error: ${error.message}`;
              if (error.message.includes('503') || error.message.includes('overloaded')) {
                  errorMessage = "The AI chef is busy refining recipes! Please try again in a moment.";
+                 errorTitle = "AI Busy";
+             } else if (error.message.includes('API key')) {
+                  errorMessage = "There seems to be an issue with the AI configuration. Please contact support.";
+                  errorTitle = "Configuration Error";
+             } else {
+                 errorMessage = `AI Error: ${error.message}`;
+                 errorTitle = "AI Error";
             }
          }
           return {
-            refinedRecipeName: "Refinement Failed",
-            refinedIngredients: errorMessage,
-            refinedInstructions: "Please check the input or try again later.",
-            feasibilityNotes: "Recipe refinement failed due to an error."
+            refinedRecipeName: errorTitle,
+            refinedIngredients: "Ingredient details unavailable due to error.",
+            refinedInstructions: "Instructions unavailable due to error.",
+            feasibilityNotes: errorMessage // Provide detailed error in notes
          };
      }
   }
 );
-

@@ -11,13 +11,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, UtensilsCrossed, TriangleAlert } from 'lucide-react';
 import Image from 'next/image';
 
-// Define the type for the structured ingredient data from the form
-interface IngredientItem {
-  id: string;
-  name: string;
-  available: boolean; // This is from the initial form parsing
-}
-
 // State for the main recipe generation result
 type RecipeState = GenerateRecipeOutput | null;
 // State for the refined recipe result
@@ -29,35 +22,38 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, startGenerating] = useTransition();
   const [isRefining, startRefining] = useTransition(); // Transition for refining
-  const [latestSubmittedIngredients, setLatestSubmittedIngredients] = useState<IngredientItem[]>([]); // Store ingredients used for generation
+  const [latestSubmittedIngredientsString, setLatestSubmittedIngredientsString] = useState<string>(''); // Store raw ingredient string
 
 
   // Handler for initial recipe generation
-  const handleGenerateRecipe = async (ingredientsList: IngredientItem[]) => {
+  const handleGenerateRecipe = async (ingredientsString: string) => {
     setError(null);
     setRecipe(null);
     setRefinedRecipe(null); // Clear refined recipe too
-    setLatestSubmittedIngredients(ingredientsList); // Store the submitted list
+    setLatestSubmittedIngredientsString(ingredientsString); // Store the submitted string
 
-    const availableIngredientsString = ingredientsList
-      .filter(item => item.available)
-      .map(item => item.name)
-      .join(', ');
-
-     if (!availableIngredientsString) {
-       setError("No available ingredients selected. Please ensure at least one ingredient is checked as available.");
+     // Input validation is now simpler as the form provides the string
+     if (!ingredientsString) {
+       setError("No ingredients provided. Please list the ingredients you have.");
        return;
      }
 
     startGenerating(async () => {
       try {
-        const result = await generateRecipe({ ingredients: availableIngredientsString });
+        // Pass the raw string directly to the flow
+        const result = await generateRecipe({ ingredients: ingredientsString });
 
         if (result && (result.recipeName === "Generation Failed" || result.recipeName === "AI Error" || result.recipeName === "Input Error")) {
-             setError(result.additionalIngredients.join(' ') || 'Failed to generate recipe due to an AI or input error.');
+             setError(result.additionalIngredients.join(' ') || result.notes || 'Failed to generate recipe due to an AI or input error.');
              setRecipe(null);
         } else if (result) {
-           setRecipe(result);
+           // Check if the AI indicated no recipe could be made
+           if (result.recipeName.includes("Recipe Idea Blocked") || result.recipeName.includes("Unable to Create")) {
+                setError(result.notes || "The AI couldn't create a recipe with the provided ingredients, even considering common staples.");
+                setRecipe(null); // Explicitly clear recipe state
+           } else {
+               setRecipe(result);
+           }
         } else {
           setError('Could not generate a recipe. The AI might be unavailable or the request failed unexpectedly.');
         }
@@ -81,14 +77,14 @@ export default function Home() {
     setError(null); // Clear previous errors
     setRefinedRecipe(null); // Clear previous refinement
 
-    const providedIngredientsNames = latestSubmittedIngredients
-        .filter(item => item.available)
-        .map(item => item.name);
+    // The `providedIngredients` for the refine flow should be the list that the *AI* used from the initial prompt.
+    // This is now available directly in the `recipe.providedIngredients` output field.
+    const providedIngredientsFromRecipe = recipe.providedIngredients || [];
 
     const refineInput: RefineRecipeInput = {
       originalRecipeName: recipe.recipeName,
-      providedIngredients: providedIngredientsNames, // Use names from the stored list
-      originalAdditionalIngredients: recipe.additionalIngredients,
+      providedIngredients: providedIngredientsFromRecipe, // Use the list from the AI's output
+      originalAdditionalIngredients: recipe.additionalIngredients || [], // Ensure it's an array
       unavailableAdditionalIngredients: unavailableAdditional,
       originalInstructions: recipe.instructions,
     };
@@ -97,9 +93,9 @@ export default function Home() {
       try {
         const result = await refineRecipe(refineInput);
 
-        if (result && (result.refinedRecipeName === "Refinement Failed" || result.refinedRecipeName === "AI Error")) {
+        if (result && (result.refinedRecipeName.includes("Failed") || result.refinedRecipeName.includes("AI Error") || result.refinedRecipeName.includes("Difficult"))) {
            setError(result.feasibilityNotes || 'Failed to refine recipe due to an AI or input error.');
-           setRefinedRecipe(null);
+           setRefinedRecipe(null); // Keep showing original recipe if refinement fails
         } else if (result) {
           setRefinedRecipe(result);
         } else {
@@ -137,7 +133,7 @@ export default function Home() {
           <CardHeader>
             <CardTitle className="text-2xl font-semibold text-primary">Your Ingredients</CardTitle>
             <CardDescription>
-              Enter ingredients, confirm availability, and generate!
+              Enter ingredients separated by commas and generate!
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -150,13 +146,33 @@ export default function Home() {
         <Card className="shadow-lg rounded-lg flex flex-col min-h-[300px] justify-between">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold text-primary">Suggested Recipe</CardTitle>
-             {/* Add description if a recipe is present */}
-             {(recipe || refinedRecipe) && !isLoading && !error && (
+             {/* Updated CardDescription logic */}
+             {!isLoading && !error && (recipe || refinedRecipe) && (
                 <CardDescription>
-                    {refinedRecipe ? "Refined recipe based on your feedback." : "Generated based on your ingredients."}
-                    {recipe?.notes && !refinedRecipe && <span className="block mt-1 text-xs italic">Note: {recipe.notes}</span>}
-                     {refinedRecipe?.feasibilityNotes && <span className="block mt-1 text-xs italic">Note: {refinedRecipe.feasibilityNotes}</span>}
+                    {refinedRecipe ? "Refined recipe based on your feedback." : (recipe ? "Generated based on your ingredients." : "")}
+                    {/* Show notes based on which recipe is active */}
+                    {(refinedRecipe?.feasibilityNotes || recipe?.notes) && (
+                         <span className="block mt-1 text-xs italic">
+                            Note: {refinedRecipe?.feasibilityNotes || recipe?.notes}
+                         </span>
+                    )}
                 </CardDescription>
+             )}
+              {/* Description when no recipe/loading/error */}
+             {!recipe && !refinedRecipe && !isLoading && !error && (
+                <CardDescription>
+                    Your generated recipe will appear here.
+                </CardDescription>
+             )}
+             {isLoading && (
+                 <CardDescription>
+                    Please wait while the chef is thinking...
+                 </CardDescription>
+             )}
+             {error && !isLoading && (
+                 <CardDescription className="text-destructive">
+                    There was an issue generating or refining the recipe.
+                 </CardDescription>
              )}
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center">
@@ -171,24 +187,26 @@ export default function Home() {
                   <AlertTitle>Error</AlertTitle>
                   <AlertDescription>{error}</AlertDescription>
                </Alert>
-            ) : recipe ? ( // Display refined recipe if available, otherwise the original
+            ) : recipe ? ( // Display RecipeDisplay if 'recipe' exists (refined or not)
               <RecipeDisplay
-                recipe={recipe} // Pass original recipe
-                refinedRecipe={refinedRecipe} // Pass refined recipe
+                recipe={recipe} // Always pass the original recipe
+                refinedRecipe={refinedRecipe} // Pass refined recipe (null if not refined yet)
                 onRefine={handleRefineRecipe} // Pass refine handler
                 isRefining={isRefining} // Pass refining state
               />
             ) : (
+              // Initial placeholder state
               <div className="text-center text-muted-foreground space-y-4">
                  <Image
                     src="https://picsum.photos/seed/recipebook/300/200"
                     alt="Empty plate waiting for a recipe"
                     width={300}
                     height={200}
-                    className="rounded-lg mx-auto"
-                    data-ai-hint="recipe book cooking illustration"
+                    className="rounded-lg mx-auto shadow-md"
+                    data-ai-hint="recipe book cooking illustration chef"
+                    priority // Prioritize loading the initial image
                   />
-                <p>Enter ingredients, confirm availability, and click "Generate Recipe"!</p>
+                <p>Enter ingredients, click "Generate Recipe", and see what the AI chef suggests!</p>
               </div>
             )}
           </CardContent>
