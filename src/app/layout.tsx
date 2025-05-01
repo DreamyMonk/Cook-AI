@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster'; // Import Toaster
 const inter = Inter({ subsets: ['latin'] }); // Use Inter font
 
 export const metadata: Metadata = {
-  title: 'FridgeChef', // Updated App Name
+  title: 'Cook AI', // Updated App Name
   description: 'Generate recipes from ingredients you already have!', // Updated description
 };
 
