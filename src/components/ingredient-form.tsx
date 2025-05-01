@@ -197,7 +197,7 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
           <div className="relative">
             <Textarea
               id="ingredients-input"
-              placeholder="e.g., chicken breast, broccoli, soy sauce, garlic, rice..."
+              placeholder="e.g., ground beef, onion, bell pepper, tomatoes, pasta..." // Generalized placeholder
               className="resize-none min-h-[80px] bg-background focus:ring-accent pr-12"
               value={ingredientsInput}
               onChange={(e) => setIngredientsInput(e.target.value)}
@@ -246,7 +246,7 @@ export function IngredientForm({ onSubmit, isGenerating }: IngredientFormProps) 
              </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 max-h-60 overflow-y-auto pr-2">
-             <p className="text-sm text-muted-foreground">Confirm which ingredients are currently available (checked = available).</p>
+             <p className="text-sm text-muted-foreground">Confirm which ingredients are currently available (checked = available).</p> {/* Updated description */}
             {parsedIngredients.map((ingredient) => (
               <div key={ingredient.id} className="flex items-center space-x-3 p-2 rounded-md hover:bg-secondary/50">
                 <Checkbox
