@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import { IngredientForm, type IngredientFormData } from '@/components/ingredient-form';
+import { IngredientForm } from '@/components/ingredient-form'; // Removed IngredientFormData type import
 import { RecipeDisplay } from '@/components/recipe-display';
 import { generateRecipe, type GenerateRecipeOutput } from '@/ai/flows/generate-recipe';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,18 +9,48 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, UtensilsCrossed, TriangleAlert } from 'lucide-react';
 import Image from 'next/image';
 
+// Define the type for the structured ingredient data
+interface IngredientItem {
+  id: string;
+  name: string;
+  available: boolean;
+}
+
+
 export default function Home() {
   const [recipe, setRecipe] = useState<GenerateRecipeOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, startTransition] = useTransition();
 
-  const handleGenerateRecipe = async (data: IngredientFormData) => {
+  // Updated handler to accept the structured ingredient list
+  const handleGenerateRecipe = async (ingredientsList: IngredientItem[]) => {
     setError(null);
     setRecipe(null); // Clear previous recipe
 
+    // Filter only available ingredients and format them as a comma-separated string
+    const availableIngredientsString = ingredientsList
+      .filter(item => item.available)
+      .map(item => item.name)
+      .join(', ');
+
+    // Optional: Add unavailable ingredients for context (adjust prompt if needed)
+    // const unavailableIngredientsString = ingredientsList
+    //   .filter(item => !item.available)
+    //   .map(item => item.name)
+    //   .join(', ');
+    // Input for the flow could be { availableIngredients: ..., unavailableIngredients: ... }
+
+    // Basic check if any available ingredients are left
+     if (!availableIngredientsString) {
+       setError("No available ingredients selected. Please check some ingredients as available.");
+       return;
+     }
+
+
     startTransition(async () => {
       try {
-        const result = await generateRecipe({ ingredients: data.ingredients });
+         // Pass the formatted string of available ingredients to the flow
+        const result = await generateRecipe({ ingredients: availableIngredientsString });
         if (result) {
            setRecipe(result);
         } else {
@@ -29,6 +59,7 @@ export default function Home() {
       } catch (e) {
         console.error('Error generating recipe:', e);
         if (e instanceof Error) {
+          // Display more specific error from AI if available
           setError(`An unexpected error occurred: ${e.message}. Please try again later.`);
         } else {
           setError('An unexpected error occurred while generating the recipe. Please try again later.');
@@ -50,19 +81,22 @@ export default function Home() {
       </header>
 
       <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Ingredient Form Card */}
         <Card className="shadow-lg rounded-lg">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold text-primary">Your Ingredients</CardTitle>
             <CardDescription>
-              List the ingredients you have available, separated by commas.
+              Enter ingredients, then confirm availability below.
             </CardDescription>
           </CardHeader>
           <CardContent>
+             {/* Pass the updated handler */}
             <IngredientForm onSubmit={handleGenerateRecipe} isGenerating={isGenerating} />
           </CardContent>
         </Card>
 
-        <Card className="shadow-lg rounded-lg flex flex-col min-h-[300px]">
+        {/* Recipe Display Card */}
+        <Card className="shadow-lg rounded-lg flex flex-col min-h-[300px] justify-between">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold text-primary">Suggested Recipe</CardTitle>
           </CardHeader>
@@ -90,10 +124,11 @@ export default function Home() {
                     className="rounded-lg mx-auto"
                     data-ai-hint="recipe book cooking"
                   />
-                <p>Enter your ingredients and click "Generate Recipe" to get started!</p>
+                <p>Enter ingredients, confirm availability, and click "Generate Recipe"!</p>
               </div>
             )}
           </CardContent>
+           {/* Optional: Footer within the recipe card if needed */}
         </Card>
       </div>
 

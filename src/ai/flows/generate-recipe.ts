@@ -11,10 +11,11 @@
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 
+// Input schema expects only the available ingredients as a comma-separated string.
 const GenerateRecipeInputSchema = z.object({
   ingredients: z
     .string()
-    .describe('A comma-separated list of ingredients available in the fridge.'),
+    .describe('A comma-separated list of ingredients confirmed to be AVAILABLE.'),
 });
 export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 
@@ -36,7 +37,7 @@ const prompt = ai.definePrompt({
     schema: z.object({
       ingredients: z
         .string()
-        .describe('A comma-separated list of ingredients available in the fridge.'),
+        .describe('A comma-separated list of AVAILABLE ingredients.'), // Updated description
     }),
   },
   output: {
@@ -45,12 +46,12 @@ const prompt = ai.definePrompt({
   },
   prompt: `You are a helpful chef assisting someone with limited ingredients. Your goal is to suggest a simple recipe that primarily uses ONLY the ingredients provided.
 
-Available Ingredients: {{{ingredients}}}
+Available Ingredients (Confirmed): {{{ingredients}}}
 
 Instructions for the Chef:
-1.  Analyze the available ingredients: {{{ingredients}}}.
+1.  Analyze the available ingredients provided: {{{ingredients}}}.
 2.  Generate a recipe name, a list of ingredients needed, and step-by-step instructions.
-3.  **Crucially, the recipe MUST prioritize using ONLY the available ingredients.**
+3.  **Crucially, the recipe MUST prioritize using ONLY the available ingredients provided.**
 4.  You MAY assume common pantry staples like **cooking oil, salt, and pepper** are available, but you MUST explicitly list them in the ingredients section under a heading like "Assumed Staples".
 5.  Do NOT include ingredients in the recipe that are not in the available list OR the assumed staples.
 6.  If you cannot create a reasonable recipe using only the provided ingredients (plus assumed staples), clearly state this. In this case:
@@ -78,8 +79,8 @@ const generateRecipeFlow = ai.defineFlow<
         // Return a structured error-like response matching the schema
         return {
             recipeName: "Input Error",
-            ingredients: "No ingredients provided or input too short.",
-            instructions: "Please list the ingredients you have available.",
+            ingredients: "No available ingredients provided or input too short.",
+            instructions: "Please list the ingredients you have available and confirm them.",
         };
     }
 
@@ -102,6 +103,7 @@ const generateRecipeFlow = ai.defineFlow<
         // Return a structured error response matching the schema
          let errorMessage = "An unexpected error occurred while generating the recipe.";
          if (error instanceof Error) {
+            // Provide more specific error message if available
             errorMessage = `AI Error: ${error.message}`;
          }
          return {
