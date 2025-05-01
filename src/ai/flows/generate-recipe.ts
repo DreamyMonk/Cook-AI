@@ -12,26 +12,30 @@
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 
-// Input schema expects only the available ingredients as a comma-separated string.
+// Input schema: Add optional preferred dish type
 const GenerateRecipeInputSchema = z.object({
   ingredients: z
     .string()
     .describe('A comma-separated list of ingredients the user claims to have available.'),
+  preferredDishType: z
+    .string()
+    .optional()
+    .describe('If specified, guides the AI to generate a recipe matching this type (e.g., "soup", "stir-fry", "salad", "baked dish").'),
 });
 export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 
-// Output schema with structured ingredients and clear naming
+// Output schema: Add optional alternative dish types
 const GenerateRecipeOutputSchema = z.object({
   recipeName: z.string().describe('The name of the generated recipe. If no recipe is possible, state that clearly (e.g., "Unable to Create Recipe").'),
   providedIngredients: z.array(z.string()).describe('List of the main ingredients PROVIDED BY THE USER that are actually USED in the recipe. This list might be a subset of the user input.'),
   additionalIngredients: z.array(z.string()).describe('List of additional ingredients needed for the recipe. Include common staples (like oil, salt, pepper) AND commonly found vegetables (like onion, garlic, carrots, bell peppers, celery) or other fridge staples (like eggs, soy sauce) if they logically complement the main ingredients to create a more complete dish. If no recipe is possible, this list should be empty.'),
   instructions: z.string().describe('Step-by-step instructions for preparing the recipe. If no recipe is possible, this field should be empty or state "No instructions applicable."'),
+  alternativeDishTypes: z.array(z.string()).optional().describe('If the main ingredients are versatile, lists other distinct types of dishes (e.g., "Soup", "Salad", "Stir-fry") that could potentially be made. Omit if only one clear type is suitable or if input is too limited.'),
   notes: z.string().optional().describe('Optional brief notes about the recipe, substitutions, or why it might be simple/complex. If no recipe is possible, explain why here (e.g., "Missing essential components for a cohesive dish.").')
 });
 export type GenerateRecipeOutput = z.infer<typeof GenerateRecipeOutputSchema>;
 
 export async function generateRecipe(input: GenerateRecipeInput): Promise<GenerateRecipeOutput> {
-  // Input validation is now primarily handled by the flow and prompt logic
   if (!input.ingredients || input.ingredients.trim().length === 0) {
       return {
           recipeName: "Input Error: No Ingredients",
@@ -47,36 +51,44 @@ export async function generateRecipe(input: GenerateRecipeInput): Promise<Genera
 const prompt = ai.definePrompt({
   name: 'generateRecipePrompt',
   input: {
-    schema: GenerateRecipeInputSchema, // Use the input schema defined above
+    schema: GenerateRecipeInputSchema,
   },
   output: {
-    // Use the updated output schema
     schema: GenerateRecipeOutputSchema,
   },
-  prompt: `You are an expert chef tasked with creating a sensible recipe using ingredients provided by a user. Your goal is to make the best possible dish focusing *primarily* on the ingredients the user listed, but suggesting common additions to make it more complete.
+  prompt: `You are an expert chef tasked with creating a sensible recipe using ingredients provided by a user.
 
 User's Available Ingredients: {{{ingredients}}}
+{{#if preferredDishType}}User's Preferred Dish Type: {{{preferredDishType}}}{{/if}}
 
 Chef's Instructions:
 1.  Analyze the user's ingredients: {{{ingredients}}}. These are the CORE components.
-2.  Generate a suitable recipe name based on the core ingredients.
+{{#if preferredDishType}}
+2.  Prioritize creating a recipe that fits the '{{{preferredDishType}}}' category, using the core ingredients.
+{{else}}
+2.  Determine the most suitable type of dish based on the core ingredients (e.g., stir-fry, soup, baked dish, salad, pasta dish). Generate a suitable recipe name.
+{{/if}}
 3.  Determine which of the USER'S ingredients will actually be USED in the recipe. List ONLY these used ingredients under 'providedIngredients'.
-4.  Identify any NECESSARY or highly complementary additional ingredients to make a sensible and more complete dish. This should include:
-    *   **Basic Staples:** Cooking oil, salt, pepper are almost always needed.
-    *   **Common Aromatics/Vegetables:** Include items like **onion, garlic, carrots, celery, bell peppers** if they logically fit the main ingredients (e.g., onion/garlic for most savory dishes).
-    *   **Other Common Fridge Items:** Consider things like **eggs, milk, butter, soy sauce, basic canned tomatoes** if they strongly complement the core ingredients and are frequently available.
-    *   **Goal:** Aim for a reasonable, well-rounded dish, but don't go overboard. Remember the user can uncheck items they don't have later.
-    *   **List these under 'additionalIngredients'.**
-5.  Write clear, step-by-step 'instructions'.
-6.  **Crucially, the recipe MUST prominently feature the user's ingredients listed in 'providedIngredients'.** Do not suggest complex recipes if the core ingredients are very basic.
-7.  **If a reasonable recipe cannot be created** (e.g., only 'salt' provided, or ingredients are completely incompatible even with common additions), then:
+4.  Identify any NECESSARY or highly complementary additional ingredients to make a sensible and more complete dish. Include:
+    *   Basic Staples: Cooking oil, salt, pepper.
+    *   Common Aromatics/Vegetables: **onion, garlic, carrots, celery, bell peppers**.
+    *   Other Common Fridge Items: **eggs, milk, butter, soy sauce, basic canned tomatoes, potatoes**.
+    *   Only include items that logically fit the main ingredients and the (preferred or determined) dish type.
+    *   List these under 'additionalIngredients'.
+5.  Write clear, step-by-step 'instructions'. The recipe MUST prominently feature the ingredients in 'providedIngredients'.
+{{#unless preferredDishType}}
+6.  **Assess Versatility:** After devising the primary recipe, consider if the CORE ingredients ({{{ingredients}}}) could *also* be used to make other *distinctly different types* of dishes (e.g., if you made a stir-fry, could they also make a soup or a casserole?).
+    *   If yes, list these alternative dish types (e.g., "Soup", "Salad", "Baked Dish") in the 'alternativeDishTypes' array.
+    *   Be realistic; only suggest plausible alternatives. Do not list minor variations of the main recipe. Omit this field if the ingredients are not versatile or too limited.
+{{/unless}}
+7.  **Failure Condition:** If a reasonable recipe cannot be created (even considering the preferred type, if any, or common additions):
     *   Set 'recipeName' to "Unable to Create Recipe".
-    *   Keep 'providedIngredients' and 'additionalIngredients' as empty arrays ([]).
+    *   Keep 'providedIngredients', 'additionalIngredients', and 'alternativeDishTypes' as empty arrays ([] or undefined).
     *   Set 'instructions' to "No instructions applicable.".
-    *   Explain *why* a recipe isn't feasible in the 'notes' field (e.g., "The provided ingredients lack a core component for a meal, even with common additions.").
-8. Add brief, optional 'notes' for suggestions (e.g., "Add chili flakes for heat if available", "Simple dish due to limited items") or explanations.
+    *   Explain *why* in the 'notes' field.
+8. Add brief, optional 'notes' for suggestions or explanations.
 
-Respond strictly following the output schema structure: {recipeName: string, providedIngredients: string[], additionalIngredients: string[], instructions: string, notes?: string}. Ensure 'providedIngredients' and 'additionalIngredients' are ALWAYS arrays of strings, even if empty.
+Respond strictly following the output schema structure. Ensure 'providedIngredients', 'additionalIngredients', and 'alternativeDishTypes' (if present) are ALWAYS arrays of strings, even if empty.
 `,
 });
 
@@ -91,7 +103,6 @@ const generateRecipeFlow = ai.defineFlow<
     outputSchema: GenerateRecipeOutputSchema,
   },
   async input => {
-    // Basic check already done in the wrapper, but belt-and-suspenders
     if (!input.ingredients || input.ingredients.trim().length === 0) {
         return {
             recipeName: "Input Error: No Ingredients",
@@ -109,6 +120,7 @@ const generateRecipeFlow = ai.defineFlow<
              // Ensure arrays are always present, default to empty if somehow missing (Zod should prevent this)
              output.providedIngredients = output.providedIngredients ?? [];
              output.additionalIngredients = output.additionalIngredients ?? [];
+             output.alternativeDishTypes = output.alternativeDishTypes ?? undefined; // Keep as undefined if not generated
              output.instructions = output.instructions || "No instructions generated."; // Provide default if empty
              return output;
         } else {
@@ -128,7 +140,6 @@ const generateRecipeFlow = ai.defineFlow<
          let errorTitle = "Generation Failed";
 
          if (error instanceof Error) {
-            // Specific error handling
             if (error.message.includes('503') || error.message.includes('overloaded')) {
                  errorMessage = "The AI chef is currently very busy with requests! Please try again in a moment.";
                  errorTitle = "AI Busy";
@@ -136,20 +147,17 @@ const generateRecipeFlow = ai.defineFlow<
                  errorMessage = "There seems to be an issue with the AI configuration. Please contact support.";
                  errorTitle = "Configuration Error";
             } else {
-                 // General AI error message
                  errorMessage = `AI Error: ${error.message}. Please check your input or try again later.`;
                  errorTitle = "AI Error";
             }
          }
-         // Return a structured error response
          return {
             recipeName: errorTitle,
             providedIngredients: [],
             additionalIngredients: [],
             instructions: "No instructions available due to error.",
-            notes: errorMessage // Provide the detailed error message in notes
+            notes: errorMessage
          };
     }
   }
 );
-
