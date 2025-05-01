@@ -11,10 +11,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Loader2, Sparkles, List, CookingPot, TriangleAlert, CheckSquare, Info, Lightbulb } from 'lucide-react';
+import { Loader2, Sparkles, List, CookingPot, TriangleAlert, CheckSquare, Info, Lightbulb, Download } from 'lucide-react'; // Added Download icon
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
 import type { TastePreference } from '@/app/page'; // Import TastePreference type
+import { jsPDF } from "jspdf"; // Import jsPDF
 
 // Supported languages mapping (Code to Name) - Used for AI flow calls
 const supportedLanguagesMap = {
@@ -63,6 +64,10 @@ const uiText = {
         notesUnavailable: "No specific notes provided.",
         ingredientsUnavailablePlaceholder: "Ingredient list unavailable.",
         instructionsUnavailablePlaceholder: "Instructions unavailable.",
+        downloadRecipeButton: "Download Recipe (PDF)", // Added translation
+        downloadingRecipe: "Downloading...", // Added translation
+        pdfGenerationErrorTitle: "PDF Error", // Added translation
+        pdfGenerationErrorDesc: "Could not generate the recipe PDF. Please try again.", // Added translation
     },
     "es": {
         recipeNotePrefix: "Nota:",
@@ -97,6 +102,10 @@ const uiText = {
         notesUnavailable: "No se proporcionaron notas específicas.",
         ingredientsUnavailablePlaceholder: "Lista de ingredientes no disponible.",
         instructionsUnavailablePlaceholder: "Instrucciones no disponibles.",
+        downloadRecipeButton: "Descargar Receta (PDF)", // Added translation
+        downloadingRecipe: "Descargando...", // Added translation
+        pdfGenerationErrorTitle: "Error PDF", // Added translation
+        pdfGenerationErrorDesc: "No se pudo generar el PDF de la receta. Por favor, inténtalo de nuevo.", // Added translation
     },
     "fr": {
         recipeNotePrefix: "Note :",
@@ -131,6 +140,10 @@ const uiText = {
         notesUnavailable: "Aucune note spécifique fournie.",
         ingredientsUnavailablePlaceholder: "Liste d'ingrédients non disponible.",
         instructionsUnavailablePlaceholder: "Instructions non disponibles.",
+        downloadRecipeButton: "Télécharger la Recette (PDF)", // Added translation
+        downloadingRecipe: "Téléchargement...", // Added translation
+        pdfGenerationErrorTitle: "Erreur PDF", // Added translation
+        pdfGenerationErrorDesc: "Impossible de générer le PDF de la recette. Veuillez réessayer.", // Added translation
     },
     "de": {
         recipeNotePrefix: "Hinweis:",
@@ -165,6 +178,10 @@ const uiText = {
         notesUnavailable: "Keine spezifischen Hinweise bereitgestellt.",
         ingredientsUnavailablePlaceholder: "Zutatenliste nicht verfügbar.",
         instructionsUnavailablePlaceholder: "Anweisungen nicht verfügbar.",
+        downloadRecipeButton: "Rezept herunterladen (PDF)", // Added translation
+        downloadingRecipe: "Wird heruntergeladen...", // Added translation
+        pdfGenerationErrorTitle: "PDF-Fehler", // Added translation
+        pdfGenerationErrorDesc: "Das Rezept-PDF konnte nicht generiert werden. Bitte versuchen Sie es erneut.", // Added translation
     },
     "hi": { // Hindi Translations
         recipeNotePrefix: "ध्यान दें:",
@@ -199,6 +216,10 @@ const uiText = {
         notesUnavailable: "कोई विशिष्ट नोट प्रदान नहीं किया गया।",
         ingredientsUnavailablePlaceholder: "सामग्री सूची अनुपलब्ध।",
         instructionsUnavailablePlaceholder: "निर्देश अनुपलब्ध।",
+        downloadRecipeButton: "रेसिपी डाउनलोड करें (PDF)", // Added translation
+        downloadingRecipe: "डाउनलोड हो रहा है...", // Added translation
+        pdfGenerationErrorTitle: "पीडीएफ त्रुटि", // Added translation
+        pdfGenerationErrorDesc: "रेसिपी पीडीएफ उत्पन्न नहीं किया जा सका। कृपया पुन: प्रयास करें।", // Added translation
     },
     "bn": { // Bengali Translations
         recipeNotePrefix: "দ্রষ্টব্য:",
@@ -233,6 +254,10 @@ const uiText = {
         notesUnavailable: "কোনো নির্দিষ্ট নোট প্রদান করা হয়নি।",
         ingredientsUnavailablePlaceholder: "উপকরণ তালিকা অনুপলব্ধ।",
         instructionsUnavailablePlaceholder: "নির্দেশাবলী অনুপলব্ধ।",
+        downloadRecipeButton: "রেসিপি ডাউনলোড করুন (PDF)", // Added translation
+        downloadingRecipe: "ডাউনলোড হচ্ছে...", // Added translation
+        pdfGenerationErrorTitle: "পিডিএফ ত্রুটি", // Added translation
+        pdfGenerationErrorDesc: "রেসিপি পিডিএফ তৈরি করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।", // Added translation
     },
      // Add more languages as needed
 };
@@ -274,6 +299,7 @@ export function RecipeDisplay({
   const [isExplaining, startExplaining] = useTransition();
   const [explainError, setExplainError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [isDownloading, setIsDownloading] = useState(false); // State for download button
 
   // Get translated UI text based on language code
   const T = uiText[language] || uiText['en'];
@@ -476,11 +502,123 @@ export function RecipeDisplay({
         });
     };
 
+    // Function to generate and download PDF
+    const handleDownloadPdf = () => {
+        setIsDownloading(true);
+        try {
+            const doc = new jsPDF();
+            const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+            const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
+            const margin = 15;
+            const contentWidth = pageWidth - margin * 2;
+            let currentY = margin;
+
+            // Title
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(40, 40, 40); // Dark Grey
+            doc.text(displayData.name || "Recipe", pageWidth / 2, currentY, { align: "center" });
+            currentY += 15;
+
+            // Optional Note
+            if (displayData.notes) {
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "italic");
+                doc.setTextColor(100, 100, 100); // Grey
+                const noteLines = doc.splitTextToSize(`${T.recipeNotePrefix} ${displayData.notes}`, contentWidth);
+                doc.text(noteLines, margin, currentY);
+                currentY += noteLines.length * 4 + 6; // Adjust line height and spacing
+            }
+
+             // Divider
+            doc.setDrawColor(200, 200, 200); // Light Grey
+            doc.setLineWidth(0.3);
+            doc.line(margin, currentY, pageWidth - margin, currentY);
+            currentY += 8;
+
+            // Ingredients
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(60, 179, 113); // Medium Sea Green (Primary-like)
+            doc.text(T.ingredientsTitle, margin, currentY);
+            currentY += 8;
+
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(50, 50, 50); // Near Black
+            const ingredientLines = doc.splitTextToSize(displayData.ingredientsText?.replace(/\*\*/g, '') || T.ingredientsUnavailable, contentWidth); // Remove markdown bolding
+            doc.text(ingredientLines, margin, currentY);
+            currentY += ingredientLines.length * 5 + 10; // Adjust line height and spacing
+
+            // Divider
+            doc.setDrawColor(200, 200, 200);
+            doc.setLineWidth(0.3);
+            doc.line(margin, currentY, pageWidth - margin, currentY);
+            currentY += 8;
+
+            // Instructions
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(60, 179, 113); // Medium Sea Green
+            doc.text(T.instructionsTitle, margin, currentY);
+            currentY += 8;
+
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(50, 50, 50);
+             const instructionText = displayData.instructionsText || T.instructionsUnavailable;
+             // Basic handling for numbered lists in instructions for PDF
+             const instructionLinesRaw = instructionText.split('\n').map(l => l.trim()).filter(Boolean);
+             const instructionLinesFormatted: string[] = [];
+             instructionLinesRaw.forEach(line => {
+                 if (/^\d+[\.\)]\s/.test(line)) {
+                     // Add slight indent for numbered items
+                     instructionLinesFormatted.push("  " + line);
+                 } else {
+                     instructionLinesFormatted.push(line);
+                 }
+             });
+
+            const instructionLines = doc.splitTextToSize(instructionLinesFormatted.join('\n'), contentWidth);
+
+             // Handle page breaks for long instructions
+             instructionLines.forEach((line: string) => {
+                 if (currentY > pageHeight - margin) { // Check if Y position exceeds page height
+                     doc.addPage();
+                     currentY = margin; // Reset Y for new page
+                 }
+                 doc.text(line, margin, currentY);
+                 currentY += 5; // Adjust line height
+             });
+
+
+            // Save PDF
+            const fileName = `${(displayData.name || "recipe").replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+            doc.save(fileName);
+
+        } catch (error) {
+            console.error("Error generating PDF:", error);
+            toast({
+                variant: "destructive",
+                title: T.pdfGenerationErrorTitle,
+                description: T.pdfGenerationErrorDesc,
+            });
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
 
     // Determine if refinement checklist or alternative types should be shown
     const showChecklist = showRefineSection; // Relies on state set in useEffect
     // Show alternatives only if NOT refined and alternatives exist
     const showAlternatives = !refinedRecipe && alternativeTypes && alternativeTypes.length > 0;
+
+    // Check if the recipe is valid enough to be downloaded
+    const canDownload = (recipe || refinedRecipe) &&
+                        !displayData.name.includes("Failed") &&
+                        !displayData.name.includes("Error") &&
+                        !displayData.name.includes("Unable");
 
 
   return (
@@ -518,7 +656,7 @@ export function RecipeDisplay({
                                 size="sm"
                                 onClick={() => onSelectAlternative(type)}
                                 // Disable if any generation, refinement, or explanation is in progress
-                                disabled={isGenerating || isRefining || isExplaining}
+                                disabled={isGenerating || isRefining || isExplaining || isDownloading}
                                 className="border-primary text-primary hover:bg-primary/10 text-sm h-8 px-3" // Adjusted size and text
                                 aria-live="polite"
                             >
@@ -552,7 +690,7 @@ export function RecipeDisplay({
                                 handleAvailabilityChange(ingredient.id, !!checked)
                             }
                             aria-labelledby={`${ingredient.id}-label`}
-                            disabled={isRefining || isExplaining || isGenerating} // Disable if any action is happening
+                            disabled={isRefining || isExplaining || isGenerating || isDownloading} // Disable if any action is happening
                             className="h-5 w-5" // Slightly larger checkbox
                             />
                             <Label
@@ -576,7 +714,7 @@ export function RecipeDisplay({
                         variant="outline"
                         size="sm"
                         onClick={handleRefineClick}
-                        disabled={isRefining || isExplaining || isGenerating || additionalIngredientsChecklist.length === 0} // Disable if no items
+                        disabled={isRefining || isExplaining || isGenerating || additionalIngredientsChecklist.length === 0 || isDownloading} // Disable if no items or downloading
                         className="mt-3 border-primary text-primary hover:bg-primary/10 w-full sm:w-auto text-sm h-9 px-4 shadow-sm" // Adjusted size, text, and added shadow
                         aria-live="polite"
                      >
@@ -599,25 +737,44 @@ export function RecipeDisplay({
             {/* Instructions Section */}
             <Separator className="my-4"/> {/* Increased margin */}
             <div>
-               <div className="flex justify-between items-center mb-2.5"> {/* Adjusted margin */}
+               <div className="flex justify-between items-center mb-2.5 flex-wrap gap-2"> {/* Adjusted margin and added wrap */}
                    <h3 className="font-semibold text-foreground flex items-center text-lg"><CookingPot className="h-5 w-5 mr-2 text-accent"/>{T.instructionsTitle}</h3>
-                    {/* Show explain button only if instructions are available and not currently explaining/loading */}
-                    {!detailedInstructions && instructionsAvailable && (
-                         <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleExplainInstructions}
-                            disabled={isExplaining || isRefining || isGenerating} // Disable if any action happening
-                            className="text-primary hover:bg-primary/10 h-8 px-3 text-sm" // Adjusted size and text
-                        >
-                            {isExplaining ? (
-                                <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                            ) : (
-                                <Info className="h-4 w-4 mr-1.5" />
-                            )}
-                             {T.explainStepsButton}
-                        </Button>
-                    )}
+                   <div className="flex items-center gap-2">
+                        {/* Show explain button only if instructions are available and not currently explaining/loading */}
+                        {!detailedInstructions && instructionsAvailable && (
+                             <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleExplainInstructions}
+                                disabled={isExplaining || isRefining || isGenerating || isDownloading} // Disable if any action happening
+                                className="text-primary hover:bg-primary/10 h-8 px-3 text-sm" // Adjusted size and text
+                            >
+                                {isExplaining ? (
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                ) : (
+                                    <Info className="h-4 w-4 mr-1.5" />
+                                )}
+                                 {T.explainStepsButton}
+                            </Button>
+                        )}
+                        {/* Download Button */}
+                        {canDownload && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleDownloadPdf}
+                                disabled={isDownloading || isGenerating || isRefining || isExplaining}
+                                className="border-primary text-primary hover:bg-primary/10 h-8 px-3 text-sm"
+                            >
+                                {isDownloading ? (
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                ) : (
+                                    <Download className="h-4 w-4 mr-1.5" />
+                                )}
+                                {isDownloading ? T.downloadingRecipe : T.downloadRecipeButton}
+                            </Button>
+                        )}
+                   </div>
                </div>
 
                <div className="text-muted-foreground">
@@ -630,7 +787,7 @@ export function RecipeDisplay({
                         <AccordionItem value="item-1">
                              <AccordionTrigger
                                 className={`text-primary hover:no-underline text-base py-2.5 ${detailedInstructions ? '' : 'cursor-default pointer-events-none'} [&[data-state=open]>svg]:text-primary`} // Adjusted size, make chevron primary when open
-                                disabled={!detailedInstructions || isExplaining} // Disable trigger if no details or loading
+                                disabled={!detailedInstructions || isExplaining || isDownloading} // Disable trigger if no details, loading or downloading
                              >
                                 {isExplaining ? (
                                     <span className="flex items-center"><Loader2 className="h-4 w-4 animate-spin mr-2" />{T.fetchingDetails}</span>

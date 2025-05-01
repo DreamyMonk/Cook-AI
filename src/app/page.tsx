@@ -83,7 +83,7 @@ const uiText = {
         generateErrorGeneric: "An unexpected error occurred: {message}. Please try again later.",
         generateErrorUnknown: "An unexpected error occurred while generating the recipe. Please try again later.",
         generateAltErrorMissingIngredients: "Cannot generate alternative - original ingredients list is missing.",
-        comingSoonBanner: "Recipe download & Pro Chef features coming soon!",
+        comingSoonBanner: "Recipe download & Pro Chef features coming soon!", // Added translation
     },
     "es": {
         title: "Cook AI",
@@ -112,7 +112,7 @@ const uiText = {
         generateErrorGeneric: "Ocurrió un error inesperado: {message}. Por favor, inténtalo de nuevo más tarde.",
         generateErrorUnknown: "Ocurrió un error inesperado al generar la receta. Por favor, inténtalo de nuevo más tarde.",
         generateAltErrorMissingIngredients: "No se puede generar alternativa - falta la lista original de ingredientes.",
-        comingSoonBanner: "¡Descarga de recetas y funciones Pro Chef próximamente!",
+        comingSoonBanner: "¡Descarga de recetas y funciones Pro Chef próximamente!", // Added translation
     },
     "fr": {
         title: "Cook AI",
@@ -141,7 +141,7 @@ const uiText = {
         generateErrorGeneric: "Une erreur inattendue s'est produite : {message}. Veuillez réessayer plus tard.",
         generateErrorUnknown: "Une erreur inattendue s'est produite lors de la génération de la recette. Veuillez réessayer plus tard.",
         generateAltErrorMissingIngredients: "Impossible de générer une alternative - la liste originale des ingrédients est manquante.",
-        comingSoonBanner: "Téléchargement de recettes et fonctionnalités Pro Chef bientôt disponibles !",
+        comingSoonBanner: "Téléchargement de recettes et fonctionnalités Pro Chef bientôt disponibles !", // Added translation
     },
     "de": {
         title: "Cook AI",
@@ -170,7 +170,7 @@ const uiText = {
         generateErrorGeneric: "Ein unerwarteter Fehler ist aufgetreten: {message}. Bitte versuchen Sie es später erneut.",
         generateErrorUnknown: "Beim Generieren des Rezepts ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
         generateAltErrorMissingIngredients: "Alternative kann nicht generiert werden - ursprüngliche Zutatenliste fehlt.",
-        comingSoonBanner: "Rezept-Download & Pro Chef-Funktionen bald verfügbar!",
+        comingSoonBanner: "Rezept-Download & Pro Chef-Funktionen bald verfügbar!", // Added translation
     },
     "hi": {
         title: "Cook AI",
@@ -199,7 +199,7 @@ const uiText = {
         generateErrorGeneric: "एक अप्रत्याशित त्रुटि हुई: {message}। कृपया बाद में पुनः प्रयास करें।",
         generateErrorUnknown: "रेसिपी बनाते समय एक अप्रत्याशित त्रुटि हुई। कृपया बाद में पुनः प्रयास करें।",
         generateAltErrorMissingIngredients: "विकल्प उत्पन्न नहीं किया जा सकता - मूल सामग्री सूची गायब है।",
-        comingSoonBanner: "रेसिपी डाउनलोड और प्रो शेफ सुविधाएँ जल्द ही आ रही हैं!",
+        comingSoonBanner: "रेसिपी डाउनलोड और प्रो शेफ सुविधाएँ जल्द ही आ रही हैं!", // Added translation
     },
     "bn": {
         title: "Cook AI",
@@ -228,7 +228,7 @@ const uiText = {
         generateErrorGeneric: "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে: {message}। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
         generateErrorUnknown: "রেসিপি তৈরি করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
         generateAltErrorMissingIngredients: "বিকল্প তৈরি করা যাবে না - মূল উপকরণ তালিকা অনুপস্থিত।",
-        comingSoonBanner: "রেসিপি ডাউনলোড এবং প্রো শেফ বৈশিষ্ট্য শীঘ্রই আসছে!",
+        comingSoonBanner: "রেসিপি ডাউনলোড এবং প্রো শেফ বৈশিষ্ট্য শীঘ্রই আসছে!", // Added translation
     },
      // Add more languages as needed
 };
