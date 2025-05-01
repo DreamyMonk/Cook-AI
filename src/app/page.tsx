@@ -8,7 +8,7 @@ import { generateRecipe, type GenerateRecipeOutput } from '@/ai/flows/generate-r
 import { refineRecipe, type RefineRecipeInput, type RefineRecipeOutput } from '@/ai/flows/refine-recipe';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, UtensilsCrossed, TriangleAlert, Languages, ChefHat } from 'lucide-react'; // Added Languages, ChefHat icons
+import { Loader2, UtensilsCrossed, TriangleAlert, Languages, ChefHat, PartyPopper } from 'lucide-react'; // Added Languages, ChefHat, PartyPopper icons
 import Image from 'next/image';
 import {
   Select,
@@ -83,6 +83,7 @@ const uiText = {
         generateErrorGeneric: "An unexpected error occurred: {message}. Please try again later.",
         generateErrorUnknown: "An unexpected error occurred while generating the recipe. Please try again later.",
         generateAltErrorMissingIngredients: "Cannot generate alternative - original ingredients list is missing.",
+        comingSoonBanner: "Recipe download & Pro Chef features coming soon!",
     },
     "es": {
         title: "Cook AI",
@@ -111,6 +112,7 @@ const uiText = {
         generateErrorGeneric: "Ocurrió un error inesperado: {message}. Por favor, inténtalo de nuevo más tarde.",
         generateErrorUnknown: "Ocurrió un error inesperado al generar la receta. Por favor, inténtalo de nuevo más tarde.",
         generateAltErrorMissingIngredients: "No se puede generar alternativa - falta la lista original de ingredientes.",
+        comingSoonBanner: "¡Descarga de recetas y funciones Pro Chef próximamente!",
     },
     "fr": {
         title: "Cook AI",
@@ -139,6 +141,7 @@ const uiText = {
         generateErrorGeneric: "Une erreur inattendue s'est produite : {message}. Veuillez réessayer plus tard.",
         generateErrorUnknown: "Une erreur inattendue s'est produite lors de la génération de la recette. Veuillez réessayer plus tard.",
         generateAltErrorMissingIngredients: "Impossible de générer une alternative - la liste originale des ingrédients est manquante.",
+        comingSoonBanner: "Téléchargement de recettes et fonctionnalités Pro Chef bientôt disponibles !",
     },
     "de": {
         title: "Cook AI",
@@ -167,6 +170,7 @@ const uiText = {
         generateErrorGeneric: "Ein unerwarteter Fehler ist aufgetreten: {message}. Bitte versuchen Sie es später erneut.",
         generateErrorUnknown: "Beim Generieren des Rezepts ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
         generateAltErrorMissingIngredients: "Alternative kann nicht generiert werden - ursprüngliche Zutatenliste fehlt.",
+        comingSoonBanner: "Rezept-Download & Pro Chef-Funktionen bald verfügbar!",
     },
     "hi": {
         title: "Cook AI",
@@ -195,6 +199,7 @@ const uiText = {
         generateErrorGeneric: "एक अप्रत्याशित त्रुटि हुई: {message}। कृपया बाद में पुनः प्रयास करें।",
         generateErrorUnknown: "रेसिपी बनाते समय एक अप्रत्याशित त्रुटि हुई। कृपया बाद में पुनः प्रयास करें।",
         generateAltErrorMissingIngredients: "विकल्प उत्पन्न नहीं किया जा सकता - मूल सामग्री सूची गायब है।",
+        comingSoonBanner: "रेसिपी डाउनलोड और प्रो शेफ सुविधाएँ जल्द ही आ रही हैं!",
     },
     "bn": {
         title: "Cook AI",
@@ -223,6 +228,7 @@ const uiText = {
         generateErrorGeneric: "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে: {message}। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
         generateErrorUnknown: "রেসিপি তৈরি করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
         generateAltErrorMissingIngredients: "বিকল্প তৈরি করা যাবে না - মূল উপকরণ তালিকা অনুপস্থিত।",
+        comingSoonBanner: "রেসিপি ডাউনলোড এবং প্রো শেফ বৈশিষ্ট্য শীঘ্রই আসছে!",
     },
      // Add more languages as needed
 };
@@ -360,7 +366,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-start p-4 md:p-8 lg:p-12 bg-gradient-to-br from-background to-secondary/30 dark:from-background dark:to-black/20">
-      <header className="w-full max-w-4xl mb-10 text-center">
+      <header className="w-full max-w-4xl mb-8 text-center"> {/* Reduced margin-bottom */}
          <div className="flex justify-center items-center gap-3 mb-4">
           <UtensilsCrossed className="h-10 w-10 text-primary drop-shadow-md" />
           <h1 className="text-5xl font-bold text-primary tracking-tight drop-shadow-sm">{T.title}</h1>
@@ -396,6 +402,18 @@ export default function Home() {
              </Select>
          </div>
       </header>
+
+       {/* Coming Soon Banner */}
+       <div className="w-full max-w-4xl mb-8">
+            <Alert className="bg-accent/20 border-accent/50 text-accent-foreground shadow-md">
+                <PartyPopper className="h-5 w-5 text-accent" />
+                <AlertTitle className="font-semibold">Coming Soon!</AlertTitle>
+                <AlertDescription>
+                 {T.comingSoonBanner}
+                </AlertDescription>
+            </Alert>
+       </div>
+
 
       <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Ingredient Form Card */}
