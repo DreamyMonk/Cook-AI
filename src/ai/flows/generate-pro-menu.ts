@@ -114,19 +114,18 @@ const proPrompt = ai.definePrompt({
     *   For EACH requested course:
         *   Design a specific recipe ('recipeName') appropriate for the course type (starter, main, dessert) and event theme.
         *   **Maximize use of the user's {{{ingredients}}}** across the different courses where sensible.
-        *   Determine **ALL** necessary ingredients for *that specific recipe* scaled for *{{numGuests}} guests*. Format this in the 'ingredients' field for the course using **Markdown lists**, clearly differentiating user-provided vs. additional items and including **estimated quantities**. Example Format:
+        *   Determine **ALL** necessary ingredients for *that specific recipe* scaled for *{{numGuests}} guests*. **You MUST estimate appropriate quantities based on standard recipe scaling for {{numGuests}} guests.** Format this in the 'ingredients' field for the course using **Markdown lists**, clearly differentiating user-provided vs. additional items and including the **estimated quantities**. Example Format:
             \`\`\`markdown
             **Provided:**
-            - Chicken (approx. {{calculateQuantity 'chicken' numGuests}} lbs)
-            - Rice (approx. {{calculateQuantity 'rice' numGuests}} cups dry)
+            - Chicken (Approx. X lbs for {{numGuests}} guests)
+            - Rice (Approx. Y cups dry for {{numGuests}} guests)
             **Additional:**
-            - Onion ({{calculateQuantity 'onion' numGuests}} large, diced)
-            - Olive Oil ({{calculateQuantity 'olive_oil' numGuests}} cup)
-            - Garlic ({{calculateQuantity 'garlic' numGuests}} cloves, minced)
+            - Onion (Z large, diced)
+            - Olive Oil (Approx. A cup)
+            - Garlic (B cloves, minced)
             - Salt & Pepper (to taste)
             - Specific spices... (Quantity)
             \`\`\`
-            (You need to estimate appropriate quantities based on standard recipe scaling for {{numGuests}} guests).
         *   Write clear, step-by-step 'instructions' for preparing *that specific course*.
         *   Ensure the recipe aligns with the overall '{{{tastePreference}}}' (if specified) and respects '{{{preferences}}}'.
 5.  **Chef Notes (Crucial):** Provide *comprehensive* 'chefNotes'. Explain *why* you made certain menu choices. Describe how the user's main ingredients were incorporated. Suggest drink pairings or a preparation timeline if applicable. Discuss any challenges faced (e.g., ingredient limitations affecting authenticity of taste preference) and suggest potential simple substitutions (that don't require new, complex ingredients). Make this section insightful and helpful, like a real chef consulting.
@@ -202,8 +201,14 @@ const generateProMenuFlow = ai.defineFlow<
              errorTitle = msg.defaultFailTitle + ` (${lang})`;
              errorMessage = msg.defaultFailNotesInsufficient;
         } else {
-             errorMessage = msg.aiErrorGenericNotes.replace('{message}', error.message);
-             errorTitle = msg.aiErrorGenericTitle + ` (${lang})`;
+             // Capture the specific Handlebars error if present
+             if (error.message.includes("unknown helper")) {
+                 errorMessage = `Internal Error: Template helper issue (${error.message}). Please report this.`;
+                 errorTitle = "Template Error";
+             } else {
+                 errorMessage = msg.aiErrorGenericNotes.replace('{message}', error.message);
+                 errorTitle = msg.aiErrorGenericTitle + ` (${lang})`;
+             }
         }
       }
       return {
