@@ -28,7 +28,11 @@ export default function Home() {
         }
       } catch (e) {
         console.error('Error generating recipe:', e);
-        setError('An unexpected error occurred while generating the recipe. Please try again later.');
+        if (e instanceof Error) {
+          setError(`An unexpected error occurred: ${e.message}. Please try again later.`);
+        } else {
+          setError('An unexpected error occurred while generating the recipe. Please try again later.');
+        }
       }
     });
   };
