@@ -70,7 +70,7 @@ const uiText = {
         loadingPlaceholder: "Please wait while the chef is thinking...",
         errorPlaceholder: "There was an issue generating or refining the recipe.",
         errorTitle: "Error",
-        footerText: "Cook AI. Powered by AI.", // Updated
+        footerText: "Cook AI. Powered by zedsu made with ❤️ by saptrishi", // Updated
         selectLanguagePlaceholder: "Select Language",
         selectTastePlaceholder: "Taste Preference (Optional)",
         inputErrorNoIngredients: "No ingredients provided. Please list the ingredients you have.",
@@ -85,7 +85,7 @@ const uiText = {
         generateAltErrorMissingIngredients: "Cannot generate alternative - original ingredients list is missing.",
     },
     "es": {
-        title: "Cook AI", // Updated
+        title: "Cook AI",
         tagline: "¡Dinos qué hay en tu nevera y te prepararemos una receta!",
         ingredientsTitle: "Tus Ingredientes",
         ingredientsDescription: "Ingresa ingredientes, selecciona idioma y opcionalmente elige una preferencia de sabor.",
@@ -98,7 +98,7 @@ const uiText = {
         loadingPlaceholder: "Por favor espera mientras el chef piensa...",
         errorPlaceholder: "Hubo un problema al generar o refinar la receta.",
         errorTitle: "Error",
-        footerText: "Cook AI. Impulsado por IA.", // Updated
+        footerText: "Cook AI. Impulsado por zedsu hecho con ❤️ por saptrishi", // Updated
         selectLanguagePlaceholder: "Seleccionar Idioma",
         selectTastePlaceholder: "Preferencia de Sabor (Opcional)",
         inputErrorNoIngredients: "No se proporcionaron ingredientes. Por favor, enumera los ingredientes que tienes.",
@@ -113,7 +113,7 @@ const uiText = {
         generateAltErrorMissingIngredients: "No se puede generar alternativa - falta la lista original de ingredientes.",
     },
     "fr": {
-        title: "Cook AI", // Updated
+        title: "Cook AI",
         tagline: "Dites-nous ce qu'il y a dans votre frigo et nous vous concocterons une recette !",
         ingredientsTitle: "Vos Ingrédients",
         ingredientsDescription: "Entrez les ingrédients, sélectionnez la langue et choisissez éventuellement une préférence gustative.",
@@ -126,7 +126,7 @@ const uiText = {
         loadingPlaceholder: "Veuillez patienter pendant que le chef réfléchit...",
         errorPlaceholder: "Un problème est survenu lors de la génération ou de l'affinage de la recette.",
         errorTitle: "Erreur",
-        footerText: "Cook AI. Propulsé par l'IA.", // Updated
+        footerText: "Cook AI. Propulsé par zedsu fait avec ❤️ par saptrishi", // Updated
         selectLanguagePlaceholder: "Choisir la Langue",
         selectTastePlaceholder: "Préférence Gustative (Facultatif)",
         inputErrorNoIngredients: "Aucun ingrédient fourni. Veuillez lister les ingrédients dont vous disposez.",
@@ -141,7 +141,7 @@ const uiText = {
         generateAltErrorMissingIngredients: "Impossible de générer une alternative - la liste originale des ingrédients est manquante.",
     },
     "de": {
-        title: "Cook AI", // Updated
+        title: "Cook AI",
         tagline: "Sagen Sie uns, was in Ihrem Kühlschrank ist, und wir zaubern ein Rezept für Sie!",
         ingredientsTitle: "Ihre Zutaten",
         ingredientsDescription: "Zutaten eingeben, Sprache wählen und optional eine Geschmackspräferenz auswählen.",
@@ -154,7 +154,7 @@ const uiText = {
         loadingPlaceholder: "Bitte warten Sie, während der Koch nachdenkt...",
         errorPlaceholder: "Beim Generieren oder Verfeinern des Rezepts ist ein Problem aufgetreten.",
         errorTitle: "Fehler",
-        footerText: "Cook AI. Unterstützt durch KI.", // Updated
+        footerText: "Cook AI. Unterstützt durch zedsu gemacht mit ❤️ von saptrishi", // Updated
         selectLanguagePlaceholder: "Sprache auswählen",
         selectTastePlaceholder: "Geschmackspräferenz (Optional)",
         inputErrorNoIngredients: "Keine Zutaten angegeben. Bitte listen Sie die vorhandenen Zutaten auf.",
@@ -168,8 +168,8 @@ const uiText = {
         generateErrorUnknown: "Beim Generieren des Rezepts ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
         generateAltErrorMissingIngredients: "Alternative kann nicht generiert werden - ursprüngliche Zutatenliste fehlt.",
     },
-    "hi": { // Hindi Translations
-        title: "Cook AI", // Updated
+    "hi": {
+        title: "Cook AI",
         tagline: "हमें बताएं कि आपके फ्रिज में क्या है, और हम आपके लिए एक रेसिपी तैयार करेंगे!",
         ingredientsTitle: "आपकी सामग्री",
         ingredientsDescription: "सामग्री दर्ज करें, भाषा चुनें, और वैकल्पिक रूप से स्वाद वरीयता चुनें।",
@@ -182,7 +182,7 @@ const uiText = {
         loadingPlaceholder: "कृपया प्रतीक्षा करें जब तक शेफ सोच रहा है...",
         errorPlaceholder: "रेसिपी बनाने या परिष्कृत करने में कोई समस्या हुई।",
         errorTitle: "त्रुटि",
-        footerText: "Cook AI. एआई द्वारा संचालित।", // Updated
+        footerText: "Cook AI. ज़ेडसु द्वारा संचालित ❤️ द्वारा बनाया गया सप्तऋषि", // Updated
         selectLanguagePlaceholder: "भाषा चुनें",
         selectTastePlaceholder: "स्वाद वरीयता (वैकल्पिक)",
         inputErrorNoIngredients: "कोई सामग्री प्रदान नहीं की गई। कृपया आपके पास उपलब्ध सामग्री सूचीबद्ध करें।",
@@ -196,8 +196,8 @@ const uiText = {
         generateErrorUnknown: "रेसिपी बनाते समय एक अप्रत्याशित त्रुटि हुई। कृपया बाद में पुनः प्रयास करें।",
         generateAltErrorMissingIngredients: "विकल्प उत्पन्न नहीं किया जा सकता - मूल सामग्री सूची गायब है।",
     },
-    "bn": { // Bengali Translations
-        title: "Cook AI", // Updated
+    "bn": {
+        title: "Cook AI",
         tagline: "আপনার ফ্রিজে কী আছে বলুন, এবং আমরা আপনার জন্য একটি রেসিপি তৈরি করব!",
         ingredientsTitle: "আপনার উপকরণ",
         ingredientsDescription: "উপকরণ লিখুন, ভাষা নির্বাচন করুন, এবং ঐচ্ছিকভাবে একটি স্বাদের পছন্দ নির্বাচন করুন।",
@@ -210,7 +210,7 @@ const uiText = {
         loadingPlaceholder: "শেফ চিন্তা করার সময় দয়া করে অপেক্ষা করুন...",
         errorPlaceholder: "রেসিপি তৈরি বা পরিমার্জনে একটি সমস্যা হয়েছে।",
         errorTitle: "ত্রুটি",
-        footerText: "Cook AI. এআই দ্বারা চালিত।", // Updated
+        footerText: "Cook AI. জেডসু দ্বারা চালিত ❤️ দ্বারা তৈরি সপ্তর্ষি", // Updated
         selectLanguagePlaceholder: "ভাষা নির্বাচন করুন",
         selectTastePlaceholder: "স্বাদের পছন্দ (ঐচ্ছিক)",
         inputErrorNoIngredients: "কোন উপকরণ প্রদান করা হয়নি। আপনার কাছে উপলব্ধ উপকরণ তালিকাভুক্ত করুন।",
@@ -490,6 +490,7 @@ export default function Home() {
       </div>
 
       <footer className="mt-12 text-center text-sm text-muted-foreground">
+        {/* Updated Footer Text */}
         <p>&copy; {new Date().getFullYear()} {T.footerText}</p>
       </footer>
     </main>
