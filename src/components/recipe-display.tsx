@@ -88,6 +88,7 @@ const uiText = {
         proMenuCourseDessert: "Dessert",
         proMenuChefNotes: "Chef's Notes:",
         proMenuChefNotesPlaceholder: "No additional notes from the chef.",
+        explainThisCourse: "Explain This Course", // Added for Pro mode
     },
     "es": {
         recipeNotePrefix: "Nota:",
@@ -134,6 +135,7 @@ const uiText = {
         proMenuCourseDessert: "Postre",
         proMenuChefNotes: "Notas del Chef:",
         proMenuChefNotesPlaceholder: "No hay notas adicionales del chef.",
+        explainThisCourse: "Explicar Este Plato", // Added for Pro mode
     },
     "fr": {
         recipeNotePrefix: "Note :",
@@ -180,6 +182,7 @@ const uiText = {
         proMenuCourseDessert: "Dessert",
         proMenuChefNotes: "Notes du Chef:",
         proMenuChefNotesPlaceholder: "Aucune note supplémentaire du chef.",
+        explainThisCourse: "Expliquer Ce Plat", // Added for Pro mode
     },
     "de": {
         recipeNotePrefix: "Hinweis:",
@@ -226,6 +229,7 @@ const uiText = {
         proMenuCourseDessert: "Dessert",
         proMenuChefNotes: "Anmerkungen des Kochs:",
         proMenuChefNotesPlaceholder: "Keine zusätzlichen Anmerkungen vom Koch.",
+        explainThisCourse: "Diesen Gang erklären", // Added for Pro mode
     },
     "hi": { // Hindi Translations
         recipeNotePrefix: "ध्यान दें:",
@@ -272,6 +276,7 @@ const uiText = {
         proMenuCourseDessert: "मिठाई",
         proMenuChefNotes: "शेफ के नोट्स:",
         proMenuChefNotesPlaceholder: "शेफ से कोई अतिरिक्त नोट्स नहीं।",
+        explainThisCourse: "इस कोर्स को समझाएं", // Added for Pro mode
     },
     "bn": { // Bengali Translations
         recipeNotePrefix: "দ্রষ্টব্য:",
@@ -318,6 +323,7 @@ const uiText = {
         proMenuCourseDessert: "ডেজার্ট",
         proMenuChefNotes: "শেফের নোট:",
         proMenuChefNotesPlaceholder: "শেফের কাছ থেকে কোনো অতিরিক্ত নোট নেই।",
+        explainThisCourse: "এই কোর্সটি ব্যাখ্যা করুন", // Added for Pro mode
     },
      // Add more languages as needed
 };
@@ -362,9 +368,12 @@ export function RecipeDisplay({
   const [additionalIngredientsChecklist, setAdditionalIngredientsChecklist] = useState<AdditionalIngredientItem[]>([]);
   const [refineError, setRefineError] = useState<string | null>(null);
 
-  const [detailedInstructions, setDetailedInstructions] = useState<string | null>(null);
+  // State for explanations (for standard/refined and individual pro courses)
+  const [detailedExplanation, setDetailedExplanation] = useState<{ [key: string]: string | null }>({}); // Keyed by recipe name or course index
   const [isExplaining, startExplaining] = useTransition();
-  const [explainError, setExplainError] = useState<string | null>(null);
+  const [explanationError, setExplanationError] = useState<{ [key: string]: string | null }>({}); // Keyed by recipe name or course index
+  const [activeExplanationKey, setActiveExplanationKey] = useState<string | null>(null); // Track which explanation is loading/shown
+
   const { toast } = useToast();
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -373,9 +382,10 @@ export function RecipeDisplay({
 
 
   useEffect(() => {
-    // Reset explanation when data changes
-    setDetailedInstructions(null);
-    setExplainError(null);
+    // Reset all explanations when main data changes
+    setDetailedExplanation({});
+    setExplanationError({});
+    setActiveExplanationKey(null);
 
     // Setup checklist ONLY if showRefinementOptions is true and it's a standard recipe
     if (showRefinementOptions && displayData.type === 'standard' && displayData.data.additionalIngredients && displayData.data.additionalIngredients.length > 0) {
@@ -448,10 +458,11 @@ export function RecipeDisplay({
                     if (line.startsWith('**') && line.endsWith(':**')) {
                         return <p key={index} className="font-semibold text-foreground mt-3 mb-1">{line.slice(2, -3)}:</p>;
                     }
-                    // Match - List Item or * List Item or 1. List Item
+                    // Match - List Item or * List Item
                     if (/^[-*]\s/.test(line)) {
                         return <p key={index} className="pl-4 relative before:content-['•'] before:absolute before:left-0 before:text-accent">{line.slice(2)}</p>;
                     }
+                     // Match 1. List Item or 1) List Item
                      if (/^\d+[\.\)]\s/.test(line)) {
                          return <p key={index} className="pl-4 relative before:content-[attr(data-number)] before:absolute before:left-0 before:font-medium before:text-foreground/80" data-number={line.match(/^\d+[\.\)]/)?.[0]}>{line.replace(/^\d+[\.\)]\s/, '')}</p>;
                      }
@@ -471,49 +482,43 @@ export function RecipeDisplay({
     };
 
     // Get ingredients and instructions based on the display data type
-    let currentInstructions: string | undefined | null = null;
-    let currentIngredients: string | undefined | null = null;
-    let currentRecipeName: string | undefined | null = null;
+    // For standard/refined, these are top-level
+    let currentStandardRefinedInstructions: string | undefined | null = null;
+    let currentStandardRefinedIngredients: string | undefined | null = null;
+    let currentStandardRefinedRecipeName: string | undefined | null = null;
 
     if (displayData.type === 'standard') {
-        currentInstructions = displayData.data.instructions;
-        currentIngredients = formatInitialIngredientsList(displayData.data.providedIngredients, displayData.data.additionalIngredients);
-        currentRecipeName = displayData.data.recipeName;
+        currentStandardRefinedInstructions = displayData.data.instructions;
+        currentStandardRefinedIngredients = formatInitialIngredientsList(displayData.data.providedIngredients, displayData.data.additionalIngredients);
+        currentStandardRefinedRecipeName = displayData.data.recipeName;
     } else if (displayData.type === 'refined') {
-        currentInstructions = displayData.data.refinedInstructions;
+        currentStandardRefinedInstructions = displayData.data.refinedInstructions;
         // Refined ingredients are already formatted, just pass them through
-        currentIngredients = displayData.data.refinedIngredients;
-        currentRecipeName = displayData.data.refinedRecipeName;
+        currentStandardRefinedIngredients = displayData.data.refinedIngredients;
+        currentStandardRefinedRecipeName = displayData.data.refinedRecipeName;
     }
-    // No single 'instructions' or 'ingredients' for pro-menu at top level
-
-    // Check if instructions are meaningful for enabling the explain button (only for standard/refined)
-    const instructionsAvailableForExplain = displayData.type !== 'pro-menu' &&
-                                   currentInstructions &&
-                                   currentInstructions.trim() !== T.instructionsUnavailable &&
-                                   currentInstructions.trim() !== T.instructionsUnavailablePlaceholder &&
-                                   currentInstructions.trim() !== "No instructions applicable.";
 
 
-    const handleExplainInstructions = () => {
-        if (!instructionsAvailableForExplain) {
-            toast({ variant: "default", title: T.noInstructionsToExplainTitle, description: T.noInstructionsToExplainDesc });
-            return;
-        }
-        setExplainError(null);
-        setDetailedInstructions(null);
+    // Function to handle explaining instructions (modified to accept course details)
+    const handleExplainInstructions = (
+        recipeName: string | null | undefined,
+        instructions: string | null | undefined,
+        ingredients: string | null | undefined,
+        explanationKey: string // Unique key for this explanation (e.g., recipe name or course index)
+    ) => {
+        if (!instructions || instructions.trim() === T.instructionsUnavailable || instructions.trim() === T.instructionsUnavailablePlaceholder || instructions.trim() === "No instructions applicable.") {
+             toast({ variant: "default", title: T.noInstructionsToExplainTitle, description: T.noInstructionsToExplainDesc });
+             return;
+         }
 
-        // Ingredients list for context depends on whether it was refined
-        const ingredientsForExplanation = displayData.type === 'refined'
-            ? displayData.data.refinedIngredients // Already formatted string
-            : (displayData.type === 'standard' ? formatInitialIngredientsList(displayData.data.providedIngredients, displayData.data.additionalIngredients) : ''); // Should not happen for pro
-
-        const recipeNameForExplanation = displayData.type !== 'pro-menu' ? currentRecipeName || "Recipe" : "Recipe";
+         setExplanationError(prev => ({ ...prev, [explanationKey]: null }));
+         setDetailedExplanation(prev => ({ ...prev, [explanationKey]: null }));
+         setActiveExplanationKey(explanationKey);
 
         const input: ExplainInstructionsInput = {
-            recipeName: recipeNameForExplanation,
-            originalInstructions: currentInstructions!, // Known to be available due to check
-            ingredientsList: ingredientsForExplanation,
+            recipeName: recipeName || "Recipe",
+            originalInstructions: instructions,
+            ingredientsList: ingredients || T.ingredientsUnavailable,
             language: languageName
         };
 
@@ -521,20 +526,30 @@ export function RecipeDisplay({
             try {
                 const result = await explainInstructions(input);
                 if (result && result.detailedExplanation && !result.detailedExplanation.startsWith("Error:")) {
-                    setDetailedInstructions(result.detailedExplanation);
+                    setDetailedExplanation(prev => ({ ...prev, [explanationKey]: result.detailedExplanation }));
                 } else {
                     const errorMsg = result?.detailedExplanation || T.explanationFailedDesc;
-                    setExplainError(errorMsg);
+                    setExplanationError(prev => ({ ...prev, [explanationKey]: errorMsg }));
                     toast({ variant: "destructive", title: T.explanationFailedTitle, description: errorMsg });
                 }
             } catch (e) {
                 console.error("Error explaining instructions:", e);
                 const errorMsg = e instanceof Error ? e.message : T.explanationErrorDesc.replace('{errorMsg}', 'Unknown error');
-                setExplainError(errorMsg);
+                setExplanationError(prev => ({ ...prev, [explanationKey]: errorMsg }));
                 toast({ variant: "destructive", title: T.explanationErrorTitle, description: T.explanationErrorDesc.replace('{errorMsg}', errorMsg) });
+            } finally {
+                setActiveExplanationKey(null); // Clear active key after fetch completes
             }
         });
     };
+
+    // Check if instructions are available for the standard/refined recipe
+    const standardRefinedInstructionsAvailable = displayData.type !== 'pro-menu' &&
+                                        currentStandardRefinedInstructions &&
+                                        currentStandardRefinedInstructions.trim() !== T.instructionsUnavailable &&
+                                        currentStandardRefinedInstructions.trim() !== T.instructionsUnavailablePlaceholder &&
+                                        currentStandardRefinedInstructions.trim() !== "No instructions applicable.";
+
 
     // Function to generate and download PDF (updated for menu)
     const handleDownloadPdf = async () => {
@@ -605,7 +620,9 @@ export function RecipeDisplay({
 
 
                 // Loop through courses
-                menuData.courses?.forEach(course => {
+                menuData.courses?.forEach((course, index) => {
+                    const explanationKey = `pro-course-${index}`;
+                    const courseExplanation = detailedExplanation[explanationKey];
 
                     doc.setFont("helvetica", "bold");
                     doc.setTextColor(60, 179, 113); // Primary-like
@@ -634,6 +651,24 @@ export function RecipeDisplay({
                          .map(line => /^\d+[\.\)]\s/.test(line) ? line : (/^- /gm.test(line) ? "  • " + line.replace(/^- /gm, '') : line));
                      addText(instructionLinesFormatted.join('\n'), {}, bodyFontSize, 15);
 
+                     // Add detailed explanation for this course if available
+                     if (courseExplanation) {
+                        doc.setFont("helvetica", "bold");
+                        doc.setTextColor(80, 80, 80); // Use same style as instructions title
+                        addText(T.detailedExplanationTitle, {}, subHeadingFontSize, 5);
+                        doc.setFont("helvetica", "normal");
+                        doc.setTextColor(50, 50, 50);
+                        const explanationLinesFormatted = courseExplanation.split('\n')
+                            .map(l => l.trim()).filter(Boolean)
+                            .map(line => {
+                                if (/^\d+[\.\)]\s/.test(line)) return line; // Keep numbered list
+                                if (/^- /gm.test(line)) return "  • " + line.replace(/^- /gm, ''); // Indent bullet points
+                                if (/^\*\*([^*]+)\*\*/gm.test(line)) return "\n" + line.replace(/^\*\*([^*]+)\*\*/gm, '$1') + ":"; // Bold headers
+                                return line;
+                            });
+                        addText(explanationLinesFormatted.join('\n'), {}, bodyFontSize, 15);
+                     }
+
                      // Add separator between courses
                      if (menuData.courses && menuData.courses.indexOf(course) < menuData.courses.length - 1) {
                         doc.setLineWidth(0.5);
@@ -645,6 +680,8 @@ export function RecipeDisplay({
 
             } else { // Standard or Refined Recipe
                 const recipeData = displayData.data;
+                const explanationKey = displayData.type === 'standard' ? recipeData.recipeName || 'standard-recipe' : recipeData.refinedRecipeName || 'refined-recipe';
+                const recipeExplanation = detailedExplanation[explanationKey];
                 const name = displayData.type === 'standard' ? recipeData.recipeName : recipeData.refinedRecipeName;
                 const notes = displayData.type === 'standard' ? recipeData.notes : recipeData.feasibilityNotes;
                 const ingredients = displayData.type === 'standard' ? formatInitialIngredientsList(recipeData.providedIngredients, recipeData.additionalIngredients) : recipeData.refinedIngredients;
@@ -693,15 +730,15 @@ export function RecipeDisplay({
                  addText(instructionLinesFormatted.join('\n'), {}, bodyFontSize, 15);
 
                  // Add detailed explanation if available for standard/refined
-                 if (detailedInstructions) {
+                 if (recipeExplanation) {
                     doc.line(margin, currentY, pageWidth - margin, currentY);
                     currentY += 10;
                     doc.setFont("helvetica", "bold");
-                    doc.setTextColor(60, 179, 113);
-                    addText(T.detailedExplanationTitle, {}, headingFontSize, 8);
+                    doc.setTextColor(80, 80, 80); // Match instruction title style
+                    addText(T.detailedExplanationTitle, {}, subHeadingFontSize, 5);
                     doc.setFont("helvetica", "normal");
                     doc.setTextColor(50, 50, 50);
-                    const explanationText = detailedInstructions;
+                    const explanationText = recipeExplanation;
                     // Format explanation text similarly to instructions
                     const explanationLinesFormatted = explanationText.split('\n')
                         .map(l => l.trim()).filter(Boolean)
@@ -716,7 +753,7 @@ export function RecipeDisplay({
             }
             // --- End PDF Content ---
 
-            const fileNameBase = (displayData.type === 'pro-menu' ? menuData.menuTitle : (displayData.type === 'standard' ? recipeData.recipeName : recipeData.refinedRecipeName)) || 'recipe_or_menu';
+            const fileNameBase = (displayData.type === 'pro-menu' ? displayData.data.menuTitle : (displayData.type === 'standard' ? displayData.data.recipeName : displayData.data.refinedRecipeName)) || 'recipe_or_menu';
             const fileName = `${fileNameBase.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
             doc.save(fileName);
 
@@ -729,7 +766,7 @@ export function RecipeDisplay({
     };
 
     // Show alternatives only if NOT refined and alternatives exist and NOT pro mode
-    const showAlternatives = !detailedInstructions && displayData.type === 'standard' && alternativeTypes && alternativeTypes.length > 0;
+    const showAlternatives = displayData.type === 'standard' && alternativeTypes && alternativeTypes.length > 0;
 
     // Check if the recipe/menu is valid enough to be downloaded
     const canDownload = (displayData.type === 'standard' && !displayData.data.recipeName?.includes("Failed") && !displayData.data.recipeName?.includes("Error")) ||
@@ -760,8 +797,14 @@ export function RecipeDisplay({
                     {displayData.data.courses?.map((course, index) => {
                          const CourseIcon = courseIcons[course.type] || Utensils; // Default icon
                          const courseName = course.type === 'main' ? T.proMenuCourseMain : (course.type === 'starter' ? T.proMenuCourseStarter : T.proMenuCourseDessert);
+                         const explanationKey = `pro-course-${index}`;
+                         const courseExplanation = detailedExplanation[explanationKey];
+                         const courseExplainError = explanationError[explanationKey];
+                         const isCourseExplaining = activeExplanationKey === explanationKey;
+                         const courseInstructionsAvailable = course.instructions && course.instructions.trim() !== T.instructionsUnavailable && course.instructions.trim() !== T.instructionsUnavailablePlaceholder && course.instructions.trim() !== "No instructions applicable.";
+
                         return (
-                            <div key={index} className="border-b border-border pb-5 last:border-b-0">
+                            <div key={explanationKey} className="border-b border-border pb-5 last:border-b-0">
                                 <h3 className="font-semibold text-foreground mb-2.5 flex items-center text-xl gap-2">
                                     <CourseIcon className="h-5 w-5 text-accent"/>
                                     {courseName}: {course.recipeName}
@@ -772,9 +815,41 @@ export function RecipeDisplay({
                                         {formatTextToComponent(course.ingredients, T.ingredientsUnavailablePlaceholder)}
                                     </div>
                                     <div>
-                                         <h4 className="font-medium text-foreground/90 mb-1.5 text-lg">{T.instructionsTitle}</h4>
+                                         <div className="flex justify-between items-center mb-1.5 flex-wrap gap-2">
+                                             <h4 className="font-medium text-foreground/90 text-lg">{T.instructionsTitle}</h4>
+                                             {courseInstructionsAvailable && (
+                                                 <Button
+                                                     variant="ghost"
+                                                     size="sm"
+                                                     onClick={() => handleExplainInstructions(course.recipeName, course.instructions, course.ingredients, explanationKey)}
+                                                     disabled={isExplaining || isRefining || isGenerating || isDownloading}
+                                                     className="text-primary hover:bg-primary/10 h-8 px-3 text-sm"
+                                                 >
+                                                     {isCourseExplaining ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Info className="h-4 w-4 mr-1.5" />}
+                                                     {T.explainThisCourse}
+                                                 </Button>
+                                             )}
+                                         </div>
                                         {formatTextToComponent(course.instructions, T.instructionsUnavailablePlaceholder)}
                                     </div>
+                                     {/* Explanation Accordion for this course */}
+                                     {(isCourseExplaining || courseExplainError || courseExplanation) && (
+                                         <Accordion type="single" collapsible className="w-full mt-3" value={courseExplanation ? explanationKey : undefined} onValueChange={(value) => !value && setDetailedExplanation(prev => ({...prev, [explanationKey]: null}))}>
+                                            <AccordionItem value={explanationKey} className="border-b-0">
+                                                 <AccordionTrigger className={`text-primary hover:no-underline text-base py-1.5 ${courseExplanation ? '' : 'cursor-default pointer-events-none'} [&[data-state=open]>svg]:text-primary`} disabled={!courseExplanation || isExplaining || isDownloading}>
+                                                    {isCourseExplaining ? (<span className="flex items-center"><Loader2 className="h-4 w-4 animate-spin mr-2" />{T.fetchingDetails}</span>)
+                                                                         : courseExplainError ? (<span className="flex items-center text-destructive"><TriangleAlert className="h-4 w-4 mr-2" />{T.explanationError}</span>)
+                                                                         : (<span className="flex items-center"><Info className="h-4 w-4 mr-2" />{T.viewDetailedExplanation}</span>)}
+                                                 </AccordionTrigger>
+                                                <AccordionContent className="pt-2 pb-1">
+                                                    {isCourseExplaining ? (<div className="flex items-center text-muted-foreground p-4 text-base"><Loader2 className="h-5 w-5 animate-spin mr-2.5" /> {T.loadingExplanation}</div>)
+                                                                          : courseExplainError ? (<Alert variant="destructive" className="text-sm my-1"><TriangleAlert className="h-4 w-4" /><AlertTitle className="text-sm font-medium">{T.errorTitle}</AlertTitle><AlertDescription className="text-sm">{courseExplainError}</AlertDescription></Alert>)
+                                                                          : courseExplanation ? (<div className="text-muted-foreground text-base">{formatTextToComponent(courseExplanation)}</div>)
+                                                                          : null}
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                         </Accordion>
+                                     )}
                                 </div>
                             </div>
                         );
@@ -806,11 +881,11 @@ export function RecipeDisplay({
                           <List className="h-5 w-5 mr-2 text-accent"/>
                           {displayData.type === 'refined' ? T.refinedIngredientsHeader : T.ingredientsTitle}
                       </h3>
-                       {formatTextToComponent(currentIngredients, T.ingredientsUnavailablePlaceholder)}
+                       {formatTextToComponent(currentStandardRefinedIngredients, T.ingredientsUnavailablePlaceholder)}
                     </div>
 
                      {/* Alternative Dish Types Section (Only for standard initial) */}
-                     {showAlternatives && (
+                     {showAlternatives && !activeExplanationKey && ( // Hide alternatives if explanation is active
                          <>
                          <Separator className="my-4"/>
                          <div className="space-y-3 rounded-md border border-dashed border-border p-4 bg-secondary/20">
@@ -841,7 +916,7 @@ export function RecipeDisplay({
                      )}
 
                     {/* Refinement Checklist Section (Only if prop allows) */}
-                    {showRefinementOptions && (
+                    {showRefinementOptions && !activeExplanationKey && ( // Hide refinement if explanation is active
                         <>
                          <Separator className="my-4"/>
                          <div className="space-y-3 rounded-md border border-dashed border-border p-4 bg-secondary/20">
@@ -901,9 +976,18 @@ export function RecipeDisplay({
                            <h3 className="font-semibold text-foreground flex items-center text-lg"><CookingPot className="h-5 w-5 mr-2 text-accent"/>{T.instructionsTitle}</h3>
                            <div className="flex items-center gap-2">
                                 {/* Explain Button (Only for standard/refined) */}
-                                {!detailedInstructions && instructionsAvailableForExplain && (
-                                     <Button variant="ghost" size="sm" onClick={handleExplainInstructions} disabled={isExplaining || isRefining || isGenerating || isDownloading} className="text-primary hover:bg-primary/10 h-8 px-3 text-sm">
-                                        {isExplaining ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Info className="h-4 w-4 mr-1.5" />}
+                                {standardRefinedInstructionsAvailable && (
+                                     <Button
+                                         variant="ghost"
+                                         size="sm"
+                                         onClick={() => {
+                                              const explanationKey = currentStandardRefinedRecipeName || 'recipe-explanation';
+                                              handleExplainInstructions(currentStandardRefinedRecipeName, currentStandardRefinedInstructions, currentStandardRefinedIngredients, explanationKey);
+                                         }}
+                                         disabled={isExplaining || isRefining || isGenerating || isDownloading}
+                                         className="text-primary hover:bg-primary/10 h-8 px-3 text-sm"
+                                     >
+                                        {activeExplanationKey === (currentStandardRefinedRecipeName || 'recipe-explanation') ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Info className="h-4 w-4 mr-1.5" />}
                                          {T.explainStepsButton}
                                     </Button>
                                 )}
@@ -917,26 +1001,37 @@ export function RecipeDisplay({
                            </div>
                        </div>
                        <div className="text-muted-foreground">
-                         {formatTextToComponent(currentInstructions, T.instructionsUnavailablePlaceholder)}
+                         {formatTextToComponent(currentStandardRefinedInstructions, T.instructionsUnavailablePlaceholder)}
                        </div>
                         {/* Explanation Accordion (Only for standard/refined) */}
-                        {(isExplaining || explainError || detailedInstructions) && (
-                             <Accordion type="single" collapsible className="w-full mt-5" defaultValue={detailedInstructions ? "item-1" : undefined}>
-                                <AccordionItem value="item-1">
-                                     <AccordionTrigger className={`text-primary hover:no-underline text-base py-2.5 ${detailedInstructions ? '' : 'cursor-default pointer-events-none'} [&[data-state=open]>svg]:text-primary`} disabled={!detailedInstructions || isExplaining || isDownloading}>
-                                        {isExplaining ? (<span className="flex items-center"><Loader2 className="h-4 w-4 animate-spin mr-2" />{T.fetchingDetails}</span>)
-                                                     : explainError ? (<span className="flex items-center text-destructive"><TriangleAlert className="h-4 w-4 mr-2" />{T.explanationError}</span>)
-                                                     : (<span className="flex items-center"><Info className="h-4 w-4 mr-2" />{T.viewDetailedExplanation}</span>)}
-                                     </AccordionTrigger>
-                                    <AccordionContent className="pt-3 pb-1">
-                                        {isExplaining ? (<div className="flex items-center text-muted-foreground p-4 text-base"><Loader2 className="h-5 w-5 animate-spin mr-2.5" /> {T.loadingExplanation}</div>)
-                                                      : explainError ? (<Alert variant="destructive" className="text-sm my-2"><TriangleAlert className="h-4 w-4" /><AlertTitle className="text-sm font-medium">{T.errorTitle}</AlertTitle><AlertDescription className="text-sm">{explainError}</AlertDescription></Alert>)
-                                                      : detailedInstructions ? (<div className="text-muted-foreground text-base">{formatTextToComponent(detailedInstructions)}</div>)
-                                                      : null}
-                                    </AccordionContent>
-                                </AccordionItem>
-                             </Accordion>
-                        )}
+                        {(isExplaining && activeExplanationKey === (currentStandardRefinedRecipeName || 'recipe-explanation')) || explanationError[currentStandardRefinedRecipeName || 'recipe-explanation'] || detailedExplanation[currentStandardRefinedRecipeName || 'recipe-explanation']}
+                        {(() => {
+                             const explanationKey = currentStandardRefinedRecipeName || 'recipe-explanation';
+                             const currentExplanation = detailedExplanation[explanationKey];
+                             const currentError = explanationError[explanationKey];
+                             const isCurrentExplaining = activeExplanationKey === explanationKey;
+
+                             if (isCurrentExplaining || currentError || currentExplanation) {
+                                return (
+                                     <Accordion type="single" collapsible className="w-full mt-5" value={currentExplanation ? explanationKey : undefined} onValueChange={(value) => !value && setDetailedExplanation(prev => ({...prev, [explanationKey]: null}))}>
+                                        <AccordionItem value={explanationKey} className="border-b-0">
+                                             <AccordionTrigger className={`text-primary hover:no-underline text-base py-2.5 ${currentExplanation ? '' : 'cursor-default pointer-events-none'} [&[data-state=open]>svg]:text-primary`} disabled={!currentExplanation || isExplaining || isDownloading}>
+                                                {isCurrentExplaining ? (<span className="flex items-center"><Loader2 className="h-4 w-4 animate-spin mr-2" />{T.fetchingDetails}</span>)
+                                                                 : currentError ? (<span className="flex items-center text-destructive"><TriangleAlert className="h-4 w-4 mr-2" />{T.explanationError}</span>)
+                                                                 : (<span className="flex items-center"><Info className="h-4 w-4 mr-2" />{T.viewDetailedExplanation}</span>)}
+                                             </AccordionTrigger>
+                                            <AccordionContent className="pt-3 pb-1">
+                                                {isCurrentExplaining ? (<div className="flex items-center text-muted-foreground p-4 text-base"><Loader2 className="h-5 w-5 animate-spin mr-2.5" /> {T.loadingExplanation}</div>)
+                                                                  : currentError ? (<Alert variant="destructive" className="text-sm my-2"><TriangleAlert className="h-4 w-4" /><AlertTitle className="text-sm font-medium">{T.errorTitle}</AlertTitle><AlertDescription className="text-sm">{currentError}</AlertDescription></Alert>)
+                                                                  : currentExplanation ? (<div className="text-muted-foreground text-base">{formatTextToComponent(currentExplanation)}</div>)
+                                                                  : null}
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                     </Accordion>
+                                );
+                             }
+                             return null;
+                         })()}
                     </div>
                 </>
             )}
