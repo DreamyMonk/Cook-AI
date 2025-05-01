@@ -68,6 +68,7 @@ const uiText = {
         downloadingRecipe: "Downloading...", // Added translation
         pdfGenerationErrorTitle: "PDF Error", // Added translation
         pdfGenerationErrorDesc: "Could not generate the recipe PDF. Please try again.", // Added translation
+        detailedExplanationTitle: "Detailed Explanation", // Added for PDF
     },
     "es": {
         recipeNotePrefix: "Nota:",
@@ -106,6 +107,7 @@ const uiText = {
         downloadingRecipe: "Descargando...", // Added translation
         pdfGenerationErrorTitle: "Error PDF", // Added translation
         pdfGenerationErrorDesc: "No se pudo generar el PDF de la receta. Por favor, inténtalo de nuevo.", // Added translation
+        detailedExplanationTitle: "Explicación Detallada", // Added for PDF
     },
     "fr": {
         recipeNotePrefix: "Note :",
@@ -144,6 +146,7 @@ const uiText = {
         downloadingRecipe: "Téléchargement...", // Added translation
         pdfGenerationErrorTitle: "Erreur PDF", // Added translation
         pdfGenerationErrorDesc: "Impossible de générer le PDF de la recette. Veuillez réessayer.", // Added translation
+        detailedExplanationTitle: "Explication Détaillée", // Added for PDF
     },
     "de": {
         recipeNotePrefix: "Hinweis:",
@@ -182,6 +185,7 @@ const uiText = {
         downloadingRecipe: "Wird heruntergeladen...", // Added translation
         pdfGenerationErrorTitle: "PDF-Fehler", // Added translation
         pdfGenerationErrorDesc: "Das Rezept-PDF konnte nicht generiert werden. Bitte versuchen Sie es erneut.", // Added translation
+        detailedExplanationTitle: "Detaillierte Erklärung", // Added for PDF
     },
     "hi": { // Hindi Translations
         recipeNotePrefix: "ध्यान दें:",
@@ -220,6 +224,7 @@ const uiText = {
         downloadingRecipe: "डाउनलोड हो रहा है...", // Added translation
         pdfGenerationErrorTitle: "पीडीएफ त्रुटि", // Added translation
         pdfGenerationErrorDesc: "रेसिपी पीडीएफ उत्पन्न नहीं किया जा सका। कृपया पुन: प्रयास करें।", // Added translation
+        detailedExplanationTitle: "विस्तृत स्पष्टीकरण", // Added for PDF
     },
     "bn": { // Bengali Translations
         recipeNotePrefix: "দ্রষ্টব্য:",
@@ -258,6 +263,7 @@ const uiText = {
         downloadingRecipe: "ডাউনলোড হচ্ছে...", // Added translation
         pdfGenerationErrorTitle: "পিডিএফ ত্রুটি", // Added translation
         pdfGenerationErrorDesc: "রেসিপি পিডিএফ তৈরি করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।", // Added translation
+        detailedExplanationTitle: "বিস্তারিত ব্যাখ্যা", // Added for PDF
     },
      // Add more languages as needed
 };
@@ -508,91 +514,135 @@ export function RecipeDisplay({
         try {
             // Dynamically import jsPDF only on the client-side
             const { jsPDF } = await import('jspdf');
-            const doc = new jsPDF();
+            const doc = new jsPDF({
+                unit: "pt", // Use points for better control
+                format: "a4",
+            });
+
             const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
             const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-            const margin = 15;
+            const margin = 40; // Increased margin
             const contentWidth = pageWidth - margin * 2;
             let currentY = margin;
+            const lineHeight = 1.4; // Line height multiplier
+            const titleFontSize = 20;
+            const headingFontSize = 14;
+            const bodyFontSize = 10;
+            const smallFontSize = 8;
+
+            // Helper function to add text and handle page breaks
+            const addText = (text: string, options: any, size = bodyFontSize, spacing = 5) => {
+                 doc.setFontSize(size);
+                 const lines = doc.splitTextToSize(text, contentWidth);
+                 lines.forEach((line: string) => {
+                     if (currentY + size > pageHeight - margin) {
+                         doc.addPage();
+                         currentY = margin;
+                     }
+                     doc.text(line, margin, currentY, options);
+                     currentY += size * lineHeight;
+                 });
+                 currentY += spacing;
+            };
+
+             // Add a border
+            doc.setDrawColor(200, 200, 200);
+            doc.rect(margin / 2, margin / 2, pageWidth - margin, pageHeight - margin);
+
+
+            // --- PDF Content ---
 
             // Title
-            doc.setFontSize(22);
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(40, 40, 40); // Dark Grey
-            doc.text(displayData.name || "Recipe", pageWidth / 2, currentY, { align: "center" });
-            currentY += 15;
+             doc.setFont("helvetica", "bold");
+             doc.setTextColor(40, 40, 40); // Dark Grey
+             addText(displayData.name || "Recipe", { align: "center" }, titleFontSize, 15);
 
-            // Optional Note
-            if (displayData.notes) {
-                doc.setFontSize(10);
-                doc.setFont("helvetica", "italic");
-                doc.setTextColor(100, 100, 100); // Grey
-                const noteLines = doc.splitTextToSize(`${T.recipeNotePrefix} ${displayData.notes}`, contentWidth);
-                doc.text(noteLines, margin, currentY);
-                currentY += noteLines.length * 4 + 6; // Adjust line height and spacing
-            }
+             // Optional Note
+             if (displayData.notes) {
+                 doc.setFont("helvetica", "italic");
+                 doc.setTextColor(100, 100, 100); // Grey
+                 addText(`${T.recipeNotePrefix} ${displayData.notes}`, {}, smallFontSize, 10);
+             }
 
              // Divider
-            doc.setDrawColor(200, 200, 200); // Light Grey
-            doc.setLineWidth(0.3);
-            doc.line(margin, currentY, pageWidth - margin, currentY);
-            currentY += 8;
+             doc.setLineWidth(0.5);
+             doc.setDrawColor(200, 200, 200);
+             doc.line(margin, currentY, pageWidth - margin, currentY);
+             currentY += 10;
 
-            // Ingredients
-            doc.setFontSize(16);
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(60, 179, 113); // Medium Sea Green (Primary-like)
-            doc.text(T.ingredientsTitle, margin, currentY);
-            currentY += 8;
+             // Ingredients
+             doc.setFont("helvetica", "bold");
+             doc.setTextColor(60, 179, 113); // Medium Sea Green (Primary-like)
+             addText(T.ingredientsTitle, {}, headingFontSize, 8);
 
-            doc.setFontSize(11);
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(50, 50, 50); // Near Black
-            const ingredientLines = doc.splitTextToSize(displayData.ingredientsText?.replace(/\*\*/g, '') || T.ingredientsUnavailable, contentWidth); // Remove markdown bolding
-            doc.text(ingredientLines, margin, currentY);
-            currentY += ingredientLines.length * 5 + 10; // Adjust line height and spacing
+             doc.setFont("helvetica", "normal");
+             doc.setTextColor(50, 50, 50); // Near Black
+             // Improved ingredient formatting for PDF
+             const ingredientsContent = (displayData.ingredientsText || T.ingredientsUnavailable)
+                .replace(/\*\*(.*?)\*\*/g, '$1:') // Replace markdown bold with colon
+                .replace(/^- /gm, '  • '); // Replace markdown list item with bullet
+             addText(ingredientsContent, {}, bodyFontSize, 15);
 
-            // Divider
-            doc.setDrawColor(200, 200, 200);
-            doc.setLineWidth(0.3);
-            doc.line(margin, currentY, pageWidth - margin, currentY);
-            currentY += 8;
 
-            // Instructions
-            doc.setFontSize(16);
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(60, 179, 113); // Medium Sea Green
-            doc.text(T.instructionsTitle, margin, currentY);
-            currentY += 8;
+             // Divider
+             doc.line(margin, currentY, pageWidth - margin, currentY);
+             currentY += 10;
 
-            doc.setFontSize(11);
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(50, 50, 50);
+             // Instructions
+             doc.setFont("helvetica", "bold");
+             doc.setTextColor(60, 179, 113);
+             addText(T.instructionsTitle, {}, headingFontSize, 8);
+
+             doc.setFont("helvetica", "normal");
+             doc.setTextColor(50, 50, 50);
              const instructionText = displayData.instructionsText || T.instructionsUnavailable;
-             // Basic handling for numbered lists in instructions for PDF
              const instructionLinesRaw = instructionText.split('\n').map(l => l.trim()).filter(Boolean);
              const instructionLinesFormatted: string[] = [];
              instructionLinesRaw.forEach(line => {
                  if (/^\d+[\.\)]\s/.test(line)) {
-                     // Add slight indent for numbered items
-                     instructionLinesFormatted.push("  " + line);
-                 } else {
+                     instructionLinesFormatted.push(line); // Keep number for PDF
+                 } else if (/^- /gm.test(line)) {
+                      instructionLinesFormatted.push("  • " + line.replace(/^- /gm, '')); // Add bullet
+                 }
+                 else {
                      instructionLinesFormatted.push(line);
                  }
              });
+             addText(instructionLinesFormatted.join('\n'), {}, bodyFontSize, 15);
 
-            const instructionLines = doc.splitTextToSize(instructionLinesFormatted.join('\n'), contentWidth);
 
-             // Handle page breaks for long instructions
-             instructionLines.forEach((line: string) => {
-                 if (currentY > pageHeight - margin) { // Check if Y position exceeds page height
-                     doc.addPage();
-                     currentY = margin; // Reset Y for new page
-                 }
-                 doc.text(line, margin, currentY);
-                 currentY += 5; // Adjust line height
-             });
+              // Detailed Explanation (if available)
+              if (detailedInstructions) {
+                    // Divider
+                    doc.line(margin, currentY, pageWidth - margin, currentY);
+                    currentY += 10;
 
+                    doc.setFont("helvetica", "bold");
+                    doc.setTextColor(60, 179, 113);
+                    addText(T.detailedExplanationTitle, {}, headingFontSize, 8);
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setTextColor(50, 50, 50);
+                    // Format explanation similarly to instructions
+                    const explanationText = detailedInstructions;
+                    const explanationLinesRaw = explanationText.split('\n').map(l => l.trim()).filter(Boolean);
+                    const explanationLinesFormatted: string[] = [];
+                    explanationLinesRaw.forEach(line => {
+                         if (/^\d+[\.\)]\s/.test(line)) {
+                            explanationLinesFormatted.push(line);
+                         } else if (/^- /gm.test(line)) {
+                            explanationLinesFormatted.push("  • " + line.replace(/^- /gm, ''));
+                         } else if (/^\*\*([^*]+)\*\*/gm.test(line)) { // Basic bold handling
+                            explanationLinesFormatted.push("\n" + line.replace(/^\*\*([^*]+)\*\*/gm, '$1') + ":"); // Treat as sub-heading
+                         }
+                         else {
+                             explanationLinesFormatted.push(line);
+                         }
+                    });
+                    addText(explanationLinesFormatted.join('\n'), {}, bodyFontSize, 15);
+              }
+
+             // --- End PDF Content ---
 
             // Save PDF
             const fileName = `${(displayData.name || "recipe").replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
@@ -827,3 +877,4 @@ export function RecipeDisplay({
     </Card>
   );
 }
+
