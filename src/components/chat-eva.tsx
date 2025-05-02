@@ -46,6 +46,7 @@ const supportedLanguagesMap = {
 
 const MAX_MESSAGES = 30; // Define the message limit
 const LOCAL_STORAGE_KEY_EVA_COUNT = 'chefEvaMessageCount';
+const LOCAL_STORAGE_KEY_EVA_HISTORY = 'chefEvaChatHistory'; // Key for chat history
 
 // UI Text translations (keyed by LanguageCode)
 const uiText = {
@@ -240,40 +241,91 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
 
   const T = uiText[currentLanguage] || uiText.en;
 
-  // --- Load and Persist Message Count ---
+  // --- Load Message Count from localStorage ---
   useEffect(() => {
-    const savedCount = localStorage.getItem(LOCAL_STORAGE_KEY_EVA_COUNT);
-    const initialCount = savedCount ? parseInt(savedCount, 10) : MAX_MESSAGES;
+      // This check ensures localStorage is accessed only on the client-side
+      if (typeof window !== 'undefined') {
+        const savedCount = localStorage.getItem(LOCAL_STORAGE_KEY_EVA_COUNT);
+        const initialCount = savedCount ? parseInt(savedCount, 10) : MAX_MESSAGES;
 
-    // Ensure the loaded count is a valid number and not negative
-    if (!isNaN(initialCount) && initialCount >= 0) {
-      setMessageCount(initialCount);
-      setLimitReached(initialCount === 0);
-    } else {
-      // If invalid data in localStorage, reset to max
-      setMessageCount(MAX_MESSAGES);
-      setLimitReached(false);
-      localStorage.setItem(LOCAL_STORAGE_KEY_EVA_COUNT, String(MAX_MESSAGES));
-    }
-  }, []);
+        if (!isNaN(initialCount) && initialCount >= 0) {
+          setMessageCount(initialCount);
+          setLimitReached(initialCount === 0);
+        } else {
+          setMessageCount(MAX_MESSAGES);
+          setLimitReached(false);
+          localStorage.setItem(LOCAL_STORAGE_KEY_EVA_COUNT, String(MAX_MESSAGES));
+        }
+      }
+  }, []); // Runs only once on mount
 
+
+  // --- Save Message Count to localStorage ---
   useEffect(() => {
-    // Save count whenever it changes (and is valid)
-    if (typeof messageCount === 'number' && messageCount >= 0) {
-      localStorage.setItem(LOCAL_STORAGE_KEY_EVA_COUNT, String(messageCount));
-      setLimitReached(messageCount === 0);
-    }
+      // Save count whenever it changes (and is valid)
+      if (typeof window !== 'undefined' && typeof messageCount === 'number' && messageCount >= 0) {
+        localStorage.setItem(LOCAL_STORAGE_KEY_EVA_COUNT, String(messageCount));
+        setLimitReached(messageCount === 0);
+      }
   }, [messageCount]);
 
 
-  // --- Initialize Chat ---
+  // --- Load Chat History from localStorage ---
   useEffect(() => {
-      if (isOpen) {
-          if (messages.length === 0) {
+      if (typeof window !== 'undefined' && isOpen) {
+          const savedHistory = localStorage.getItem(LOCAL_STORAGE_KEY_EVA_HISTORY);
+          if (savedHistory) {
+              try {
+                  const parsedHistory = JSON.parse(savedHistory) as ChatMessage[];
+                  // Basic validation if needed
+                  if (Array.isArray(parsedHistory)) {
+                     // Only set if history has changed from initial empty state
+                     if (messages.length === 0) {
+                        setMessages(parsedHistory);
+                     }
+                  } else {
+                     console.warn("Invalid chat history found in localStorage.");
+                      setMessages([{ role: 'model', parts: [{ text: T.description }] }]);
+                      localStorage.removeItem(LOCAL_STORAGE_KEY_EVA_HISTORY);
+                  }
+              } catch (e) {
+                  console.error("Failed to parse chat history from localStorage:", e);
+                  setMessages([{ role: 'model', parts: [{ text: T.description }] }]);
+                  localStorage.removeItem(LOCAL_STORAGE_KEY_EVA_HISTORY);
+              }
+          } else if (messages.length === 0) {
+              // If no saved history and messages are empty, set initial message
               setMessages([{ role: 'model', parts: [{ text: T.description }] }]);
           }
       }
-  }, [isOpen, T.description, messages.length]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]); // Load when dialog opens
+
+
+  // --- Save Chat History to localStorage ---
+  useEffect(() => {
+      // Save history whenever messages change and the component is open
+      if (typeof window !== 'undefined' && isOpen && messages.length > 0) {
+          // Don't save just the initial greeting message
+          if (messages.length === 1 && messages[0].role === 'model' && messages[0].parts[0]?.text === T.description) {
+              return;
+          }
+          try {
+             localStorage.setItem(LOCAL_STORAGE_KEY_EVA_HISTORY, JSON.stringify(messages));
+          } catch (e) {
+             console.error("Failed to save chat history to localStorage:", e);
+             // Handle potential storage quota issues here if needed
+          }
+      }
+  }, [messages, isOpen, T.description]); // Depend on messages and isOpen
+
+  // --- Initialize Chat (If not loaded from storage) ---
+  // useEffect(() => {
+  //     if (isOpen && messages.length === 0) {
+  //         // Initial message is set during loading from storage now
+  //         // setMessages([{ role: 'model', parts: [{ text: T.description }] }]);
+  //     }
+  // }, [isOpen, T.description, messages.length]);
 
 
   // --- Language Sync & Reset ---
@@ -281,15 +333,15 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
     setCurrentLanguage(initialLanguage);
   }, [initialLanguage]);
 
-  useEffect(() => {
-    if (isOpen && messages.length > 1) {
-        // Don't automatically reset on language change now, let user decide
-        // handleResetChatConfirm(); // Commented out
-    } else if (isOpen && messages.length <= 1) {
-         setMessages([{ role: 'model', parts: [{ text: uiText[initialLanguage].description }] }]);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialLanguage, isOpen]);
+  // Don't automatically reset on language change anymore
+  // useEffect(() => {
+  //   if (isOpen && messages.length > 1) {
+  //       // handleResetChatConfirm(); // Commented out
+  //   } else if (isOpen && messages.length <= 1) {
+  //        setMessages([{ role: 'model', parts: [{ text: uiText[initialLanguage].description }] }]);
+  //   }
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [initialLanguage, isOpen]);
 
 
   // --- Scrolling ---
@@ -431,7 +483,11 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
         const result = await chatWithEva(flowInput);
 
         if (result && result.response) {
-             setMessages(prev => [...prev, { role: 'model', parts: [{ text: result.response }] }]);
+             // Don't need to update messages here, already done optimistically
+             // setMessages(prev => [...prev, { role: 'model', parts: [{ text: result.response }] }]);
+             // Instead, just add the model's response
+              setMessages(prev => [...prev, { role: 'model', parts: [{ text: result.response }] }]);
+
          } else {
             // Revert count decrement if AI call failed structurally
             setMessageCount(messageCount);
@@ -464,11 +520,16 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
   };
 
   const handleResetChatConfirm = () => {
-      setMessages([{ role: 'model', parts: [{ text: T.description }] }]); // Reset to initial message
+      const initialMessage = { role: 'model' as const, parts: [{ text: T.description }] };
+      setMessages([initialMessage]); // Reset to initial message
       setInput('');
       removeImage();
       setError(null);
       setShowResetConfirm(false);
+      // Remove history from localStorage on explicit reset
+      if (typeof window !== 'undefined') {
+         localStorage.removeItem(LOCAL_STORAGE_KEY_EVA_HISTORY);
+      }
       // NOTE: Message count is NOT reset here
   };
 
