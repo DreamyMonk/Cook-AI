@@ -135,7 +135,7 @@ const uiText = {
         generateProButtonLabel: "Generate Pro Menu", // Added button label
         chatWithEvaButton: "Chat with Chef Eva (Beta)",
         loginRequiredTitle: "Feature Disabled", // Changed Title
-        loginRequiredDescPro: "Pro Chef Mode is currently disabled.", // Updated Message
+        loginRequiredDescPro: "Pro Chef Mode is currently disabled.", // Kept for reference, but logic is removed
         loginRequiredDescEva: "Chef Eva chat is currently disabled.", // Updated Message
         loginButton: "Login / Sign Up",
         myAccount: "My Account",
@@ -201,7 +201,7 @@ const uiText = {
         generateProButtonLabel: "Generar Menú Pro",
         chatWithEvaButton: "Chatear con Chef Eva (Beta)",
         loginRequiredTitle: "Función Deshabilitada", // Changed Title
-        loginRequiredDescPro: "El Modo Chef Profesional está actualmente deshabilitado.", // Updated Message
+        loginRequiredDescPro: "El Modo Chef Profesional está actualmente deshabilitado.", // Kept for reference
         loginRequiredDescEva: "El chat con Chef Eva está actualmente deshabilitado.", // Updated Message
         loginButton: "Iniciar Sesión / Registrarse",
         myAccount: "Mi Cuenta",
@@ -267,7 +267,7 @@ const uiText = {
         generateProButtonLabel: "Générer le Menu Pro",
         chatWithEvaButton: "Discuter avec Chef Eva (Bêta)",
         loginRequiredTitle: "Fonctionnalité Désactivée", // Changed Title
-        loginRequiredDescPro: "Le Mode Chef Pro est actuellement désactivé.", // Updated Message
+        loginRequiredDescPro: "Le Mode Chef Pro est actuellement désactivé.", // Kept for reference
         loginRequiredDescEva: "Le chat avec Chef Eva est actuellement désactivé.", // Updated Message
         loginButton: "Connexion / Inscription",
         myAccount: "Mon Compte",
@@ -333,7 +333,7 @@ const uiText = {
         generateProButtonLabel: "Profi-Menü generieren",
         chatWithEvaButton: "Chat mit Chef Eva (Beta)",
         loginRequiredTitle: "Funktion Deaktiviert", // Changed Title
-        loginRequiredDescPro: "Der Profi-Koch-Modus ist derzeit deaktiviert.", // Updated Message
+        loginRequiredDescPro: "Der Profi-Koch-Modus ist derzeit deaktiviert.", // Kept for reference
         loginRequiredDescEva: "Der Chat mit Chef Eva ist derzeit deaktiviert.", // Updated Message
         loginButton: "Anmelden / Registrieren",
         myAccount: "Mein Konto",
@@ -399,7 +399,7 @@ const uiText = {
         generateProButtonLabel: "प्रो मेनू बनाएं",
         chatWithEvaButton: "शेफ ईवा के साथ चैट करें (बीटा)",
         loginRequiredTitle: "सुविधा अक्षम", // Changed Title
-        loginRequiredDescPro: "प्रो शेफ मोड वर्तमान में अक्षम है।", // Updated Message
+        loginRequiredDescPro: "प्रो शेफ मोड वर्तमान में अक्षम है।", // Kept for reference
         loginRequiredDescEva: "शेफ ईवा चैट वर्तमान में अक्षम है।", // Updated Message
         loginButton: "लॉगिन / साइन अप",
         myAccount: "मेरा खाता",
@@ -464,7 +464,7 @@ const uiText = {
         generateProButtonLabel: "প্রো মেনু তৈরি করুন",
         chatWithEvaButton: "শেফ ইভার সাথে চ্যাট করুন (বিটা)",
         loginRequiredTitle: "বৈশিষ্ট্য নিষ্ক্রিয়", // Changed Title
-        loginRequiredDescPro: "প্রো শেফ মোড বর্তমানে নিষ্ক্রিয়।", // Updated Message
+        loginRequiredDescPro: "প্রো শেফ মোড বর্তমানে নিষ্ক্রিয়।", // Kept for reference
         loginRequiredDescEva: "শেফ ইভা চ্যাট বর্তমানে নিষ্ক্রিয়।", // Updated Message
         loginButton: "লগইন / সাইন আপ",
         myAccount: "আমার অ্যাকাউন্ট",
@@ -489,7 +489,7 @@ export default function Home() {
   const [showChatEva, setShowChatEva] = useState(false); // State to control ChatEva visibility
 
   // Pro Chef Mode State
-  const [isProChefMode, setIsProChefMode] = useState(false);
+  const [isProChefMode, setIsProChefMode] = useState(false); // Enable Pro Chef Mode by default or based on preference
   const [eventTheme, setEventTheme] = useState('');
   const [eventDetails, setEventDetails] = useState(''); // State for event description
   const [numGuests, setNumGuests] = useState<number | ''>(2); // Default to 2 guests
@@ -509,17 +509,7 @@ export default function Home() {
 
   // Toggle Pro Chef Mode
   const handleProChefToggle = (checked: boolean) => {
-     // if (checked && !user) { // Check removed as auth is disabled
-     //    setError(T.loginRequiredDescPro);
-     //    return;
-    // }
-    setError(T.loginRequiredDescPro); // Always show disabled message for now
-    setIsProChefMode(false); // Keep it disabled
-    return;
-
-    // --- Below code is kept for when auth is re-enabled ---
-    /*
-    setError(null); // Clear error if user is logged in or toggling off
+    setError(null); // Clear error when toggling
     setIsProChefMode(checked);
     // Reset state when toggling mode
     setRecipeResult(null);
@@ -534,7 +524,6 @@ export default function Home() {
         setProPreferences('');
         setProIngredientsInput(''); // Reset pro ingredients
     }
-    */
   };
 
    // Toggle Chat Eva Modal
@@ -573,16 +562,6 @@ export default function Home() {
   const handleGenerateRecipeOrMenu = async (ingredientsString?: string) => { // Make ingredients optional for standard mode too
     setError(null);
 
-    // // Require login for Pro Chef Mode - DISABLED
-    // if (isProChefMode && !user) {
-    //     setError(T.loginRequiredDescPro);
-    //     return;
-    // }
-     if (isProChefMode) { // Show error if trying to use Pro Mode
-        setError(T.loginRequiredDescPro);
-        return;
-     }
-
     setRecipeResult(null);
     setRefinedRecipe(null);
     setAlternativeTypes(null);
@@ -595,7 +574,6 @@ export default function Home() {
 
     // --- Validation ---
     if (isProChefMode) {
-        // This block should not be reached currently as Pro Mode is disabled
         if (!eventTheme.trim()) {
             setError(T.inputErrorNoTheme);
             return;
@@ -626,22 +604,21 @@ export default function Home() {
         let result: RecipeResultState = null;
 
         if (isProChefMode) {
-            // --- Call Pro Chef Flow (Currently disabled) ---
-            // const proInput: GenerateProMenuInput = {
-            //     ingredients: ingredientsString || '', // Pass empty string if no optional ingredients provided
-            //     eventTheme: eventTheme,
-            //     eventDetails: eventDetails, // Pass event details
-            //     numGuests: numGuests as number, // Cast as number (validated above)
-            //     courses: selectedCourses,
-            //     preferences: proPreferences,
-            //     language: languageName,
-            //     tastePreference: tastePreference,
-            // };
-            // result = await generateProMenu(proInput);
-            // // Pro mode doesn't have alternatives or refinement in this structure
-            // setAlternativeTypes(null);
-            // setRefinedRecipe(null);
-             setError(T.loginRequiredDescPro); // Redundant safety check
+            // --- Call Pro Chef Flow ---
+            const proInput: GenerateProMenuInput = {
+                ingredients: ingredientsString || '', // Pass empty string if no optional ingredients provided
+                eventTheme: eventTheme,
+                eventDetails: eventDetails, // Pass event details
+                numGuests: numGuests as number, // Cast as number (validated above)
+                courses: selectedCourses,
+                preferences: proPreferences,
+                language: languageName,
+                tastePreference: tastePreference,
+            };
+            result = await generateProMenu(proInput);
+            // Pro mode doesn't have alternatives or refinement in this structure
+            setAlternativeTypes(null);
+            setRefinedRecipe(null);
 
         } else {
             // --- Call Standard Recipe Flow ---
@@ -915,7 +892,7 @@ export default function Home() {
                     id="pro-chef-mode"
                     checked={isProChefMode}
                     onCheckedChange={handleProChefToggle}
-                    disabled={isLoading} // Keep disabling based on loading state
+                    disabled={isLoading}
                     aria-labelledby="pro-chef-mode-label"
                 />
                 <Label htmlFor="pro-chef-mode" id="pro-chef-mode-label" className="flex items-center gap-1.5 font-medium text-primary cursor-pointer">
@@ -965,27 +942,128 @@ export default function Home() {
              )}
 
              {/* Pro Chef Mode Inputs (Conditional) */}
-             {isProChefMode && ( // Show disabled message if Pro mode selected
-                 <Alert variant="destructive">
-                     <TriangleAlert className="h-4 w-4" />
-                     <AlertTitle>{T.loginRequiredTitle}</AlertTitle>
-                     <AlertDescription>
-                        {T.loginRequiredDescPro}
-                        {/* Link removed as auth is disabled */}
-                        {/*
-                        <Link href="/auth" passHref>
-                           <Button variant="link" className="p-0 h-auto ml-1 text-destructive font-semibold">{T.loginButton}</Button>
-                        </Link>
-                        */}
-                     </AlertDescription>
-                 </Alert>
-             )}
-             {/* Pro inputs removed as the feature is disabled
-             {isProChefMode && user && ( // Show Pro inputs only if Pro mode and logged in
-                 ... Pro input fields ...
-             )}
-             */}
+             {isProChefMode && (
+                  <div className="space-y-4">
+                        {/* Event Theme */}
+                        <div className="space-y-1.5">
+                             <Label htmlFor="event-theme">{T.eventThemeLabel}</Label>
+                             <Input
+                                id="event-theme"
+                                value={eventTheme}
+                                onChange={(e) => setEventTheme(e.target.value)}
+                                placeholder={T.eventThemePlaceholder}
+                                disabled={isLoading}
+                                className="bg-background"
+                             />
+                        </div>
 
+                        {/* Event Details */}
+                         <div className="space-y-1.5">
+                             <Label htmlFor="event-details">{T.eventDetailsLabel}</Label>
+                             <Textarea
+                                id="event-details"
+                                value={eventDetails}
+                                onChange={(e) => setEventDetails(e.target.value)}
+                                placeholder={T.eventDetailsPlaceholder}
+                                disabled={isLoading}
+                                className="bg-background min-h-[100px] resize-none"
+                             />
+                         </div>
+
+                        {/* Number of Guests */}
+                        <div className="space-y-1.5">
+                            <Label htmlFor="num-guests">{T.numGuestsLabel}</Label>
+                            <Input
+                                id="num-guests"
+                                type="number"
+                                value={numGuests}
+                                onChange={(e) => setNumGuests(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value, 10)))}
+                                min="1"
+                                placeholder="e.g., 4"
+                                disabled={isLoading}
+                                className="bg-background w-24"
+                            />
+                        </div>
+
+                         {/* Course Selection */}
+                         <div className="space-y-2">
+                            <Label>{T.coursesLabel}</Label>
+                            <div className="grid grid-cols-3 gap-2">
+                                {courseTypes.map((course) => (
+                                    <div key={course} className="flex items-center space-x-2 bg-background border border-input rounded-md p-2 justify-center shadow-sm">
+                                        <Checkbox
+                                            id={`course-${course}`}
+                                            checked={selectedCourses.includes(course)}
+                                            onCheckedChange={(checked) => handleCourseChange(course, checked)}
+                                            disabled={isLoading || (selectedCourses.length === 1 && selectedCourses[0] === course)} // Disable unchecking last item
+                                            aria-labelledby={`course-${course}-label`}
+                                        />
+                                        <Label htmlFor={`course-${course}`} id={`course-${course}-label`} className="text-sm font-medium capitalize cursor-pointer">
+                                             {course === 'main' ? T.courseMain : course === 'starter' ? T.courseStarter : T.courseDessert}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </div>
+                         </div>
+
+                          {/* Preferences/Dietary Needs */}
+                         <div className="space-y-1.5">
+                            <Label htmlFor="pro-preferences">{T.proPreferencesLabel}</Label>
+                            <Textarea
+                                id="pro-preferences"
+                                value={proPreferences}
+                                onChange={(e) => setProPreferences(e.target.value)}
+                                placeholder={T.proPreferencesPlaceholder}
+                                disabled={isLoading}
+                                className="bg-background min-h-[60px] resize-none"
+                             />
+                         </div>
+
+                         {/* Optional Key Ingredients */}
+                         <div className="space-y-1.5">
+                             <Label htmlFor="pro-ingredients">{T.proOptionalIngredientsLabel}</Label>
+                              <Input
+                                id="pro-ingredients"
+                                value={proIngredientsInput}
+                                onChange={(e) => setProIngredientsInput(e.target.value)}
+                                placeholder={T.proOptionalIngredientsPlaceholder}
+                                disabled={isLoading}
+                                className="bg-background"
+                                aria-describedby="pro-ingredients-desc"
+                             />
+                             <p id="pro-ingredients-desc" className="text-xs text-muted-foreground">{T.proOptionalIngredientsDesc}</p>
+                         </div>
+
+                        {/* Info Box */}
+                        <Alert variant="default" className="bg-secondary/40 border-secondary">
+                            <Info className="h-4 w-4 text-secondary-foreground" />
+                             <AlertDescription className="text-xs text-secondary-foreground">
+                                {T.proInfoText}
+                             </AlertDescription>
+                         </Alert>
+
+                          {/* Submit Button for Pro Mode */}
+                         <Button
+                             type="button"
+                             onClick={() => handleGenerateRecipeOrMenu()} // Call the unified handler
+                             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary text-base h-11 shadow-md"
+                             disabled={isLoading}
+                             aria-live="polite"
+                         >
+                             {isLoading ? (
+                                 <>
+                                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                     {T.generatingProAltText}
+                                 </>
+                             ) : (
+                                 <>
+                                     <ChefHat className="mr-2 h-5 w-5" />
+                                     {T.generateProButtonLabel}
+                                 </>
+                             )}
+                         </Button>
+                  </div>
+             )}
           </CardContent>
         </Card>
 
@@ -999,7 +1077,7 @@ export default function Home() {
                  {recipeDescription}
             </CardDescription>
              {/* Display error specific to feature disabled */}
-             {error && (error === T.loginRequiredDescPro || error === T.loginRequiredDescEva) && (
+             {error && (error === T.loginRequiredDescEva) && ( // Only show Eva login error here
                  <Alert variant="destructive" className="mt-3">
                      <TriangleAlert className="h-4 w-4" />
                      <AlertTitle>{T.loginRequiredTitle}</AlertTitle>
@@ -1016,12 +1094,12 @@ export default function Home() {
              )}
           </CardHeader>
           <CardContent className="p-5 flex-grow flex items-center justify-center bg-card">
-            {isLoading && !(error === T.loginRequiredDescPro || error === T.loginRequiredDescEva) ? ( // Only show loader if not a login error
+            {isLoading && !(error === T.loginRequiredDescEva) ? ( // Only show loader if not an Eva login error
               <div className="flex flex-col items-center text-muted-foreground text-center p-8">
                 <Loader2 className="h-16 w-16 animate-spin text-primary mb-6" />
                 <p className="text-lg">{isGenerating ? (isProChefMode ? T.generatingProAltText : T.generatingAltText) : T.refiningAltText}</p>
               </div>
-            ) : error && !(error === T.loginRequiredDescPro || error === T.loginRequiredDescEva) ? ( // Show general error if not login error
+            ) : error && !(error === T.loginRequiredDescEva) ? ( // Show general error if not login error
                <Alert variant="destructive" className="w-full m-4">
                   <TriangleAlert className="h-5 w-5" />
                   <AlertTitle className="text-lg">{T.errorTitle}</AlertTitle>
@@ -1041,7 +1119,7 @@ export default function Home() {
               />
             ) : (
               // Initial placeholder state or login prompt state
-               !(error === T.loginRequiredDescPro || error === T.loginRequiredDescEva) ? ( // Only show placeholder if not a login error
+               !(error === T.loginRequiredDescEva) ? ( // Only show placeholder if not an Eva login error
                  <div className="text-center text-muted-foreground space-y-6 p-8">
                    <Image
                       src="https://picsum.photos/seed/culinarydelight/350/230" // Updated seed
@@ -1054,7 +1132,7 @@ export default function Home() {
                     />
                   <p className="text-lg">{T.recipeDescriptionPlaceholder}</p>
                  </div>
-               ) : null // Don't show placeholder if there's a login error
+               ) : null // Don't show placeholder if there's an Eva login error
             )}
           </CardContent>
         </Card>
@@ -1094,5 +1172,3 @@ export default function Home() {
     </main>
   );
 }
-
-
