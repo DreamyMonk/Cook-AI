@@ -489,7 +489,7 @@ export default function Home() {
   const [showChatEva, setShowChatEva] = useState(false); // State to control ChatEva visibility
 
   // Pro Chef Mode State
-  const [isProChefMode, setIsProChefMode] = useState(true); // Enable Pro Chef Mode by default
+  const [isProChefMode, setIsProChefMode] = useState(false); // Disable Pro Chef Mode by default
   const [eventTheme, setEventTheme] = useState('');
   const [eventDetails, setEventDetails] = useState(''); // State for event description
   const [numGuests, setNumGuests] = useState<number | ''>(2); // Default to 2 guests
@@ -528,18 +528,9 @@ export default function Home() {
 
    // Toggle Chat Eva Modal
     const handleChatEvaToggle = () => {
-        // if (!user) { // Check removed as auth is disabled
-        //     setError(T.loginRequiredDescEva);
-        //     return;
-        // }
-         setError(T.loginRequiredDescEva); // Always show disabled message for now
-         setShowChatEva(false); // Keep it disabled
-         return;
-        // --- Below code is kept for when auth is re-enabled ---
-        /*
-        setError(null); // Clear error if user is logged in
-        setShowChatEva(prev => !prev);
-        */
+        // Authentication check removed, Eva is always enabled now
+         setError(null); // Clear any previous errors
+         setShowChatEva(prev => !prev);
     };
 
   // Handle course selection change
@@ -1139,32 +1130,16 @@ export default function Home() {
       </div>
 
         {/* Chef Eva Chat Modal */}
-         {/* Disabled Chat Eva as auth is disabled */}
-         {/*
-         {showChatEva && user && (
+         {showChatEva && (
            <ChatEva
               isOpen={showChatEva}
               onClose={() => setShowChatEva(false)}
               language={selectedLanguage}
-              userId={user._id} // Pass userId
+              // userId is not strictly needed if not using tokens/auth
+              userId={"anonymous"} // Pass a placeholder or omit if not needed by the component
            />
          )}
-          */}
-          {showChatEva && ( // Show disabled message if Eva button clicked
-             <Alert variant="destructive" className="w-full max-w-4xl mt-4">
-                 <TriangleAlert className="h-4 w-4" />
-                 <AlertTitle>{T.loginRequiredTitle}</AlertTitle>
-                 <AlertDescription>
-                     {T.loginRequiredDescEva}
-                      {/* Link removed as auth is disabled */}
-                      {/*
-                      <Link href="/auth" passHref>
-                         <Button variant="link" className="p-0 h-auto ml-1 text-destructive font-semibold">{T.loginButton}</Button>
-                      </Link>
-                      */}
-                 </AlertDescription>
-             </Alert>
-         )}
+          {/* Removed error display for disabled Eva */}
 
       <footer className="mt-16 text-center text-sm text-muted-foreground/80">
         {/* Updated footer text to use current year and only English */}
