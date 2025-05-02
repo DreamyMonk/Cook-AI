@@ -48,7 +48,7 @@ const uiText = {
         recipeNotePrefix: "Note:",
         ingredientsTitle: "Ingredients",
         ingredientsNotAvailable: "No ingredients listed.",
-        mainIngredientsHeader: "**Main Ingredients (Provided):**", // Clarify source
+        mainIngredientsHeader: "**Main Ingredients (User Provided):**", // Clarify source
         additionalIngredientsHeader: "**Additional Ingredients (Suggested):**", // Clarify source
         refinedIngredientsHeader: "**Refined Ingredients:**", // Header for refined list
         alternativeIdeasTitle: "Alternative Ideas",
@@ -95,7 +95,7 @@ const uiText = {
         recipeNotePrefix: "Nota:",
         ingredientsTitle: "Ingredientes",
         ingredientsNotAvailable: "No hay ingredientes listados.",
-        mainIngredientsHeader: "**Ingredientes Principales (Proporcionados):**",
+        mainIngredientsHeader: "**Ingredientes Principales (Proporcionados por el Usuario):**",
         additionalIngredientsHeader: "**Ingredientes Adicionales (Sugeridos):**",
         refinedIngredientsHeader: "**Ingredientes Refinados:**",
         alternativeIdeasTitle: "Ideas Alternativas",
@@ -142,7 +142,7 @@ const uiText = {
         recipeNotePrefix: "Note :",
         ingredientsTitle: "Ingrédients",
         ingredientsNotAvailable: "Aucun ingrédient listé.",
-        mainIngredientsHeader: "**Ingrédients Principaux (Fournis) :**",
+        mainIngredientsHeader: "**Ingrédients Principaux (Fournis par l'Utilisateur) :**",
         additionalIngredientsHeader: "**Ingrédients Additionnels (Suggérés) :**",
         refinedIngredientsHeader: "**Ingrédients Affinés :**",
         alternativeIdeasTitle: "Idées Alternatives",
@@ -189,7 +189,7 @@ const uiText = {
         recipeNotePrefix: "Hinweis:",
         ingredientsTitle: "Zutaten",
         ingredientsNotAvailable: "Keine Zutaten aufgelistet.",
-        mainIngredientsHeader: "**Hauptzutaten (Bereitgestellt):**",
+        mainIngredientsHeader: "**Hauptzutaten (Vom Benutzer bereitgestellt):**",
         additionalIngredientsHeader: "**Zusätzliche Zutaten (Vorgeschlagen):**",
         refinedIngredientsHeader: "**Verfeinerte Zutaten:**",
         alternativeIdeasTitle: "Alternative Ideen",
@@ -236,7 +236,7 @@ const uiText = {
         recipeNotePrefix: "ध्यान दें:",
         ingredientsTitle: "सामग्री",
         ingredientsNotAvailable: "कोई सामग्री सूचीबद्ध नहीं है।",
-        mainIngredientsHeader: "**मुख्य सामग्री (प्रदान की गई):**",
+        mainIngredientsHeader: "**मुख्य सामग्री (उपयोगकर्ता द्वारा प्रदान की गई):**",
         additionalIngredientsHeader: "**अतिरिक्त सामग्री (सुझाई गई):**",
         refinedIngredientsHeader: "**परिष्कृत सामग्री:**",
         alternativeIdeasTitle: "वैकल्पिक विचार",
@@ -283,7 +283,7 @@ const uiText = {
         recipeNotePrefix: "দ্রষ্টব্য:",
         ingredientsTitle: "উপকরণ",
         ingredientsNotAvailable: "কোনো উপকরণ তালিকাভুক্ত নেই।",
-        mainIngredientsHeader: "**প্রধান উপকরণ (প্রদান করা):**",
+        mainIngredientsHeader: "**প্রধান উপকরণ (ব্যবহারকারী দ্বারা প্রদান করা):**",
         additionalIngredientsHeader: "**অতিরিক্ত উপকরণ (প্রস্তাবিত):**",
         refinedIngredientsHeader: "**পরিমার্জিত উপকরণ:**",
         alternativeIdeasTitle: "বিকল্প ধারণা",
@@ -781,7 +781,7 @@ export function RecipeDisplay({
 
   return (
     <Card className="w-full border-none shadow-none bg-transparent flex flex-col h-full p-0">
-       <ScrollArea className="flex-grow pr-3 -mr-3">
+       <ScrollArea className="flex-grow pr-4 -mr-4"> {/* Adjust right padding here */}
          <CardContent className="p-0 space-y-5 text-base">
 
             {/* --- Conditional Rendering based on displayData.type --- */}
@@ -1046,5 +1046,6 @@ export function RecipeDisplay({
     </Card>
   );
 }
+
 
     
