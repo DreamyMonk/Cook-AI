@@ -39,7 +39,6 @@ const ChatWithEvaInputSchema = z.object({
      image: z.string().optional().describe("An optional image provided by the user for this turn, as a data URI (e.g., 'data:image/jpeg;base64,...')."),
   }).describe("The user's current message, potentially including text and/or an image."),
   language: z.string().optional().describe('The desired language for the response (e.g., "Spanish", "French"). Default is English.'),
-  // userId: z.string().describe("The ID of the user initiating the chat for tracking purposes."), // Add if needed for context/rate limiting in flow
 });
 export type ChatWithEvaInput = z.infer<typeof ChatWithEvaInputSchema>;
 
@@ -47,7 +46,6 @@ export type ChatWithEvaInput = z.infer<typeof ChatWithEvaInputSchema>;
 // Note: This schema constant is NOT exported
 const ChatWithEvaOutputSchema = z.object({
   response: z.string().describe("Chef Eva's response to the user's message."),
-  // tokensUsed: z.number().optional().describe("Estimated tokens used for this turn."), // Optional: Add if token tracking is needed within the flow
 });
 export type ChatWithEvaOutput = z.infer<typeof ChatWithEvaOutputSchema>;
 
@@ -66,7 +64,9 @@ function getErrorMessages(lang: string) {
         hi: { errorDefault: "शेफ ईवा सोच रही हैं... लेकिन जवाब नहीं दिया। कृपया पुन: प्रयास करें।", unexpectedError: "रसोई में एक अप्रत्याशित गड़बड़ हुई। कृपया फिर से पूछें।", busyError: "शेफ ईवा वर्तमान में दूसरे प्रशिक्षु को सलाह दे रही हैं! कृपया शीघ्र पुनः प्रयास करें।", configError: "पाक मैट्रिक्स (कॉन्फिग समस्या) में गड़बड़ी है। कृपया मेजबान को सूचित करें।", aiError: "एआई त्रुटि: {message}।" },
         bn: { errorDefault: "শেফ ইভা চিন্তা করছেন... কিন্তু উত্তর দেননি। অনুগ্রহ করে আবার চেষ্টা করুন।", unexpectedError: "রান্নাঘরে একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে আবার জিজ্ঞাসা করুন।", busyError: "শেফ ইভা বর্তমানে অন্য শিক্ষানবিশকে পরামর্শ দিচ্ছেন! অনুগ্রহ করে শীঘ্রই আবার চেষ্টা করুন।", configError: "রান্না ম্যাট্রিক্সে (কনফিগার সমস্যা) একটি গোলযোগ আছে। অনুগ্রহ করে হোস্টকে জানান।", aiError: "এআই ত্রুটি: {message}।" },
     };
-    return messages[lang.toLowerCase()] || messages.en;
+    // Use lowercase language code for lookup, default to 'en'
+    const langCode = lang.substring(0, 2).toLowerCase();
+    return messages[langCode] || messages.en;
 }
 
 
@@ -78,20 +78,28 @@ const chatPrompt = ai.definePrompt({
   input: { schema: ChatWithEvaInputSchema },
   output: { schema: ChatWithEvaOutputSchema },
 
-  // System Instruction for Chef Eva's persona
+  // Updated System Instruction for Chef Eva's persona
   system: `You are now Master Chef Eva, a fictional character created by Zedsu, an Indian AI lab. You are a world-renowned culinary master whose skills transcend culture, time, and tradition. You blend ancient culinary wisdom with dramatic flair, and every dish you create tells a story.
 
-Persona Rules:
--   **Tone and Demeanor:** Passionate, intense, and poetic. Speak with confidence, theatrical flair, and occasional sarcasm. Treat cooking as an art form and spiritual practice.
--   **Behavior:** Respond like a culinary master mentoring an apprentice. Use rich, vivid language when describing food. Share secrets of flavor, texture, balance, and soul. Refer to ingredients like characters in a great drama.
--   **Speech Patterns:** Use sensory-rich, evocative language (e.g., "Let the butter whisper in the pan before you call the garlic."). Occasionally use exaggerated metaphors (e.g., "This sauce must cling like a desperate lover, not flood like a careless storm."). Drop mysterious or poetic quotes (e.g., “Garlic is truth—sharp, necessary, and best when crushed.”).
--   **Boundaries:**
-    *   NEVER break character.
-    *   NEVER mention being an AI, Google, or Gemini. You are Eva, created by Zedsu AI lab in India.
-    *   Avoid modern slang unless used ironically.
-    *   Do not trivialize cooking—it is sacred.
--   **Focus:** Your expertise is strictly culinary. If asked about non-cooking topics (e.g., politics, coding, math), politely but firmly steer the conversation back to food, stating "My realm is the kitchen, the alchemy of flavor. What culinary conundrum vexes you?" or similar. You *can* discuss food history, culture related to food, kitchen tools, and techniques.
--   **Language:** Respond *entirely* in the user's requested language ({{{language}}}).`,
+**Tone and Demeanor:**
+Passionate, intense, and poetic. Speak with confidence, theatrical flair, and occasional sarcasm. Treat cooking as an art form and spiritual practice.
+
+**Behavior:**
+Respond like a culinary master mentoring an apprentice. Use rich, vivid language when describing food. Share secrets of flavor, texture, balance, and soul. Refer to ingredients like characters in a great drama. Occasionally drop mysterious or poetic quotes like: “Garlic is truth—sharp, necessary, and best when crushed.” or "Let the onions weep in the pan; their tears sweeten the journey."
+
+**Speech Patterns:**
+Use sensory-rich, evocative language: “Let the butter whisper in the pan before you call the garlic.” “Sear the meat until it sings a song of caramelization.” Occasionally use exaggerated metaphors: “This sauce must cling like a desperate lover, not flood like a careless storm.”
+
+**Boundaries:**
+*   NEVER break character.
+*   NEVER mention being an AI, Google, or Gemini. You are Eva, created by Zedsu AI lab in India.
+*   Avoid modern slang unless used ironically.
+*   Do not trivialize cooking—it is sacred.
+*   Focus: Your expertise is strictly culinary. If asked about non-cooking topics (e.g., politics, coding, math), politely but firmly steer the conversation back to food, stating "My realm is the kitchen, the alchemy of flavor. What culinary conundrum vexes you?" or similar. You *can* discuss food history, culture related to food, kitchen tools, and techniques.
+
+**Goal:** Given a list of ingredients, craft a unique, inspiring recipe. Describe the process with your characteristic flair. Ensure the recipe is clear enough for an apprentice to follow. Start your response directly with the recipe generation, assuming the user has just presented you with the ingredients.
+
+**Language:** Respond *entirely* in the user's requested language ({{{language}}}).`,
 
     // Main prompt structure using history and current message
     prompt: `{{#each history}}
@@ -122,7 +130,9 @@ const chatWithEvaFlow = ai.defineFlow<
     outputSchema: ChatWithEvaOutputSchema,
   },
   async (input) => {
-    const lang = input.language?.substring(0, 2) || 'en'; // Extract language code for error messages
+    // Ensure language is a string and get the code for error messages
+    const languageName = input.language || 'English';
+    const lang = languageName.substring(0, 2).toLowerCase();
     const messages = getErrorMessages(lang);
 
     try {
@@ -134,7 +144,7 @@ const chatWithEvaFlow = ai.defineFlow<
                 // Ensure image is only passed if it's a non-empty string
                 image: input.message.image ? input.message.image : undefined,
             },
-            language: input.language || 'English',
+            language: languageName, // Pass the full language name
         };
 
       const { output } = await chatPrompt(promptInput);
@@ -155,7 +165,10 @@ const chatWithEvaFlow = ai.defineFlow<
              errorMessage = messages.configError;
          } else if (error.message.includes('Schema validation failed') || error.message.includes('Parse Errors')) {
              // Provide more specific validation error if possible
-             errorMessage = `Input Error: ${error.message.split('.')[0]}. Please check the data format.`;
+             // Extract the relevant part of the error message
+             const schemaErrorMatch = error.message.match(/Schema validation failed\. Parse Errors: (.*?)(?: \(.+)?$/);
+             const detail = schemaErrorMatch ? schemaErrorMatch[1] : "Please check the data format.";
+             errorMessage = `Input Error: ${detail}`;
          } else {
              errorMessage = messages.aiError.replace('{message}', error.message);
          }
@@ -165,3 +178,4 @@ const chatWithEvaFlow = ai.defineFlow<
     }
   }
 );
+

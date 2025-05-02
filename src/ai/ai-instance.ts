@@ -8,6 +8,7 @@ export const ai = genkit({
       apiKey: process.env.GOOGLE_GENAI_API_KEY,
     }),
   ],
-  // Switch to gemini-1.5-flash as gemini-2.0-flash was reported as overloaded (503 error).
+  // Switch to gemini-1.5-flash as gemini-2.5-pro-preview is not a valid model name
   model: 'googleai/gemini-1.5-flash',
 });
+
