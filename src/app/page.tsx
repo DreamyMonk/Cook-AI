@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useTransition, useEffect } from 'react';
@@ -9,7 +10,7 @@ import { generateProMenu, type GenerateProMenuInput, type GenerateProMenuOutput 
 import { refineRecipe, type RefineRecipeInput, type RefineRecipeOutput } from '@/ai/flows/refine-recipe';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, UtensilsCrossed, TriangleAlert, Languages, ChefHat, PartyPopper, BrainCircuit, Info, NotebookText } from 'lucide-react'; // Added BrainCircuit, Info, NotebookText
+import { Loader2, UtensilsCrossed, TriangleAlert, Languages, ChefHat, PartyPopper, BrainCircuit, Info, NotebookText, User, LogOut } from 'lucide-react'; // Added BrainCircuit, Info, NotebookText, User, LogOut
 import Image from 'next/image';
 import {
   Select,
@@ -23,7 +24,18 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from '@/components/ui/textarea';
-
+import { ChatEva } from '@/components/chat-eva'; // Corrected import
+import { Button } from '@/components/ui/button'; // Import Button
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth hook
+import Link from 'next/link';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"; // Import Dropdown components
 
 // State for the main recipe generation result (can be single or multi-recipe)
 type RecipeResultState = GenerateRecipeOutput | GenerateProMenuOutput | null; // Unified state type
@@ -113,13 +125,24 @@ const uiText = {
         generateErrorGeneric: "An unexpected error occurred: {message}. Please try again later.",
         generateErrorUnknown: "An unexpected error occurred while generating the recipe/menu. Please try again later.", // Updated
         generateAltErrorMissingIngredients: "Cannot generate alternative - original ingredients list is missing.",
-        comingSoonBanner: "Recipe download & Pro Chef features coming soon!",
+        comingSoonTitle: "Now Available!", // Changed Title
+        comingSoonBanner: "Recipe download & Pro Chef features now available! Chef Eva chat coming soon!", // Updated text
         serverComponentError: "An unexpected server error occurred. Please try again later. (Details omitted for security)",
         inputErrorNumGuests: "Please enter a valid number of guests (1 or more).", // New error
         inputErrorNoCourses: "Please select at least one course for the Pro menu.", // New error
         inputErrorNoTheme: "Please provide a theme or name for the event.", // New error for pro mode
         proInfoText: "The AI will suggest ingredients based on your menu plan. You can optionally list key ingredients you *must* use below.", // Added for info box
         generateProButtonLabel: "Generate Pro Menu", // Added button label
+        chatWithEvaButton: "Chat with Chef Eva (Beta)",
+        loginRequiredTitle: "Login Required",
+        loginRequiredDescPro: "Please log in or sign up to use Pro Chef Mode.",
+        loginRequiredDescEva: "Please log in or sign up to chat with Chef Eva.",
+        loginButton: "Login / Sign Up",
+        myAccount: "My Account",
+        logout: "Logout",
+        accountEmail: "Email",
+        accountName: "Name",
+        accountTokens: "Chef Eva Tokens Remaining",
     },
     "es": {
         title: "Cook AI",
@@ -168,13 +191,24 @@ const uiText = {
         generateErrorGeneric: "Ocurrió un error inesperado: {message}. Por favor, inténtalo de nuevo más tarde.",
         generateErrorUnknown: "Ocurrió un error inesperado al generar la receta/menú. Por favor, inténtalo de nuevo más tarde.",
         generateAltErrorMissingIngredients: "No se puede generar alternativa - falta la lista original de ingredientes.",
-        comingSoonBanner: "¡Descarga de recetas y funciones Pro Chef próximamente!",
+        comingSoonTitle: "¡Ya Disponible!", // Changed Title
+        comingSoonBanner: "¡Descarga de recetas y funciones Pro Chef ahora disponibles! Chat con Chef Eva próximamente.", // Updated text
         serverComponentError: "Ocurrió un error inesperado en el servidor. Por favor, inténtalo de nuevo más tarde. (Detalles omitidos por seguridad)",
         inputErrorNumGuests: "Introduce un número válido de invitados (1 o más).",
         inputErrorNoCourses: "Selecciona al menos un plato para el menú Pro.",
         inputErrorNoTheme: "Proporciona un tema o nombre para el evento.",
         proInfoText: "La IA sugerirá ingredientes basados en tu plan de menú. Opcionalmente, puedes listar ingredientes clave que *debes* usar a continuación.",
         generateProButtonLabel: "Generar Menú Pro",
+        chatWithEvaButton: "Chatear con Chef Eva (Beta)",
+        loginRequiredTitle: "Se Requiere Iniciar Sesión",
+        loginRequiredDescPro: "Inicia sesión o regístrate para usar el Modo Chef Profesional.",
+        loginRequiredDescEva: "Inicia sesión o regístrate para chatear con Chef Eva.",
+        loginButton: "Iniciar Sesión / Registrarse",
+        myAccount: "Mi Cuenta",
+        logout: "Cerrar Sesión",
+        accountEmail: "Correo Electrónico",
+        accountName: "Nombre",
+        accountTokens: "Tokens de Chef Eva Restantes",
     },
     "fr": {
         title: "Cook AI",
@@ -223,13 +257,24 @@ const uiText = {
         generateErrorGeneric: "Une erreur inattendue s'est produite : {message}. Veuillez réessayer plus tard.",
         generateErrorUnknown: "Une erreur inattendue s'est produite lors de la génération de la recette/menu. Veuillez réessayer plus tard.",
         generateAltErrorMissingIngredients: "Impossible de générer une alternative - la liste originale des ingrédients est manquante.",
-        comingSoonBanner: "Téléchargement de recettes et fonctionnalités Pro Chef bientôt disponibles !",
+        comingSoonTitle: "Maintenant Disponible !", // Changed Title
+        comingSoonBanner: "Téléchargement de recettes et fonctionnalités Pro Chef maintenant disponibles ! Chat avec Chef Eva bientôt disponible.", // Updated text
         serverComponentError: "Une erreur serveur inattendue s'est produite. Veuillez réessayer plus tard. (Détails omis pour la sécurité)",
         inputErrorNumGuests: "Veuillez entrer un nombre valide d'invités (1 ou plus).",
         inputErrorNoCourses: "Veuillez sélectionner au moins un plat pour le menu Pro.",
         inputErrorNoTheme: "Veuillez fournir un thème ou un nom pour l'événement.",
         proInfoText: "L'IA suggérera des ingrédients en fonction de votre plan de menu. Vous pouvez éventuellement lister les ingrédients clés que vous *devez* utiliser ci-dessous.",
         generateProButtonLabel: "Générer le Menu Pro",
+        chatWithEvaButton: "Discuter avec Chef Eva (Bêta)",
+        loginRequiredTitle: "Connexion Requise",
+        loginRequiredDescPro: "Connectez-vous ou inscrivez-vous pour utiliser le Mode Chef Pro.",
+        loginRequiredDescEva: "Connectez-vous ou inscrivez-vous pour discuter avec Chef Eva.",
+        loginButton: "Connexion / Inscription",
+        myAccount: "Mon Compte",
+        logout: "Déconnexion",
+        accountEmail: "Email",
+        accountName: "Nom",
+        accountTokens: "Jetons Chef Eva Restants",
     },
     "de": {
         title: "Cook AI",
@@ -278,13 +323,24 @@ const uiText = {
         generateErrorGeneric: "Ein unerwarteter Fehler ist aufgetreten: {message}. Bitte versuchen Sie es später erneut.",
         generateErrorUnknown: "Beim Generieren des Rezepts/Menüs ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
         generateAltErrorMissingIngredients: "Alternative kann nicht generiert werden - ursprüngliche Zutatenliste fehlt.",
-        comingSoonBanner: "Rezept-Download & Pro Chef-Funktionen bald verfügbar!",
+        comingSoonTitle: "Jetzt Verfügbar!", // Changed Title
+        comingSoonBanner: "Rezept-Download & Pro Chef-Funktionen jetzt verfügbar! Chat mit Chef Eva bald verfügbar.", // Updated text
         serverComponentError: "Ein unerwarteter Serverfehler ist aufgetreten. Bitte versuchen Sie es später erneut. (Details aus Sicherheitsgründen weggelassen)",
         inputErrorNumGuests: "Bitte geben Sie eine gültige Anzahl von Gästen ein (1 oder mehr).",
         inputErrorNoCourses: "Bitte wählen Sie mindestens einen Gang für das Pro-Menü aus.",
         inputErrorNoTheme: "Bitte geben Sie ein Thema oder einen Namen für die Veranstaltung an.",
         proInfoText: "Die KI schlägt Zutaten basierend auf Ihrem Menüplan vor. Optional können Sie unten Schlüsselzutaten angeben, die Sie *verwenden* müssen.",
         generateProButtonLabel: "Profi-Menü generieren",
+        chatWithEvaButton: "Chat mit Chef Eva (Beta)",
+        loginRequiredTitle: "Anmeldung Erforderlich",
+        loginRequiredDescPro: "Melden Sie sich an oder registrieren Sie sich, um den Profi-Koch-Modus zu nutzen.",
+        loginRequiredDescEva: "Melden Sie sich an oder registrieren Sie sich, um mit Chef Eva zu chatten.",
+        loginButton: "Anmelden / Registrieren",
+        myAccount: "Mein Konto",
+        logout: "Abmelden",
+        accountEmail: "E-Mail",
+        accountName: "Name",
+        accountTokens: "Verbleibende Chef Eva Tokens",
     },
     "hi": { // Hindi Translations
         title: "Cook AI",
@@ -333,13 +389,24 @@ const uiText = {
         generateErrorGeneric: "एक अप्रत्याशित त्रुटि हुई: {message}। कृपया बाद में पुनः प्रयास करें।",
         generateErrorUnknown: "रेसिपी/मेनू बनाते समय एक अप्रत्याशित त्रुटि हुई। कृपया बाद में पुनः प्रयास करें।",
         generateAltErrorMissingIngredients: "विकल्प उत्पन्न नहीं किया जा सकता - मूल सामग्री सूची गायब है।",
-        comingSoonBanner: "रेसिपी डाउनलोड और प्रो शेफ सुविधाएँ जल्द ही आ रही हैं!",
+        comingSoonTitle: "अब उपलब्ध!", // Changed Title
+        comingSoonBanner: "रेसिपी डाउनलोड और प्रो शेफ सुविधाएँ अब उपलब्ध हैं! शेफ ईवा चैट जल्द ही आ रहा है!", // Updated text
         serverComponentError: "एक अप्रत्याशित सर्वर त्रुटि हुई। कृपया बाद में पुनः प्रयास करें। (सुरक्षा कारणों से विवरण छोड़े गए)",
         inputErrorNumGuests: "कृपया मेहमानों की एक मान्य संख्या दर्ज करें (1 या अधिक)।",
         inputErrorNoCourses: "प्रो मेनू के लिए कृपया कम से कम एक कोर्स चुनें।",
         inputErrorNoTheme: "कृपया घटना के लिए एक थीम या नाम प्रदान करें।",
         proInfoText: "एआई आपके मेनू योजना के आधार पर सामग्री सुझाएगा। आप वैकल्पिक रूप से नीचे मुख्य सामग्री सूचीबद्ध कर सकते हैं जिनका आपको *उपयोग* करना चाहिए।",
         generateProButtonLabel: "प्रो मेनू बनाएं",
+        chatWithEvaButton: "शेफ ईवा के साथ चैट करें (बीटा)",
+        loginRequiredTitle: "लॉगिन आवश्यक है",
+        loginRequiredDescPro: "प्रो शेफ मोड का उपयोग करने के लिए कृपया लॉगिन करें या साइन अप करें।",
+        loginRequiredDescEva: "शेफ ईवा के साथ चैट करने के लिए कृपया लॉगिन करें या साइन अप करें।",
+        loginButton: "लॉगिन / साइन अप",
+        myAccount: "मेरा खाता",
+        logout: "लॉगआउट",
+        accountEmail: "ईमेल",
+        accountName: "नाम",
+        accountTokens: "शेष शेफ ईवा टोकन",
     },
     "bn": { // Bengali Translations
         title: "Cook AI",
@@ -387,13 +454,24 @@ const uiText = {
         refineErrorUnknown: "রেসিপি পরিমার্জন করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
         generateErrorGeneric: "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে: {message}। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
         generateErrorUnknown: "রেসিপি/মেনু তৈরি করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
-        comingSoonBanner: "রেসিপি ডাউনলোড এবং প্রো শেফ বৈশিষ্ট্য শীঘ্রই আসছে!",
+        comingSoonTitle: "এখন উপলব্ধ!", // Changed Title
+        comingSoonBanner: "রেসিপি ডাউনলোড এবং প্রো শেফ বৈশিষ্ট্য এখন উপলব্ধ! শেফ ইভা চ্যাট শীঘ্রই আসছে!", // Updated text
         serverComponentError: "একটি অপ্রত্যাশিত সার্ভার ত্রুটি ঘটেছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন। (নিরাপত্তার জন্য বিস্তারিত বাদ দেওয়া হয়েছে)",
         inputErrorNumGuests: "অনুগ্রহ করে অতিথিদের একটি বৈধ সংখ্যা লিখুন (1 বা তার বেশি)।",
         inputErrorNoCourses: "প্রো মেনুর জন্য অনুগ্রহ করে অন্তত একটি কোর্স নির্বাচন করুন।",
         inputErrorNoTheme: "অনুগ্রহ করে ইভেন্টের জন্য একটি থিম বা নাম প্রদান করুন।",
         proInfoText: "এআই আপনার মেনু পরিকল্পনার উপর ভিত্তি করে উপকরণ প্রস্তাব করবে। আপনি ঐচ্ছিকভাবে নীচের প্রধান উপকরণ তালিকাভুক্ত করতে পারেন যা আপনাকে *অবশ্যই* ব্যবহার করতে হবে।",
         generateProButtonLabel: "প্রো মেনু তৈরি করুন",
+        chatWithEvaButton: "শেফ ইভার সাথে চ্যাট করুন (বিটা)",
+        loginRequiredTitle: "লগইন প্রয়োজন",
+        loginRequiredDescPro: "প্রো শেফ মোড ব্যবহার করতে লগইন বা সাইন আপ করুন।",
+        loginRequiredDescEva: "শেফ ইভার সাথে চ্যাট করতে লগইন বা সাইন আপ করুন।",
+        loginButton: "লগইন / সাইন আপ",
+        myAccount: "আমার অ্যাকাউন্ট",
+        logout: "লগআউট",
+        accountEmail: "ইমেল",
+        accountName: "নাম",
+        accountTokens: "অবশিষ্ট শেফ ইভা টোকেন",
     },
      // Add more languages as needed
 };
@@ -408,6 +486,7 @@ export default function Home() {
   const [latestSubmittedIngredientsString, setLatestSubmittedIngredientsString] = useState<string>('');
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>('en'); // Default to English
   const [selectedTaste, setSelectedTaste] = useState<TastePreference>('Any'); // State for taste preference
+  const [showChatEva, setShowChatEva] = useState(false); // State to control ChatEva visibility
 
   // Pro Chef Mode State
   const [isProChefMode, setIsProChefMode] = useState(false);
@@ -418,6 +497,7 @@ export default function Home() {
   const [proPreferences, setProPreferences] = useState('');
   const [proIngredientsInput, setProIngredientsInput] = useState(''); // Dedicated input for Pro mode ingredients (if any specified)
 
+  const { user, loading, logout } = useAuth(); // Get user state and logout function
 
   // Get translated UI text based on selected language code
   const T = uiText[selectedLanguage] || uiText['en'];
@@ -426,12 +506,16 @@ export default function Home() {
 
   // Toggle Pro Chef Mode
   const handleProChefToggle = (checked: boolean) => {
+     if (checked && !user) {
+        setError(T.loginRequiredDescPro);
+        return;
+    }
+    setError(null); // Clear error if user is logged in or toggling off
     setIsProChefMode(checked);
     // Reset state when toggling mode
     setRecipeResult(null);
     setRefinedRecipe(null);
     setAlternativeTypes(null);
-    setError(null);
     // Optionally reset Pro inputs when turning off
     if (!checked) {
         setEventTheme('');
@@ -442,6 +526,16 @@ export default function Home() {
         setProIngredientsInput(''); // Reset pro ingredients
     }
   };
+
+   // Toggle Chat Eva Modal
+    const handleChatEvaToggle = () => {
+        if (!user) {
+            setError(T.loginRequiredDescEva);
+            return;
+        }
+        setError(null); // Clear error if user is logged in
+        setShowChatEva(prev => !prev);
+    };
 
   // Handle course selection change
   const handleCourseChange = (course: CourseType, checked: boolean | 'indeterminate') => {
@@ -462,6 +556,13 @@ export default function Home() {
   // Handler for initial recipe generation (now handles both modes)
   const handleGenerateRecipeOrMenu = async (ingredientsString?: string) => { // Make ingredients optional for standard mode too
     setError(null);
+
+    // Require login for Pro Chef Mode
+    if (isProChefMode && !user) {
+        setError(T.loginRequiredDescPro);
+        return;
+    }
+
     setRecipeResult(null);
     setRefinedRecipe(null);
     setAlternativeTypes(null);
@@ -675,7 +776,7 @@ export default function Home() {
     });
   };
 
-  const isLoading = isGenerating || isRefining;
+  const isLoading = isGenerating || isRefining || loading; // Include auth loading state
 
   // Determine the display data based on the current state
   let displayData: RecipeDisplayData | null = null;
@@ -686,28 +787,19 @@ export default function Home() {
   if (isLoading) {
       recipeDescription = T.loadingPlaceholder;
   } else if (error) {
-      recipeDescription = T.errorPlaceholder;
+      recipeDescription = error; // Display the specific error message
   } else if (refinedRecipe) { // Check refined first
       displayData = { type: 'refined', data: refinedRecipe };
       recipeDescription = T.recipeDescriptionRefined;
-      if (refinedRecipe.feasibilityNotes) {
-          // recipeDescription += ` ${T.recipeNotePrefix} ${refinedRecipe.feasibilityNotes}`; // Append note prefix
-      }
   } else if (recipeResult) {
       if ('menuTitle' in recipeResult) { // Pro Menu Output
           displayData = { type: 'pro-menu', data: recipeResult };
           recipeTitle = recipeResult.menuTitle || T.recipeTitle; // Use menu title if available
           recipeDescription = T.recipeDescriptionProMenu;
-          if (recipeResult.chefNotes) {
-             // recipeDescription += ` ${T.recipeNotePrefix} ${recipeResult.chefNotes}`; // Append note prefix
-          }
       } else { // Standard Recipe Output
           displayData = { type: 'standard', data: recipeResult };
           recipeTitle = recipeResult.recipeName || T.recipeTitle;
           recipeDescription = T.recipeDescriptionGenerated;
-          if (recipeResult.notes) {
-              // recipeDescription += ` ${T.recipeNotePrefix} ${recipeResult.notes}`; // Append note prefix
-          }
           // Show refinement only for standard recipe if additional ingredients exist
           showRefinementOptions = !!(recipeResult.additionalIngredients && recipeResult.additionalIngredients.length > 0);
       }
@@ -715,12 +807,56 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-start p-4 md:p-8 lg:p-12 bg-gradient-to-br from-background to-secondary/30 dark:from-background dark:to-black/20">
-      <header className="w-full max-w-4xl mb-8 text-center">
-         <div className="flex justify-center items-center gap-3 mb-4">
-          <UtensilsCrossed className="h-10 w-10 text-primary drop-shadow-md" />
-          <h1 className="text-5xl font-bold text-primary tracking-tight drop-shadow-sm">{T.title}</h1>
+      <header className="w-full max-w-4xl mb-8">
+         <div className="flex justify-between items-center flex-wrap gap-4 mb-4">
+              <div className="flex justify-center items-center gap-3">
+                 <UtensilsCrossed className="h-10 w-10 text-primary drop-shadow-md" />
+                 <h1 className="text-4xl sm:text-5xl font-bold text-primary tracking-tight drop-shadow-sm">{T.title}</h1>
+              </div>
+               {/* Auth Section */}
+              <div className="flex items-center gap-3">
+                 {loading ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                 ) : user ? (
+                     <DropdownMenu>
+                         <DropdownMenuTrigger asChild>
+                             <Button variant="outline" className="h-10 rounded-full px-4 flex items-center gap-2 shadow-sm bg-card">
+                                <User className="h-5 w-5 text-primary" />
+                                <span className="text-sm font-medium">{user.name || user.email}</span>
+                             </Button>
+                         </DropdownMenuTrigger>
+                         <DropdownMenuContent align="end" className="w-56">
+                             <DropdownMenuLabel>{T.myAccount}</DropdownMenuLabel>
+                             <DropdownMenuSeparator />
+                             <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                                 <span className="font-medium">{T.accountEmail}:</span> {user.email}
+                             </DropdownMenuItem>
+                              {user.name && (
+                                <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                                     <span className="font-medium">{T.accountName}:</span> {user.name}
+                                </DropdownMenuItem>
+                               )}
+                             <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                                 <span className="font-medium">{T.accountTokens}:</span> {user.tokens ?? 30}
+                             </DropdownMenuItem>
+                             <DropdownMenuSeparator />
+                             <DropdownMenuItem onClick={logout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                                 <LogOut className="mr-2 h-4 w-4" />
+                                 <span>{T.logout}</span>
+                             </DropdownMenuItem>
+                         </DropdownMenuContent>
+                     </DropdownMenu>
+                 ) : (
+                      <Link href="/auth" passHref>
+                         <Button variant="outline" className="h-10 shadow-sm bg-card">
+                             <User className="mr-2 h-4 w-4" />
+                             {T.loginButton}
+                         </Button>
+                      </Link>
+                 )}
+              </div>
         </div>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
           {T.tagline}
         </p>
          <div className="mt-6 flex justify-center items-center flex-wrap gap-4">
@@ -763,14 +899,19 @@ export default function Home() {
                     {T.proChefModeLabel}
                 </Label>
             </div>
+             {/* Chat with Eva Button */}
+             <Button variant="outline" onClick={handleChatEvaToggle} disabled={isLoading || showChatEva} className="h-10 shadow-sm bg-card">
+                <ChefHat className="mr-2 h-4 w-4" />
+                {T.chatWithEvaButton}
+            </Button>
          </div>
       </header>
 
-       {/* Coming Soon Banner */}
+       {/* Feature Banner */}
        <div className="w-full max-w-4xl mb-8">
             <Alert className="bg-accent/20 border-accent/50 text-accent-foreground shadow-md">
                 <PartyPopper className="h-5 w-5 text-accent" />
-                <AlertTitle className="font-semibold">Coming Soon!</AlertTitle>
+                <AlertTitle className="font-semibold">{T.comingSoonTitle}</AlertTitle>
                 <AlertDescription>
                  {T.comingSoonBanner}
                 </AlertDescription>
@@ -800,7 +941,19 @@ export default function Home() {
              )}
 
              {/* Pro Chef Mode Inputs (Conditional) */}
-             {isProChefMode && (
+             {isProChefMode && !user && ( // Show login prompt if Pro mode selected but not logged in
+                 <Alert variant="destructive">
+                     <TriangleAlert className="h-4 w-4" />
+                     <AlertTitle>{T.loginRequiredTitle}</AlertTitle>
+                     <AlertDescription>
+                        {T.loginRequiredDescPro}
+                        <Link href="/auth" passHref>
+                           <Button variant="link" className="p-0 h-auto ml-1 text-destructive font-semibold">{T.loginButton}</Button>
+                        </Link>
+                     </AlertDescription>
+                 </Alert>
+             )}
+             {isProChefMode && user && ( // Show Pro inputs only if Pro mode and logged in
                 <div className="space-y-4">
                      <div className="text-xs text-muted-foreground italic p-2 border border-dashed border-accent/70 rounded-md bg-accent/10 dark:bg-accent/20 flex items-start gap-1.5">
                          <Info className="h-3 w-3 mr-1 flex-shrink-0 relative top-0.5 text-accent"/>
@@ -930,14 +1083,27 @@ export default function Home() {
              <CardDescription className={`text-muted-foreground ${error && !isLoading ? 'text-destructive' : ''}`}>
                  {recipeDescription}
             </CardDescription>
+             {/* Display error specific to login requirement */}
+             {error && (error === T.loginRequiredDescPro || error === T.loginRequiredDescEva) && (
+                 <Alert variant="destructive" className="mt-3">
+                     <TriangleAlert className="h-4 w-4" />
+                     <AlertTitle>{T.loginRequiredTitle}</AlertTitle>
+                     <AlertDescription>
+                         {error}
+                          <Link href="/auth" passHref>
+                             <Button variant="link" className="p-0 h-auto ml-1 text-destructive font-semibold">{T.loginButton}</Button>
+                          </Link>
+                     </AlertDescription>
+                 </Alert>
+             )}
           </CardHeader>
           <CardContent className="p-5 flex-grow flex items-center justify-center bg-card">
-            {isLoading ? (
+            {isLoading && !(error === T.loginRequiredDescPro || error === T.loginRequiredDescEva) ? ( // Only show loader if not a login error
               <div className="flex flex-col items-center text-muted-foreground text-center p-8">
                 <Loader2 className="h-16 w-16 animate-spin text-primary mb-6" />
                 <p className="text-lg">{isGenerating ? (isProChefMode ? T.generatingProAltText : T.generatingAltText) : T.refiningAltText}</p>
               </div>
-            ) : error ? (
+            ) : error && !(error === T.loginRequiredDescPro || error === T.loginRequiredDescEva) ? ( // Show general error if not login error
                <Alert variant="destructive" className="w-full m-4">
                   <TriangleAlert className="h-5 w-5" />
                   <AlertTitle className="text-lg">{T.errorTitle}</AlertTitle>
@@ -956,23 +1122,47 @@ export default function Home() {
                 showRefinementOptions={showRefinementOptions && !isProChefMode} // Pass flag to show refinement UI conditionally
               />
             ) : (
-              // Initial placeholder state
-              <div className="text-center text-muted-foreground space-y-6 p-8">
-                 <Image
-                    src="https://picsum.photos/seed/culinarydelight/350/230" // Updated seed
-                    alt="Delicious food placeholder"
-                    width={350}
-                    height={230}
-                    className="rounded-lg mx-auto shadow-lg border border-border"
-                    data-ai-hint="culinary delight tasty dish gourmet plate" // Updated hint
-                    priority
-                  />
-                <p className="text-lg">{T.recipeDescriptionPlaceholder}</p>
-              </div>
+              // Initial placeholder state or login prompt state
+               !(error === T.loginRequiredDescPro || error === T.loginRequiredDescEva) ? ( // Only show placeholder if not a login error
+                 <div className="text-center text-muted-foreground space-y-6 p-8">
+                   <Image
+                      src="https://picsum.photos/seed/culinarydelight/350/230" // Updated seed
+                      alt="Delicious food placeholder"
+                      width={350}
+                      height={230}
+                      className="rounded-lg mx-auto shadow-lg border border-border"
+                      data-ai-hint="culinary delight tasty dish gourmet plate" // Updated hint
+                      priority
+                    />
+                  <p className="text-lg">{T.recipeDescriptionPlaceholder}</p>
+                 </div>
+               ) : null // Don't show placeholder if there's a login error
             )}
           </CardContent>
         </Card>
       </div>
+
+        {/* Chef Eva Chat Modal */}
+         {showChatEva && user && (
+           <ChatEva
+              isOpen={showChatEva}
+              onClose={() => setShowChatEva(false)}
+              language={selectedLanguage}
+              userId={user._id} // Pass userId
+           />
+         )}
+          {showChatEva && !user && ( // Show login prompt if Eva button clicked but not logged in
+             <Alert variant="destructive" className="w-full max-w-4xl mt-4">
+                 <TriangleAlert className="h-4 w-4" />
+                 <AlertTitle>{T.loginRequiredTitle}</AlertTitle>
+                 <AlertDescription>
+                     {T.loginRequiredDescEva}
+                      <Link href="/auth" passHref>
+                         <Button variant="link" className="p-0 h-auto ml-1 text-destructive font-semibold">{T.loginButton}</Button>
+                      </Link>
+                 </AlertDescription>
+             </Alert>
+         )}
 
       <footer className="mt-16 text-center text-sm text-muted-foreground/80">
         <p>&copy; {new Date().getFullYear()} {T.footerText}</p>
@@ -980,3 +1170,5 @@ export default function Home() {
     </main>
   );
 }
+
+
