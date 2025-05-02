@@ -73,8 +73,9 @@ function getErrorMessages(lang: string) {
 // Define the Genkit prompt
 const chatPrompt = ai.definePrompt({
   name: 'chatWithEvaPrompt',
-  model: 'googleai/gemini-1.5-flash',
-  input: { schema: ChatWithEvaInputSchema },
+  model: 'googleai/gemini-1.5-flash', // Using flash as it's often sufficient for chat
+  // Input schema used internally by the flow before calling the prompt
+  input: { schema: z.any() }, // Use z.any() as we preprocess the input for the template
   output: { schema: ChatWithEvaOutputSchema },
 
   // Updated System Instruction for Chef Eva's persona
@@ -101,12 +102,11 @@ Use sensory-rich, evocative language: “Let the butter whisper in the pan befor
 **Language:** Respond *entirely* in the user's requested language ({{{language}}}).`,
 
     // Main prompt structure using history and current message
-    // Replaced non-standard 'equals' helper with 'eq'
-    prompt: `{{#each history}}
-{{#if (eq role 'user')}}**Apprentice:**
+    // Replaced non-standard 'eq' helper with standard '#if isUser' logic
+    prompt: `{{#each processedHistory}}
+{{#if isUser}}**Apprentice:**
 {{#each parts}}{{#if text}}{{{text}}}{{/if}}{{#if media}}{{media url=media.url contentType=media.contentType}}{{/if}}{{/each}}
-{{/if}}
-{{#if (eq role 'model')}}**Chef Eva:**
+{{else}}**Chef Eva:**
 {{#each parts}}{{#if text}}{{{text}}}{{/if}}{{/each}}
 {{/if}}
 {{/each}}
@@ -137,9 +137,16 @@ const chatWithEvaFlow = ai.defineFlow<
     const messages = getErrorMessages(lang);
 
     try {
+        // Preprocess history for the Handlebars template
+        const processedHistory = input.history.map(msg => ({
+            ...msg,
+            isUser: msg.role === 'user', // Add boolean flag for standard #if
+        }));
+
         // Construct the prompt input, ensuring image is string | undefined
+        // Pass the processed history instead of the original
         const promptInput = {
-            history: input.history,
+            processedHistory: processedHistory,
             message: {
                 text: input.message.text,
                 // Convert null/empty string for image to undefined for schema compliance
