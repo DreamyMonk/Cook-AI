@@ -204,7 +204,14 @@ const generateProMenuFlow = ai.defineFlow<
         } else if (error.message.includes('insufficient') || error.message.includes('Cannot create') || error.message.includes('conflicting')) { // Added conflicting
              errorTitle = msg.defaultFailTitle + ` (${lang})`;
              errorMessage = msg.defaultFailNotesInsufficient; // Use same message for conflict/insufficiency for simplicity
-        } else {
+        } else if (error.message.includes('unknown helper')) {
+             // Extract the helper name if possible
+             const helperMatch = error.message.match(/unknown helper\s*[`']([^`']+)`/);
+             const helperName = helperMatch ? helperMatch[1] : 'unknown';
+             errorMessage = `Internal template error: Unknown helper function '${helperName}'. Please report this.`;
+             errorTitle = "Template Error";
+         }
+        else {
              // Capture the specific Handlebars error if present
              if (error.message.includes("unknown helper")) {
                  errorMessage = `Internal Error: Template helper issue (${error.message}). Please report this.`;

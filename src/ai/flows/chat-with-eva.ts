@@ -57,12 +57,12 @@ export async function chatWithEva(input: ChatWithEvaInput): Promise<ChatWithEvaO
 // Define localized error messages
 function getErrorMessages(lang: string) {
     const messages: Record<string, Record<string, string>> = {
-        en: { errorDefault: "Chef Eva is pondering... but didn't reply. Please try again.", unexpectedError: "An unexpected glitch occurred in the kitchen. Please try asking again.", busyError: "Chef Eva is currently mentoring another apprentice! Please try again shortly.", configError: "There's a disturbance in the culinary matrix (config issue). Please inform the host.", aiError: "AI Error: {message}." },
-        es: { errorDefault: "Chef Eva está reflexionando... pero no respondió. Inténtalo de nuevo.", unexpectedError: "Ocurrió un error inesperado en la cocina. Por favor, pregunta de nuevo.", busyError: "¡Chef Eva está actualmente enseñando a otro aprendiz! Inténtalo de nuevo en breve.", configError: "Hay una perturbación en la matriz culinaria (problema de config). Por favor, informa al anfitrión.", aiError: "Error de IA: {message}." },
-        fr: { errorDefault: "Chef Eva réfléchit... mais n'a pas répondu. Veuillez réessayer.", unexpectedError: "Un problème inattendu est survenu en cuisine. Veuillez reposer la question.", busyError: "Chef Eva encadre actuellement un autre apprenti ! Veuillez réessayer sous peu.", configError: "Il y a une perturbation dans la matrice culinaire (problème de config). Veuillez en informer l'hôte.", aiError: "Erreur IA : {message}." },
-        de: { errorDefault: "Chef Eva grübelt... aber hat nicht geantwortet. Bitte versuchen Sie es erneut.", unexpectedError: "In der Küche ist ein unerwarteter Fehler aufgetreten. Bitte fragen Sie erneut.", busyError: "Chef Eva betreut gerade einen anderen Lehrling! Bitte versuchen Sie es bald wieder.", configError: "Es gibt eine Störung in der kulinarischen Matrix (Konfigurationsproblem). Bitte informieren Sie den Gastgeber.", aiError: "KI-Fehler: {message}." },
-        hi: { errorDefault: "शेफ ईवा सोच रही हैं... लेकिन जवाब नहीं दिया। कृपया पुन: प्रयास करें।", unexpectedError: "रसोई में एक अप्रत्याशित गड़बड़ हुई। कृपया फिर से पूछें।", busyError: "शेफ ईवा वर्तमान में दूसरे प्रशिक्षु को सलाह दे रही हैं! कृपया शीघ्र पुनः प्रयास करें।", configError: "पाक मैट्रिक्स (कॉन्फिग समस्या) में गड़बड़ी है। कृपया मेजबान को सूचित करें।", aiError: "एआई त्रुटि: {message}।" },
-        bn: { errorDefault: "শেফ ইভা চিন্তা করছেন... কিন্তু উত্তর দেননি। অনুগ্রহ করে আবার চেষ্টা করুন।", unexpectedError: "রান্নাঘরে একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে আবার জিজ্ঞাসা করুন।", busyError: "শেফ ইভা বর্তমানে অন্য শিক্ষানবিশকে পরামর্শ দিচ্ছেন! অনুগ্রহ করে শীঘ্রই আবার চেষ্টা করুন।", configError: "রান্না ম্যাট্রিক্সে (কনফিগার সমস্যা) একটি গোলযোগ আছে। অনুগ্রহ করে হোস্টকে জানান।", aiError: "এআই ত্রুটি: {message}।" },
+        en: { errorDefault: "Chef Eva is pondering... but didn't reply. Please try again.", unexpectedError: "An unexpected glitch occurred in the kitchen. Please try asking again.", busyError: "Chef Eva is currently mentoring another apprentice! Please try again shortly.", configError: "There's a disturbance in the culinary matrix (config issue). Please inform the host.", aiError: "AI Error: {message}.", noTokens: "You've used all your chat tokens for today. Tokens reset daily.", loadTokensError: "Could not load your token balance." },
+        es: { errorDefault: "Chef Eva está reflexionando... pero no respondió. Inténtalo de nuevo.", unexpectedError: "Ocurrió un error inesperado en la cocina. Por favor, pregunta de nuevo.", busyError: "¡Chef Eva está actualmente enseñando a otro aprendiz! Inténtalo de nuevo en breve.", configError: "Hay una perturbación en la matriz culinaria (problema de config). Por favor, informa al anfitrión.", aiError: "Error de IA: {message}.", noTokens: "Has usado todos tus tokens de chat de hoy. Los tokens se restablecen diariamente.", loadTokensError: "No se pudo cargar tu saldo de tokens." },
+        fr: { errorDefault: "Chef Eva réfléchit... mais n'a pas répondu. Veuillez réessayer.", unexpectedError: "Un problème inattendu est survenu en cuisine. Veuillez reposer la question.", busyError: "Chef Eva encadre actuellement un autre apprenti ! Veuillez réessayer sous peu.", configError: "Il y a une perturbation dans la matrice culinaire (problème de config). Veuillez en informer l'hôte.", aiError: "Erreur IA : {message}.", noTokens: "Vous avez utilisé tous vos jetons de chat pour aujourd'hui. Les jetons se réinitialisent quotidiennement.", loadTokensError: "Impossible de charger votre solde de jetons." },
+        de: { errorDefault: "Chef Eva grübelt... aber hat nicht geantwortet. Bitte versuchen Sie es erneut.", unexpectedError: "In der Küche ist ein unerwarteter Fehler aufgetreten. Bitte fragen Sie erneut.", busyError: "Chef Eva betreut gerade einen anderen Lehrling! Bitte versuchen Sie es bald wieder.", configError: "Es gibt eine Störung in der kulinarischen Matrix (Konfigurationsproblem). Bitte informieren Sie den Gastgeber.", aiError: "KI-Fehler: {message}.", noTokens: "Sie haben alle Ihre Chat-Tokens für heute verbraucht. Tokens werden täglich zurückgesetzt.", loadTokensError: "Ihr Token-Guthaben konnte nicht geladen werden." },
+        hi: { errorDefault: "शेफ ईवा सोच रही हैं... लेकिन जवाब नहीं दिया। कृपया पुन: प्रयास करें।", unexpectedError: "रसोई में एक अप्रत्याशित गड़बड़ हुई। कृपया फिर से पूछें।", busyError: "शेफ ईवा वर्तमान में दूसरे प्रशिक्षु को सलाह दे रही हैं! कृपया शीघ्र पुनः प्रयास करें।", configError: "पाक मैट्रिक्स (कॉन्फिग समस्या) में गड़बड़ी है। कृपया मेजबान को सूचित करें।", aiError: "एआई त्रुटि: {message}।", noTokens: "आपने आज के लिए अपने सभी चैट टोकन का उपयोग कर लिया है। टोकन प्रतिदिन रीसेट होते हैं।", loadTokensError: "आपकी टोकन शेष राशि लोड नहीं हो सकी।" },
+        bn: { errorDefault: "শেফ ইভা চিন্তা করছেন... কিন্তু উত্তর দেননি। অনুগ্রহ করে আবার চেষ্টা করুন।", unexpectedError: "রান্নাঘরে একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে আবার জিজ্ঞাসা করুন।", busyError: "শেফ ইভা বর্তমানে অন্য শিক্ষানবিশকে পরামর্শ দিচ্ছেন! অনুগ্রহ করে শীঘ্রই আবার চেষ্টা করুন।", configError: "রান্না ম্যাট্রিক্সে (কনফিগার সমস্যা) একটি গোলযোগ আছে। অনুগ্রহ করে হোস্টকে জানান।", aiError: "এআই ত্রুটি: {message}।", noTokens: "আপনি আজকের জন্য আপনার সমস্ত চ্যাট টোকেন ব্যবহার করেছেন। টোকেন প্রতিদিন রিসেট হয়।", loadTokensError: "আপনার টোকেন ব্যালেন্স লোড করা যায়নি।" },
     };
     // Use lowercase language code for lookup, default to 'en'
     const langCode = lang.substring(0, 2).toLowerCase();
@@ -74,7 +74,8 @@ function getErrorMessages(lang: string) {
 const chatPrompt = ai.definePrompt({
   name: 'chatWithEvaPrompt',
   // Use a model suitable for conversational chat, potentially multimodal like Gemini 1.5 Pro
-  model: 'googleai/gemini-1.5-pro', // Keep Pro for better conversational/image abilities
+  // Switch to 1.5 Flash as 2.0 Flash isn't a valid model name
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: ChatWithEvaInputSchema },
   output: { schema: ChatWithEvaOutputSchema },
 
@@ -103,9 +104,9 @@ Use sensory-rich, evocative language: “Let the butter whisper in the pan befor
 
     // Main prompt structure using history and current message
     prompt: `{{#each history}}
-{{#if (eq role 'user')}}**Apprentice:**
+{{#if (equals role 'user')}}**Apprentice:**
 {{#each parts}}{{#if text}}{{{text}}}{{/if}}{{#if media}}{{media url=media.url contentType=media.contentType}}{{/if}}{{/each}}
-{{else if (eq role 'model')}}**Chef Eva:**
+{{else if (equals role 'model')}}**Chef Eva:**
 {{#each parts}}{{#if text}}{{{text}}}{{/if}}{{/each}}
 {{/if}}
 {{/each}}
@@ -169,7 +170,13 @@ const chatWithEvaFlow = ai.defineFlow<
              const schemaErrorMatch = error.message.match(/Schema validation failed\. Parse Errors: (.*?)(?: \(.+)?$/);
              const detail = schemaErrorMatch ? schemaErrorMatch[1] : "Please check the data format.";
              errorMessage = `Input Error: ${detail}`;
-         } else {
+         } else if (error.message.includes('unknown helper')) {
+            // Extract the helper name if possible
+             const helperMatch = error.message.match(/unknown helper\s*[`']([^`']+)`/);
+             const helperName = helperMatch ? helperMatch[1] : 'unknown';
+             errorMessage = `Internal template error: Unknown helper function '${helperName}'. Please report this.`;
+         }
+         else {
              errorMessage = messages.aiError.replace('{message}', error.message);
          }
       }

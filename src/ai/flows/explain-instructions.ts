@@ -131,7 +131,13 @@ const explainInstructionsFlow = ai.defineFlow<
               errorMessage = msg.busyError;
           } else if (error.message.includes('API key')) {
               errorMessage = msg.configError;
-          } else {
+          } else if (error.message.includes('unknown helper')) {
+            // Extract the helper name if possible
+             const helperMatch = error.message.match(/unknown helper\s*[`']([^`']+)`/);
+             const helperName = helperMatch ? helperMatch[1] : 'unknown';
+             errorMessage = `Internal template error: Unknown helper function '${helperName}'. Please report this.`;
+          }
+          else {
               errorMessage = msg.aiError.replace('{message}', error.message);
           }
       }

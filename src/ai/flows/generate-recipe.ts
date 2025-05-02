@@ -213,7 +213,13 @@ const generateRecipeFlow = ai.defineFlow<
                  // Catch specific failure case mentioned in prompt or implied by AI response
                  errorTitle = msg.defaultFailTitle + ` (${lang})`;
                  errorMessage = msg.defaultFailNotesInsufficient; // Use standardized insufficient ingredients message
-            }
+            } else if (error.message.includes('unknown helper')) {
+                // Extract the helper name if possible
+                 const helperMatch = error.message.match(/unknown helper\s*[`']([^`']+)`/);
+                 const helperName = helperMatch ? helperMatch[1] : 'unknown';
+                 errorMessage = `Internal template error: Unknown helper function '${helperName}'. Please report this.`;
+                 errorTitle = "Template Error";
+             }
             else {
                  errorMessage = msg.aiErrorGenericNotes.replace('{message}', error.message);
                  errorTitle = msg.aiErrorGenericTitle + ` (${lang})`;

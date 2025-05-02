@@ -167,7 +167,14 @@ const refineRecipeFlow = ai.defineFlow<
              } else if (error.message.includes('API key')) {
                   errorMessage = msg.configErrorNotes;
                   errorTitle = msg.configErrorTitle;
-             } else {
+             } else if (error.message.includes('unknown helper')) {
+                 // Extract the helper name if possible
+                 const helperMatch = error.message.match(/unknown helper\s*[`']([^`']+)`/);
+                 const helperName = helperMatch ? helperMatch[1] : 'unknown';
+                 errorMessage = `Internal template error: Unknown helper function '${helperName}'. Please report this.`;
+                 errorTitle = "Template Error";
+            }
+             else {
                  errorMessage = msg.aiErrorGenericNotes.replace('{message}', error.message);
                  errorTitle = msg.aiErrorGenericTitle;
             }
