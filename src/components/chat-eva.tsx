@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useEffect, useRef, useTransition, useCallback } from 'react';
@@ -10,12 +9,23 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from '@/components/ui/dialog'; // Keep Dialog imports
+import {
+  AlertDialog, // Import AlertDialog for reset confirmation
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'; // Correct import path
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Paperclip, Send, Loader2, AlertCircle, RotateCcw, ChefHat, User } from 'lucide-react'; // Removed MessageSquare as it's not used
+import { Paperclip, Send, Loader2, AlertCircle, RotateCcw, ChefHat, User, MessageSquareWarning } from 'lucide-react'; // Added MessageSquareWarning
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { chatWithEva, type ChatWithEvaInput, type ChatMessage } from '@/ai/flows/chat-with-eva'; // Corrected import path
@@ -34,7 +44,10 @@ const supportedLanguagesMap = {
     // Add more as needed
 };
 
-// UI Text translations (keyed by LanguageCode) - Removed token-related text
+const MAX_MESSAGES = 30; // Define the message limit
+const LOCAL_STORAGE_KEY_EVA_COUNT = 'chefEvaMessageCount';
+
+// UI Text translations (keyed by LanguageCode)
 const uiText = {
   "en": {
     title: "Chat with Chef Eva",
@@ -51,15 +64,16 @@ const uiText = {
     imageUploadErrorSize: "Image size exceeds the 2MB limit.",
     imageUploadErrorType: "Invalid file type. Please upload JPEG or PNG images.",
     imageUploadErrorRead: "Could not read the image file.",
-    // tokensRemaining: "Tokens Remaining: {count}", // Removed
-    // noTokensTitle: "Out of Tokens", // Removed
-    // noTokensDesc: "You have used all your Chef Eva chat tokens for today. Tokens reset daily.", // Removed
     resetChatButton: "Reset Chat",
     resetChatConfirmTitle: "Reset Chat?",
-    resetChatConfirmDesc: "Are you sure you want to clear the chat history? This action cannot be undone.",
+    resetChatConfirmDesc: "Are you sure you want to clear the chat history? This action cannot be undone and will not reset your message count.", // Updated description
     resetChatCancel: "Cancel",
     resetChatConfirm: "Reset",
     selectLanguage: "Response Language",
+    messagesRemaining: "Messages Remaining: {count}", // New text
+    messageLimitReachedTitle: "Message Limit Reached", // New text
+    messageLimitReachedDesc: "You have used your {limit} free messages. Please upgrade for unlimited chats.", // New text
+    inputPlaceholderLimitReached: "Message limit reached.", // New placeholder
   },
   "es": {
     title: "Chatea con Chef Eva",
@@ -76,15 +90,16 @@ const uiText = {
     imageUploadErrorSize: "El tamaño de la imagen excede el límite de 2MB.",
     imageUploadErrorType: "Tipo de archivo inválido. Sube imágenes JPEG o PNG.",
     imageUploadErrorRead: "No se pudo leer el archivo de imagen.",
-    // tokensRemaining: "Tokens Restantes: {count}", // Removed
-    // noTokensTitle: "Sin Tokens", // Removed
-    // noTokensDesc: "Has usado todos tus tokens de chat de Chef Eva por hoy. Los tokens se restablecen diariamente.", // Removed
     resetChatButton: "Restablecer Chat",
     resetChatConfirmTitle: "¿Restablecer Chat?",
-    resetChatConfirmDesc: "¿Estás seguro de que quieres borrar el historial del chat? Esta acción no se puede deshacer.",
+    resetChatConfirmDesc: "¿Estás seguro de que quieres borrar el historial del chat? Esta acción no se puede deshacer y no restablecerá tu cuenta de mensajes.",
     resetChatCancel: "Cancelar",
     resetChatConfirm: "Restablecer",
     selectLanguage: "Idioma de Respuesta",
+    messagesRemaining: "Mensajes Restantes: {count}",
+    messageLimitReachedTitle: "Límite de Mensajes Alcanzado",
+    messageLimitReachedDesc: "Has usado tus {limit} mensajes gratuitos. Actualiza para chats ilimitados.",
+    inputPlaceholderLimitReached: "Límite de mensajes alcanzado.",
   },
   "fr": {
     title: "Discutez avec Chef Eva",
@@ -101,15 +116,16 @@ const uiText = {
     imageUploadErrorSize: "La taille de l'image dépasse la limite de 2 Mo.",
     imageUploadErrorType: "Type de fichier invalide. Veuillez télécharger des images JPEG ou PNG.",
     imageUploadErrorRead: "Impossible de lire le fichier image.",
-    // tokensRemaining: "Jetons Restants : {count}", // Removed
-    // noTokensTitle: "Plus de Jetons", // Removed
-    // noTokensDesc: "Vous avez utilisé tous vos jetons de chat Chef Eva pour aujourd'hui. Les jetons se réinitialisent quotidiennement.", // Removed
     resetChatButton: "Réinitialiser le Chat",
     resetChatConfirmTitle: "Réinitialiser le Chat ?",
-    resetChatConfirmDesc: "Êtes-vous sûr de vouloir effacer l'historique du chat ? Cette action est irréversible.",
+    resetChatConfirmDesc: "Êtes-vous sûr de vouloir effacer l'historique du chat ? Cette action est irréversible et ne réinitialisera pas votre compteur de messages.",
     resetChatCancel: "Annuler",
     resetChatConfirm: "Réinitialiser",
     selectLanguage: "Langue de Réponse",
+    messagesRemaining: "Messages Restants : {count}",
+    messageLimitReachedTitle: "Limite de Messages Atteinte",
+    messageLimitReachedDesc: "Vous avez utilisé vos {limit} messages gratuits. Veuillez mettre à niveau pour des discussions illimitées.",
+    inputPlaceholderLimitReached: "Limite de messages atteinte.",
   },
   "de": {
     title: "Chatten Sie mit Chef Eva",
@@ -126,17 +142,18 @@ const uiText = {
     imageUploadErrorSize: "Die Bildgröße überschreitet das 2MB-Limit.",
     imageUploadErrorType: "Ungültiger Dateityp. Bitte laden Sie JPEG- or PNG-Bilder hoch.",
     imageUploadErrorRead: "Die Bilddatei konnte nicht gelesen werden.",
-    // tokensRemaining: "Verbleibende Tokens: {count}", // Removed
-    // noTokensTitle: "Keine Tokens mehr", // Removed
-    // noTokensDesc: "Sie haben alle Ihre Chef Eva Chat-Tokens für heute verbraucht. Tokens werden täglich zurückgesetzt.", // Removed
     resetChatButton: "Chat zurücksetzen",
     resetChatConfirmTitle: "Chat zurücksetzen?",
-    resetChatConfirmDesc: "Möchten Sie den Chatverlauf wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    resetChatConfirmDesc: "Möchten Sie den Chatverlauf wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden und setzt Ihren Nachrichtenzähler nicht zurück.",
     resetChatCancel: "Abbrechen",
     resetChatConfirm: "Zurücksetzen",
     selectLanguage: "Antwortsprache",
+    messagesRemaining: "Verbleibende Nachrichten: {count}",
+    messageLimitReachedTitle: "Nachrichtenlimit erreicht",
+    messageLimitReachedDesc: "Sie haben Ihre {limit} kostenlosen Nachrichten verbraucht. Bitte führen Sie ein Upgrade für unbegrenzte Chats durch.",
+    inputPlaceholderLimitReached: "Nachrichtenlimit erreicht.",
   },
-  "hi": { // Hindi
+  "hi": {
     title: "शेफ ईवा के साथ चैट करें",
     description: "नमस्ते! मैं शेफ ईवा हूँ। आज मैं आपकी खाना पकाने में कैसे मदद कर सकती हूँ? आप सवाल पूछ सकते हैं, सामग्री का वर्णन कर सकते हैं, या भोजन की तस्वीर भी अपलोड कर सकते हैं!",
     inputPlaceholder: "ईवा से खाना पकाने के बारे में कुछ भी पूछें...",
@@ -151,17 +168,18 @@ const uiText = {
     imageUploadErrorSize: "छवि का आकार 2MB सीमा से अधिक है।",
     imageUploadErrorType: "अमान्य फ़ाइल प्रकार। कृपया JPEG या PNG छवियां अपलोड करें।",
     imageUploadErrorRead: "छवि फ़ाइल पढ़ने में असमर्थ।",
-    // tokensRemaining: "शेष टोकन: {count}", // Removed
-    // noTokensTitle: "टोकन समाप्त", // Removed
-    // noTokensDesc: "आपने आज के लिए अपने सभी शेफ ईवा चैट टोकन का उपयोग कर लिया है। टोकन प्रतिदिन रीसेट होते हैं।", // Removed
     resetChatButton: "चैट रीसेट करें",
     resetChatConfirmTitle: "चैट रीसेट करें?",
-    resetChatConfirmDesc: "क्या आप वाकई चैट इतिहास साफ़ करना चाहते हैं? यह क्रिया वापस नहीं की जा सकती।",
+    resetChatConfirmDesc: "क्या आप वाकई चैट इतिहास साफ़ करना चाहते हैं? यह क्रिया वापस नहीं की जा सकती और आपके संदेश गणना को रीसेट नहीं करेगी।",
     resetChatCancel: "रद्द करें",
     resetChatConfirm: "रीसेट करें",
     selectLanguage: "प्रतिक्रिया भाषा",
+    messagesRemaining: "शेष संदेश: {count}",
+    messageLimitReachedTitle: "संदेश सीमा समाप्त",
+    messageLimitReachedDesc: "आपने अपने {limit} मुफ्त संदेशों का उपयोग कर लिया है। असीमित चैट के लिए कृपया अपग्रेड करें।",
+    inputPlaceholderLimitReached: "संदेश सीमा समाप्त।",
   },
-  "bn": { // Bengali
+  "bn": {
     title: "শেফ ইভার সাথে চ্যাট করুন",
     description: "হাই! আমি শেফ ইভা। আজ আমি আপনার রান্নায় কীভাবে সাহায্য করতে পারি? আপনি প্রশ্ন জিজ্ঞাসা করতে পারেন, উপাদান বর্ণনা করতে পারেন, বা এমনকি খাবারের ছবি আপলোড করতে পারেন!",
     inputPlaceholder: "ইভাকে রান্না সম্পর্কে কিছু জিজ্ঞাসা করুন...",
@@ -176,15 +194,16 @@ const uiText = {
     imageUploadErrorSize: "ছবির আকার ২MB সীমা অতিক্রম করেছে।",
     imageUploadErrorType: "অবৈধ ফাইলের ধরণ। অনুগ্রহ করে JPEG বা PNG ছবি আপলোড করুন।",
     imageUploadErrorRead: "ছবির ফাইল পড়া যায়নি।",
-    // tokensRemaining: "অবশিষ্ট টোকেন: {count}", // Removed
-    // noTokensTitle: "টোকেন নেই", // Removed
-    // noTokensDesc: "আপনি আজকের জন্য আপনার সমস্ত শেফ ইভা চ্যাট টোকেন ব্যবহার করেছেন। টোকেন প্রতিদিন রিসেট হয়।", // Removed
     resetChatButton: "চ্যাট রিসেট করুন",
     resetChatConfirmTitle: "চ্যাট রিসেট করবেন?",
-    resetChatConfirmDesc: "আপনি কি নিশ্চিতভাবে চ্যাট ইতিহাস মুছে ফেলতে চান? এই ক্রিয়াটি পূর্বাবস্থায় ফেরানো যাবে না।",
+    resetChatConfirmDesc: "আপনি কি নিশ্চিতভাবে চ্যাট ইতিহাস মুছে ফেলতে চান? এই ক্রিয়াটি পূর্বাবস্থায় ফেরানো যাবে না এবং আপনার বার্তা গণনা রিসেট করবে না।",
     resetChatCancel: "বাতিল করুন",
     resetChatConfirm: "রিসেট করুন",
     selectLanguage: "প্রতিক্রিয়া ভাষা",
+    messagesRemaining: "অবশিষ্ট বার্তা: {count}",
+    messageLimitReachedTitle: "বার্তা সীমা শেষ",
+    messageLimitReachedDesc: "আপনি আপনার {limit} বিনামূল্যে বার্তা ব্যবহার করেছেন। সীমাহীন চ্যাটের জন্য অনুগ্রহ করে আপগ্রেড করুন।",
+    inputPlaceholderLimitReached: "বার্তা সীমা শেষ।",
   },
 };
 
@@ -193,7 +212,7 @@ interface ChatEvaProps {
   isOpen: boolean;
   onClose: () => void;
   language: LanguageCode;
-  userId: string; // Receive userId (though not used for tokens now)
+  userId: string;
 }
 
 // Helper to estimate tokens (simple word count, refine as needed)
@@ -201,8 +220,8 @@ const estimateTokens = (text: string): number => {
     return text ? text.split(/\s+/).length : 0;
 };
 
-// Max context tokens to send (adjust based on model limits and desired history length)
-const MAX_CONTEXT_TOKENS = 50000; // Increased context limit
+// Max context tokens to send
+const MAX_CONTEXT_TOKENS = 50000;
 
 export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: ChatEvaProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -214,21 +233,47 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  // const [tokensLeft, setTokensLeft] = useState<number | null>(null); // Removed token state
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(initialLanguage);
+  const [messageCount, setMessageCount] = useState<number>(MAX_MESSAGES); // Initialize count
+  const [limitReached, setLimitReached] = useState<boolean>(false); // State for limit
 
-  const T = uiText[currentLanguage] || uiText.en; // Use currentLanguage for UI text
+  const T = uiText[currentLanguage] || uiText.en;
+
+  // --- Load and Persist Message Count ---
+  useEffect(() => {
+    const savedCount = localStorage.getItem(LOCAL_STORAGE_KEY_EVA_COUNT);
+    const initialCount = savedCount ? parseInt(savedCount, 10) : MAX_MESSAGES;
+
+    // Ensure the loaded count is a valid number and not negative
+    if (!isNaN(initialCount) && initialCount >= 0) {
+      setMessageCount(initialCount);
+      setLimitReached(initialCount === 0);
+    } else {
+      // If invalid data in localStorage, reset to max
+      setMessageCount(MAX_MESSAGES);
+      setLimitReached(false);
+      localStorage.setItem(LOCAL_STORAGE_KEY_EVA_COUNT, String(MAX_MESSAGES));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Save count whenever it changes (and is valid)
+    if (typeof messageCount === 'number' && messageCount >= 0) {
+      localStorage.setItem(LOCAL_STORAGE_KEY_EVA_COUNT, String(messageCount));
+      setLimitReached(messageCount === 0);
+    }
+  }, [messageCount]);
+
 
   // --- Initialize Chat ---
   useEffect(() => {
       if (isOpen) {
-          // Add initial message if chat is empty
           if (messages.length === 0) {
               setMessages([{ role: 'model', parts: [{ text: T.description }] }]);
           }
       }
-  }, [isOpen, T.description, messages.length]); // Removed userId dependency
+  }, [isOpen, T.description, messages.length]);
 
 
   // --- Language Sync & Reset ---
@@ -237,15 +282,14 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
   }, [initialLanguage]);
 
   useEffect(() => {
-    // Reset messages when language changes in the main app, if the chat is open
-    if (isOpen && messages.length > 1) { // Only reset if there's actual history
-        handleResetChatConfirm(); // Use the reset logic
+    if (isOpen && messages.length > 1) {
+        // Don't automatically reset on language change now, let user decide
+        // handleResetChatConfirm(); // Commented out
     } else if (isOpen && messages.length <= 1) {
-        // Update initial message language if chat is empty/just opened
          setMessages([{ role: 'model', parts: [{ text: uiText[initialLanguage].description }] }]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialLanguage, isOpen]); // Only run when language or open state changes
+  }, [initialLanguage, isOpen]);
 
 
   // --- Scrolling ---
@@ -257,6 +301,7 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
 
   // --- Image Handling ---
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (limitReached) return; // Prevent image upload if limit reached
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -297,7 +342,14 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
   const handleSend = useCallback(async () => {
     const currentInput = input.trim();
     if (!currentInput && !imageDataUri) return;
-    // Removed token check
+    if (limitReached) {
+      toast({
+        variant: "destructive",
+        title: T.messageLimitReachedTitle,
+        description: T.messageLimitReachedDesc.replace('{limit}', String(MAX_MESSAGES)),
+      });
+      return;
+    }
 
     setError(null);
 
@@ -362,14 +414,15 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
     startTransition(async () => {
       try {
 
-        // Removed token decrement request
+        // Decrement message count immediately (optimistic update)
+        const newCount = messageCount - 1;
+        setMessageCount(newCount);
 
         // --- Call AI Flow ---
         const flowInput: ChatWithEvaInput = {
             history: historyToSend.slice(0, -1), // Send history *before* the current message
             message: { // Send the current message separately
                  text: currentInput || undefined, // Ensure text is undefined if empty
-                 // Pass image as data URI string or undefined, ensuring it's a string if present
                  image: imageDataUri ? imageDataUri : undefined,
             },
              language: supportedLanguagesMap[currentLanguage] || 'English', // Pass full language name
@@ -380,32 +433,34 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
         if (result && result.response) {
              setMessages(prev => [...prev, { role: 'model', parts: [{ text: result.response }] }]);
          } else {
-             throw new Error(T.chatErrorResponseFormat);
+            // Revert count decrement if AI call failed structurally
+            setMessageCount(messageCount);
+            throw new Error(T.chatErrorResponseFormat);
          }
 
       } catch (err) {
         console.error("Chat Error:", err);
         let errorMsg = T.chatErrorGeneric;
          if (err instanceof Error) {
-            // Check for specific schema validation error message structure
              if (err.message.includes("Schema validation failed") || err.message.includes("Parse Errors")) {
-                 errorMsg = `${T.chatErrorTitle}: ${err.message}`; // Show detailed schema error
+                 errorMsg = `${T.chatErrorTitle}: ${err.message}`;
              } else {
                 errorMsg = `${T.chatErrorTitle}: ${err.message}`;
              }
          }
         setError(errorMsg);
-        // Revert optimistic update on error
+        // Revert count decrement on error
+        setMessageCount(messageCount);
+        // Revert optimistic message update on error
         setMessages(messages);
-         // Removed token refund logic
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, imageDataUri, messages, userId, currentLanguage, T]); // Removed tokensLeft dependency
+  }, [input, imageDataUri, messages, currentLanguage, T, messageCount, limitReached]); // Add messageCount and limitReached
 
   // --- Reset Chat ---
   const handleResetChat = () => {
-    setShowResetConfirm(true);
+    setShowResetConfirm(true); // Show confirmation dialog
   };
 
   const handleResetChatConfirm = () => {
@@ -414,12 +469,14 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
       removeImage();
       setError(null);
       setShowResetConfirm(false);
-      // Note: Tokens are NOT reset here.
+      // NOTE: Message count is NOT reset here
   };
 
   const handleResetChatCancel = () => {
     setShowResetConfirm(false);
   };
+
+  const remainingMessagesText = T.messagesRemaining.replace('{count}', String(messageCount < 0 ? 0 : messageCount));
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -429,21 +486,26 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
             <ChefHat className="h-6 w-6 text-primary" />
             {T.title}
           </DialogTitle>
-           {/* Language Selector */}
-            <div className="flex items-center gap-2 pt-2">
-                <Label htmlFor="eva-language" className="text-sm text-muted-foreground whitespace-nowrap">{T.selectLanguage}:</Label>
-                <Select value={currentLanguage} onValueChange={(value) => setCurrentLanguage(value as LanguageCode)}>
-                    <SelectTrigger id="eva-language" className="w-auto h-8 text-sm bg-background">
-                        <SelectValue placeholder={T.selectLanguage} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {Object.entries(supportedLanguagesMap).map(([code, name]) => (
-                            <SelectItem key={code} value={code}>{name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+           {/* Language Selector & Message Count */}
+            <div className="flex items-center justify-between flex-wrap gap-2 pt-2">
+                <div className="flex items-center gap-2">
+                    <Label htmlFor="eva-language" className="text-sm text-muted-foreground whitespace-nowrap">{T.selectLanguage}:</Label>
+                    <Select value={currentLanguage} onValueChange={(value) => setCurrentLanguage(value as LanguageCode)}>
+                        <SelectTrigger id="eva-language" className="w-auto h-8 text-sm bg-background">
+                            <SelectValue placeholder={T.selectLanguage} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {Object.entries(supportedLanguagesMap).map(([code, name]) => (
+                                <SelectItem key={code} value={code}>{name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                {/* Display Message Count */}
+                 <div className="text-sm text-muted-foreground font-medium">
+                    {remainingMessagesText}
+                 </div>
             </div>
-           {/* Token Display Removed */}
         </DialogHeader>
 
         <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
@@ -494,9 +556,18 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
             <div className="px-4 pb-2">
                 <Alert variant="destructive" className="text-sm">
                     <AlertCircle className="h-4 w-4" />
-                    {/* Removed token-specific title */}
                     <AlertTitle>{T.chatErrorTitle}</AlertTitle>
                     <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            </div>
+        )}
+        {/* Limit Reached Display */}
+        {limitReached && !isSending && (
+             <div className="px-4 pb-2">
+                <Alert variant="destructive" className="text-sm">
+                    <MessageSquareWarning className="h-4 w-4" />
+                    <AlertTitle>{T.messageLimitReachedTitle}</AlertTitle>
+                    <AlertDescription>{T.messageLimitReachedDesc.replace('{limit}', String(MAX_MESSAGES))}</AlertDescription>
                 </Alert>
             </div>
         )}
@@ -514,12 +585,29 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
          )}
 
         <DialogFooter className="p-4 border-t flex-row items-center gap-2">
-            {/* Reset Button */}
-            <Button variant="ghost" size="icon" onClick={handleResetChat} disabled={isSending || messages.length <= 1} title={T.resetChatButton}>
-               <RotateCcw className="h-4 w-4 text-muted-foreground"/>
-            </Button>
+             {/* Reset Button wrapped in AlertDialogTrigger */}
+            <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+                <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" disabled={isSending || messages.length <= 1} title={T.resetChatButton}>
+                       <RotateCcw className="h-4 w-4 text-muted-foreground"/>
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{T.resetChatConfirmTitle}</AlertDialogTitle>
+                        <AlertDialogDescription>{T.resetChatConfirmDesc}</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={handleResetChatCancel}>{T.resetChatCancel}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleResetChatConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                             {T.resetChatConfirm}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
              {/* Attach Button */}
-            <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isSending /* Removed token check */}>
+            <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isSending || limitReached}>
                  <Paperclip className="h-4 w-4" />
                  <span className="sr-only">{T.attachLabel}</span>
             </Button>
@@ -529,36 +617,23 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
                 onChange={handleImageChange}
                 accept="image/jpeg, image/png"
                 className="hidden"
+                disabled={limitReached} // Disable file input when limit reached
              />
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={T.inputPlaceholder}
+            placeholder={limitReached ? T.inputPlaceholderLimitReached : T.inputPlaceholder}
             className="flex-grow"
             onKeyDown={(e) => e.key === 'Enter' && !isSending && handleSend()}
-            disabled={isSending /* Removed token check */}
+            disabled={isSending || limitReached} // Disable input when limit reached
           />
-          <Button onClick={handleSend} disabled={isSending || (!input.trim() && !imageDataUri) /* Removed token check */} className="min-w-[80px]">
+          <Button onClick={handleSend} disabled={isSending || limitReached || (!input.trim() && !imageDataUri)} className="min-w-[80px]">
             {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             <span className="ml-2 hidden sm:inline">{isSending ? T.sendingButton : T.sendButton}</span>
           </Button>
         </DialogFooter>
       </DialogContent>
 
-       {/* Reset Confirmation Dialog */}
-      <Dialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
-           <DialogContent className="sm:max-w-[425px]">
-               <DialogHeader>
-                   <DialogTitle>{T.resetChatConfirmTitle}</DialogTitle>
-                   <DialogDescription>{T.resetChatConfirmDesc}</DialogDescription>
-               </DialogHeader>
-               <DialogFooter>
-                   <Button variant="outline" onClick={handleResetChatCancel}>{T.resetChatCancel}</Button>
-                   <Button variant="destructive" onClick={handleResetChatConfirm}>{T.resetChatConfirm}</Button>
-               </DialogFooter>
-           </DialogContent>
-      </Dialog>
     </Dialog>
   );
 }
-
