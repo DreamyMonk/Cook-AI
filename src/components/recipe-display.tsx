@@ -781,7 +781,7 @@ export function RecipeDisplay({
 
   return (
     <Card className="w-full border-none shadow-none bg-transparent flex flex-col h-full p-0">
-       <ScrollArea className="flex-grow pr-4 -mr-4"> {/* Adjust right padding here */}
+       <ScrollArea className="flex-grow px-5 pt-0"> {/* Added padding to ScrollArea */}
          <CardContent className="p-0 space-y-5 text-base">
 
             {/* --- Conditional Rendering based on displayData.type --- */}
@@ -861,7 +861,7 @@ export function RecipeDisplay({
                     })}
                     {/* Download Button for Pro Menu */}
                     {canDownload && (
-                        <div className="pt-4">
+                        <div className="pt-4 pb-4"> {/* Added bottom padding */}
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -1046,6 +1046,3 @@ export function RecipeDisplay({
     </Card>
   );
 }
-
-
-    

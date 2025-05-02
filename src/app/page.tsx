@@ -10,7 +10,7 @@ import { generateProMenu, type GenerateProMenuInput, type GenerateProMenuOutput 
 import { refineRecipe, type RefineRecipeInput, type RefineRecipeOutput } from '@/ai/flows/refine-recipe';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, UtensilsCrossed, TriangleAlert, Languages, ChefHat, PartyPopper, BrainCircuit, Info, NotebookText, User, LogOut } from 'lucide-react'; // Added BrainCircuit, Info, NotebookText, User, LogOut
+import { Loader2, UtensilsCrossed, TriangleAlert, Languages, ChefHat, PartyPopper, BrainCircuit, Info, NotebookText, User, LogOut, Mic, MicOff } from 'lucide-react'; // Added Mic, MicOff
 import Image from 'next/image';
 import {
   Select,
@@ -143,6 +143,22 @@ const uiText = {
         accountEmail: "Email",
         accountName: "Name",
         accountTokens: "Chef Eva Tokens Remaining",
+        interactiveVoiceChatLabel: "Interactive Voice Chat", // Added for switch
+        voiceChatPlaceholderListening: "Listening...",
+        voiceChatPlaceholderActive: "Voice chat active. Tap mic to speak.",
+        voiceChatPlaceholderInactive: "Tap mic to speak or type ingredients...", // Updated inactive placeholder
+        voiceChatSupportWarning: "Voice chat requires browser support for Speech Recognition and Synthesis.",
+        voiceChatNotSupported: "(Not Supported)",
+        voiceChatInfoListening: "Actively listening for ingredients...",
+        voiceChatInfoReady: "Voice chat is on. Tap the mic icon to speak.",
+        voiceChatErrorTitle: "Voice Error",
+        voiceChatNotSupportedTitle: "Voice Chat Not Supported",
+        voiceChatNotSupportedDesc: "Your browser does not fully support the required Speech Recognition or Synthesis APIs.",
+        voiceChatEnabledSpeak: "Voice chat enabled. Please state your ingredients clearly, separated by pauses.",
+        voiceChatDisabledSpeak: "Voice chat disabled.",
+        ariaLabelStopListening: "Stop listening",
+        ariaLabelStartListening: "Start listening",
+        ariaLabelVoiceChatToggle: "Toggle Interactive Voice Chat",
     },
     "es": {
         title: "Cook AI",
@@ -209,6 +225,22 @@ const uiText = {
         accountEmail: "Correo Electrónico",
         accountName: "Nombre",
         accountTokens: "Tokens de Chef Eva Restantes",
+        interactiveVoiceChatLabel: "Chat de Voz Interactivo",
+        voiceChatPlaceholderListening: "Escuchando...",
+        voiceChatPlaceholderActive: "Chat de voz activo. Toca el micrófono para hablar.",
+        voiceChatPlaceholderInactive: "Toca el micrófono para hablar o escribe ingredientes...", // Updated placeholder
+        voiceChatSupportWarning: "El chat de voz requiere soporte del navegador para Reconocimiento y Síntesis de Voz.",
+        voiceChatNotSupported: "(No Soportado)",
+        voiceChatInfoListening: "Escuchando activamente los ingredientes...",
+        voiceChatInfoReady: "El chat de voz está activado. Toca el icono del micrófono para hablar.",
+        voiceChatErrorTitle: "Error de Voz",
+        voiceChatNotSupportedTitle: "Chat de Voz No Soportado",
+        voiceChatNotSupportedDesc: "Tu navegador no es totalmente compatible con las API de Reconocimiento o Síntesis de Voz requeridas.",
+        voiceChatEnabledSpeak: "Chat de voz activado. Indica tus ingredientes claramente, separados por pausas.",
+        voiceChatDisabledSpeak: "Chat de voz desactivado.",
+        ariaLabelStopListening: "Dejar de escuchar",
+        ariaLabelStartListening: "Empezar a escuchar",
+        ariaLabelVoiceChatToggle: "Activar/Desactivar Chat de Voz Interactivo",
     },
     "fr": {
         title: "Cook AI",
@@ -275,6 +307,22 @@ const uiText = {
         accountEmail: "Email",
         accountName: "Nom",
         accountTokens: "Jetons Chef Eva Restants",
+        interactiveVoiceChatLabel: "Chat Vocal Interactif",
+        voiceChatPlaceholderListening: "Écoute...",
+        voiceChatPlaceholderActive: "Chat vocal actif. Appuyez sur le micro pour parler.",
+        voiceChatPlaceholderInactive: "Appuyez sur le micro pour parler ou tapez des ingrédients...", // Updated placeholder
+        voiceChatSupportWarning: "Le chat vocal nécessite la prise en charge par le navigateur de la reconnaissance et de la synthèse vocales.",
+        voiceChatNotSupported: "(Non Supporté)",
+        voiceChatInfoListening: "Écoute active des ingrédients...",
+        voiceChatInfoReady: "Le chat vocal est activé. Appuyez sur l'icône du micro pour parler.",
+        voiceChatErrorTitle: "Erreur Vocale",
+        voiceChatNotSupportedTitle: "Chat Vocal Non Supporté",
+        voiceChatNotSupportedDesc: "Votre navigateur ne prend pas entièrement en charge les API de reconnaissance ou de synthèse vocales requises.",
+        voiceChatEnabledSpeak: "Chat vocal activé. Énoncez clairement vos ingrédients, séparés par des pauses.",
+        voiceChatDisabledSpeak: "Chat vocal désactivé.",
+        ariaLabelStopListening: "Arrêter l'écoute",
+        ariaLabelStartListening: "Commencer l'écoute",
+        ariaLabelVoiceChatToggle: "Activer/Désactiver le Chat Vocal Interactif",
     },
     "de": {
         title: "Cook AI",
@@ -341,6 +389,22 @@ const uiText = {
         accountEmail: "E-Mail",
         accountName: "Name",
         accountTokens: "Verbleibende Chef Eva Tokens",
+        interactiveVoiceChatLabel: "Interaktiver Voice-Chat",
+        voiceChatPlaceholderListening: "Höre zu...",
+        voiceChatPlaceholderActive: "Voice-Chat aktiv. Tippen Sie zum Sprechen auf das Mikrofon.",
+        voiceChatPlaceholderInactive: "Tippen Sie zum Sprechen auf das Mikrofon oder geben Sie Zutaten ein...", // Updated placeholder
+        voiceChatSupportWarning: "Voice-Chat erfordert Browserunterstützung für Spracherkennung und -synthese.",
+        voiceChatNotSupported: "(Nicht unterstützt)",
+        voiceChatInfoListening: "Höre aktiv auf Zutaten...",
+        voiceChatInfoReady: "Voice-Chat ist aktiviert. Tippen Sie zum Sprechen auf das Mikrofonsymbol.",
+        voiceChatErrorTitle: "Sprachfehler",
+        voiceChatNotSupportedTitle: "Voice-Chat nicht unterstützt",
+        voiceChatNotSupportedDesc: "Ihr Browser unterstützt die erforderlichen Spracherkennungs- oder Synthese-APIs nicht vollständig.",
+        voiceChatEnabledSpeak: "Voice-Chat aktiviert. Nennen Sie Ihre Zutaten deutlich, getrennt durch Pausen.",
+        voiceChatDisabledSpeak: "Voice-Chat deaktiviert.",
+        ariaLabelStopListening: "Zuhören beenden",
+        ariaLabelStartListening: "Zuhören beginnen",
+        ariaLabelVoiceChatToggle: "Interaktiven Voice-Chat umschalten",
     },
     "hi": { // Hindi Translations
         title: "Cook AI",
@@ -407,6 +471,22 @@ const uiText = {
         accountEmail: "ईमेल",
         accountName: "नाम",
         accountTokens: "शेष शेफ ईवा टोकन",
+        interactiveVoiceChatLabel: "इंटरैक्टिव वॉइस चैट",
+        voiceChatPlaceholderListening: "सुन रहा हूँ...",
+        voiceChatPlaceholderActive: "वॉइस चैट सक्रिय। बोलने के लिए माइक पर टैप करें।",
+        voiceChatPlaceholderInactive: "बोलने के लिए माइक पर टैप करें या सामग्री टाइप करें...", // Updated placeholder
+        voiceChatSupportWarning: "वॉइस चैट के लिए स्पीच रिकग्निशन और सिंथेसिस के लिए ब्राउज़र समर्थन आवश्यक है।",
+        voiceChatNotSupported: "(समर्थित नहीं)",
+        voiceChatInfoListening: "सामग्री के लिए सक्रिय रूप से सुन रहा हूँ...",
+        voiceChatInfoReady: "वॉइस चैट चालू है। बोलने के लिए माइक आइकन पर टैप करें।",
+        voiceChatErrorTitle: "वॉइस त्रुटि",
+        voiceChatNotSupportedTitle: "वॉइस चैट समर्थित नहीं",
+        voiceChatNotSupportedDesc: "आपका ब्राउज़र आवश्यक स्पीच रिकग्निशन या सिंथेसिस एपीआई का पूरी तरह से समर्थन नहीं करता है।",
+        voiceChatEnabledSpeak: "वॉइस चैट सक्षम। कृपया अपनी सामग्री स्पष्ट रूप से बताएं, विरामों से अलग करें।",
+        voiceChatDisabledSpeak: "वॉइस चैट अक्षम।",
+        ariaLabelStopListening: "सुनना बंद करें",
+        ariaLabelStartListening: "सुनना शुरू करें",
+        ariaLabelVoiceChatToggle: "इंटरैक्टिव वॉइस चैट टॉगल करें",
     },
     "bn": { // Bengali Translations
         title: "Cook AI",
@@ -472,6 +552,22 @@ const uiText = {
         accountEmail: "ইমেল",
         accountName: "নাম",
         accountTokens: "অবশিষ্ট শেফ ইভা টোকেন",
+        interactiveVoiceChatLabel: "ইন্টারেক্টিভ ভয়েস চ্যাট",
+        voiceChatPlaceholderListening: "শুনছি...",
+        voiceChatPlaceholderActive: "ভয়েস চ্যাট সক্রিয়। কথা বলতে মাইকে ট্যাপ করুন।",
+        voiceChatPlaceholderInactive: "কথা বলতে মাইকে ট্যাপ করুন বা উপকরণ টাইপ করুন...", // Updated placeholder
+        voiceChatSupportWarning: "ভয়েস চ্যাটের জন্য স্পিচ রিকগনিশন এবং সিন্থেসিসের জন্য ব্রাউজার সমর্থন প্রয়োজন।",
+        voiceChatNotSupported: "(সমর্থিত নয়)",
+        voiceChatInfoListening: "সক্রিয়ভাবে উপকরণের জন্য শুনছি...",
+        voiceChatInfoReady: "ভয়েস চ্যাট চালু আছে। কথা বলতে মাইক আইকনে ট্যাপ করুন।",
+        voiceChatErrorTitle: "ভয়েস ত্রুটি",
+        voiceChatNotSupportedTitle: "ভয়েস চ্যাট সমর্থিত নয়",
+        voiceChatNotSupportedDesc: "আপনার ব্রাউজার প্রয়োজনীয় স্পিচ রিকগনিশন বা সিন্থেসিস এপিআই সম্পূর্ণরূপে সমর্থন করে না।",
+        voiceChatEnabledSpeak: "ভয়েস চ্যাট সক্ষম। অনুগ্রহ করে আপনার উপকরণগুলি স্পষ্টভাবে বলুন, বিরতি দিয়ে আলাদা করুন।",
+        voiceChatDisabledSpeak: "ভয়েস চ্যাট অক্ষম।",
+        ariaLabelStopListening: "শোনা বন্ধ করুন",
+        ariaLabelStartListening: "শোনা শুরু করুন",
+        ariaLabelVoiceChatToggle: "ইন্টারেক্টিভ ভয়েস চ্যাট টগল করুন",
     },
      // Add more languages as needed
 };
@@ -797,8 +893,8 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-start p-4 md:p-8 lg:p-12 bg-gradient-to-br from-background to-secondary/30 dark:from-background dark:to-black/20">
-      <header className="w-full max-w-4xl mb-8">
-         <div className="flex justify-between items-center flex-wrap gap-4 mb-4">
+      <header className="w-full max-w-4xl mb-8 text-center"> {/* Added text-center */}
+         <div className="flex justify-center items-center flex-wrap gap-4 mb-4"> {/* Changed justify-between to justify-center */}
               <div className="flex justify-center items-center gap-3">
                  <UtensilsCrossed className="h-10 w-10 text-primary drop-shadow-md" />
                  <h1 className="text-4xl sm:text-5xl font-bold text-primary tracking-tight drop-shadow-sm">{T.title}</h1>
@@ -1084,7 +1180,7 @@ export default function Home() {
                  </Alert>
              )}
           </CardHeader>
-          <CardContent className="p-5 flex-grow flex items-center justify-center bg-card">
+          <CardContent className="p-0 flex-grow flex items-center justify-center bg-card"> {/* Removed padding */}
             {isLoading && !(error === T.loginRequiredDescEva) ? ( // Only show loader if not an Eva login error
               <div className="flex flex-col items-center text-muted-foreground text-center p-8">
                 <Loader2 className="h-16 w-16 animate-spin text-primary mb-6" />
@@ -1143,11 +1239,8 @@ export default function Home() {
 
       <footer className="mt-16 text-center text-sm text-muted-foreground/80">
         {/* Updated footer text to use current year and only English */}
-        <p>&copy; {new Date().getFullYear()} Cook AI. Powered by zedsu made with ❤️ by saptrishi</p>
+        <p>&copy; {new Date().getFullYear()} {T.footerText}</p>
       </footer>
     </main>
   );
 }
-
-
-    

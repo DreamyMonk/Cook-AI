@@ -9,6 +9,6 @@ export const ai = genkit({
     }),
   ],
   // Switch to gemini-1.5-flash as gemini-2.5-pro-preview is not a valid model name
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-2.0-flash-lite',
 });
 
