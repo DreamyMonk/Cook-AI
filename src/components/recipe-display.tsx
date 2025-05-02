@@ -1,4 +1,5 @@
 
+
 'use client';
 import React, { useState, useEffect, useTransition } from 'react';
 import { type GenerateRecipeOutput } from '@/ai/flows/generate-recipe';
@@ -464,7 +465,8 @@ export function RecipeDisplay({
                     }
                      // Match 1. List Item or 1) List Item
                      if (/^\d+[\.\)]\s/.test(line)) {
-                         return <p key={index} className="pl-4 relative before:content-[attr(data-number)] before:absolute before:left-0 before:font-medium before:text-foreground/80" data-number={line.match(/^\d+[\.\)]/)?.[0]}>{line.replace(/^\d+[\.\)]\s/, '')}</p>;
+                         const numberMatch = line.match(/^\d+[\.\)]/)?.[0];
+                         return <p key={index} className="pl-5 relative before:content-[attr(data-number)] before:absolute before:left-0 before:font-medium before:text-foreground/80" data-number={numberMatch}>{line.replace(/^\d+[\.\)]\s/, '')}</p>;
                      }
                     // Match ## Subheading or # Heading
                     if (/^##+\s/.test(line)) {
@@ -474,8 +476,11 @@ export function RecipeDisplay({
                     } else if (/^#\s/.test(line)) {
                          return <h2 key={index} className="text-lg font-semibold mt-5 mb-2 text-foreground">{line.replace(/^#\s/, '')}</h2>;
                      }
-                    // Default paragraph
-                    return <p key={index}>{line}</p>;
+                    // Default paragraph with margin-bottom for spacing
+                    if (line.length > 0) { // Only add paragraphs for non-empty lines
+                         return <p key={index} className="mb-1.5">{line}</p>;
+                    }
+                    return null; // Render nothing for empty lines to avoid extra space
                 })}
             </div>
         );
@@ -1041,3 +1046,5 @@ export function RecipeDisplay({
     </Card>
   );
 }
+
+    

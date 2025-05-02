@@ -178,7 +178,7 @@ const uiText = {
         loadingPlaceholder: "Por favor espera mientras el chef piensa...",
         errorPlaceholder: "Hubo un problema al generar o refinar la receta/menú.",
         errorTitle: "Error",
-        footerText: "Cook AI. Impulsado por zedsu hecho con ❤️ por saptrishi",
+        // footerText: "Cook AI. Impulsado por zedsu hecho con ❤️ por saptrishi", // Removed translation
         selectLanguagePlaceholder: "Seleccionar Idioma",
         selectTastePlaceholder: "Preferencia de Sabor (Opcional)",
         inputErrorNoIngredients: "No se proporcionaron ingredientes. Por favor, enumera los ingredientes que tienes.",
@@ -244,7 +244,7 @@ const uiText = {
         loadingPlaceholder: "Veuillez patienter pendant que le chef réfléchit...",
         errorPlaceholder: "Un problème est survenu lors de la génération ou de l'affinage de la recette/menu.",
         errorTitle: "Erreur",
-        footerText: "Cook AI. Propulsé par zedsu fait avec ❤️ par saptrishi",
+        // footerText: "Cook AI. Propulsé par zedsu fait avec ❤️ par saptrishi", // Removed translation
         selectLanguagePlaceholder: "Choisir la Langue",
         selectTastePlaceholder: "Préférence Gustative (Facultatif)",
         inputErrorNoIngredients: "Aucun ingrédient fourni. Veuillez lister les ingrédients dont vous disposez.",
@@ -310,7 +310,7 @@ const uiText = {
         loadingPlaceholder: "Bitte warten Sie, während der Koch nachdenkt...",
         errorPlaceholder: "Beim Generieren oder Verfeinern des Rezepts/Menüs ist ein Problem aufgetreten.",
         errorTitle: "Fehler",
-        footerText: "Cook AI. Unterstützt durch zedsu gemacht mit ❤️ von saptrishi",
+        // footerText: "Cook AI. Unterstützt durch zedsu gemacht mit ❤️ von saptrishi", // Removed translation
         selectLanguagePlaceholder: "Sprache auswählen",
         selectTastePlaceholder: "Geschmackspräferenz (Optional)",
         inputErrorNoIngredients: "Keine Zutaten angegeben. Bitte listen Sie die vorhandenen Zutaten auf.",
@@ -376,7 +376,7 @@ const uiText = {
         loadingPlaceholder: "कृपया प्रतीक्षा करें जब तक शेफ सोच रहा है...",
         errorPlaceholder: "रेसिपी/मेनू बनाने या परिष्कृत करने में कोई समस्या हुई।",
         errorTitle: "त्रुटि",
-        footerText: "Cook AI. ज़ेडसु द्वारा संचालित ❤️ द्वारा बनाया गया सप्तऋषि",
+        // footerText: "Cook AI. ज़ेडसु द्वारा संचालित ❤️ द्वारा बनाया गया सप्तऋषि", // Removed translation
         selectLanguagePlaceholder: "भाषा चुनें",
         selectTastePlaceholder: "स्वाद वरीयता (वैकल्पिक)",
         inputErrorNoIngredients: "कोई सामग्री प्रदान नहीं की गई। कृपया आपके पास उपलब्ध सामग्री सूचीबद्ध करें।",
@@ -442,7 +442,7 @@ const uiText = {
         loadingPlaceholder: "শেফ চিন্তা করার সময় দয়া করে অপেক্ষা করুন...",
         errorPlaceholder: "রেসিপি/মেনু তৈরি বা পরিমার্জনে একটি সমস্যা হয়েছে।",
         errorTitle: "ত্রুটি",
-        footerText: "Cook AI. জেডসু দ্বারা চালিত ❤️ দ্বারা তৈরি সপ্তর্ষি",
+        // footerText: "Cook AI. জেডসু দ্বারা চালিত ❤️ দ্বারা তৈরি সপ্তর্ষি", // Removed translation
         selectLanguagePlaceholder: "ভাষা নির্বাচন করুন",
         selectTastePlaceholder: "স্বাদের পছন্দ (ঐচ্ছিক)",
         inputErrorNoIngredients: "কোন উপকরণ প্রদান করা হয়নি। আপনার কাছে উপলব্ধ উপকরণ তালিকাভুক্ত করুন।",
@@ -489,7 +489,7 @@ export default function Home() {
   const [showChatEva, setShowChatEva] = useState(false); // State to control ChatEva visibility
 
   // Pro Chef Mode State
-  const [isProChefMode, setIsProChefMode] = useState(false); // Enable Pro Chef Mode by default or based on preference
+  const [isProChefMode, setIsProChefMode] = useState(true); // Enable Pro Chef Mode by default
   const [eventTheme, setEventTheme] = useState('');
   const [eventDetails, setEventDetails] = useState(''); // State for event description
   const [numGuests, setNumGuests] = useState<number | ''>(2); // Default to 2 guests
@@ -1167,8 +1167,12 @@ export default function Home() {
          )}
 
       <footer className="mt-16 text-center text-sm text-muted-foreground/80">
-        <p>&copy; {new Date().getFullYear()} {T.footerText}</p>
+        {/* Updated footer text to use current year and only English */}
+        <p>&copy; {new Date().getFullYear()} Cook AI. Powered by zedsu made with ❤️ by saptrishi</p>
       </footer>
     </main>
   );
 }
+
+
+    

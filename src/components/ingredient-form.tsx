@@ -1,4 +1,5 @@
 
+
 // IngredientForm component
 'use client';
 
@@ -18,11 +19,12 @@ const uiText = {
     "en": {
         enterIngredientsTitle: "Enter Ingredients",
         ingredientsLabel: "List ingredients separated by commas (e.g., chicken, rice, broccoli).",
-        voiceChatPlaceholderListening: "Listening...",
-        voiceChatPlaceholderActive: "Voice chat active. Tap mic to speak.",
+        // Voice chat placeholders removed
+        // voiceChatPlaceholderListening: "Listening...",
+        // voiceChatPlaceholderActive: "Voice chat active. Tap mic to speak.",
         voiceChatPlaceholderInactive: "Type your ingredients...",
         voiceChatErrorTitle: "Voice Error",
-        voiceChatToggleLabel: "Interactive Voice Chat",
+        // voiceChatToggleLabel: "Interactive Voice Chat", // Removed
         voiceChatSupportWarning: "Voice chat requires browser support for Speech Recognition and Synthesis.",
         voiceChatNotSupported: "(Not Supported)",
         voiceChatInfoListening: "Actively listening for ingredients...",
@@ -41,16 +43,16 @@ const uiText = {
         ariaLabelIngredients: "Enter available ingredients separated by commas",
         ariaLabelStopListening: "Stop listening",
         ariaLabelStartListening: "Start listening",
-        ariaLabelVoiceChatToggle: "Toggle Interactive Voice Chat",
+        // ariaLabelVoiceChatToggle: "Toggle Interactive Voice Chat", // Removed
     },
     "es": {
         enterIngredientsTitle: "Ingresar Ingredientes",
         ingredientsLabel: "Enumera los ingredientes separados por comas (ej., pollo, arroz, brócoli).",
-        voiceChatPlaceholderListening: "Escuchando...",
-        voiceChatPlaceholderActive: "Chat de voz activo. Toca el micrófono para hablar.",
+        // voiceChatPlaceholderListening: "Escuchando...",
+        // voiceChatPlaceholderActive: "Chat de voz activo. Toca el micrófono para hablar.",
         voiceChatPlaceholderInactive: "Escribe tus ingredientes...",
         voiceChatErrorTitle: "Error de Voz",
-        voiceChatToggleLabel: "Chat de Voz Interactivo",
+        // voiceChatToggleLabel: "Chat de Voz Interactivo",
         voiceChatSupportWarning: "El chat de voz requiere soporte del navegador para Reconocimiento y Síntesis de Voz.",
         voiceChatNotSupported: "(No Soportado)",
         voiceChatInfoListening: "Escuchando activamente los ingredientes...",
@@ -69,16 +71,16 @@ const uiText = {
         ariaLabelIngredients: "Introduce los ingredientes disponibles separados por comas",
         ariaLabelStopListening: "Dejar de escuchar",
         ariaLabelStartListening: "Empezar a escuchar",
-        ariaLabelVoiceChatToggle: "Activar/Desactivar Chat de Voz Interactivo",
+        // ariaLabelVoiceChatToggle: "Activar/Desactivar Chat de Voz Interactivo",
     },
     "fr": {
         enterIngredientsTitle: "Entrer les Ingrédients",
         ingredientsLabel: "Listez les ingrédients séparés par des virgules (ex: poulet, riz, brocoli).",
-        voiceChatPlaceholderListening: "Écoute...",
-        voiceChatPlaceholderActive: "Chat vocal actif. Appuyez sur le micro pour parler.",
+        // voiceChatPlaceholderListening: "Écoute...",
+        // voiceChatPlaceholderActive: "Chat vocal actif. Appuyez sur le micro pour parler.",
         voiceChatPlaceholderInactive: "Tapez vos ingrédients...",
         voiceChatErrorTitle: "Erreur Vocale",
-        voiceChatToggleLabel: "Chat Vocal Interactif",
+        // voiceChatToggleLabel: "Chat Vocal Interactif",
         voiceChatSupportWarning: "Le chat vocal nécessite la prise en charge par le navigateur de la reconnaissance et de la synthèse vocales.",
         voiceChatNotSupported: "(Non Supporté)",
         voiceChatInfoListening: "Écoute active des ingrédients...",
@@ -97,16 +99,16 @@ const uiText = {
         ariaLabelIngredients: "Entrez les ingrédients disponibles séparés par des virgules",
         ariaLabelStopListening: "Arrêter l'écoute",
         ariaLabelStartListening: "Commencer l'écoute",
-        ariaLabelVoiceChatToggle: "Activer/Désactiver le Chat Vocal Interactif",
+        // ariaLabelVoiceChatToggle: "Activer/Désactiver le Chat Vocal Interactif",
     },
     "de": {
         enterIngredientsTitle: "Zutaten eingeben",
         ingredientsLabel: "Zutaten durch Kommas getrennt auflisten (z.B. Hähnchen, Reis, Brokkoli).",
-        voiceChatPlaceholderListening: "Höre zu...",
-        voiceChatPlaceholderActive: "Voice-Chat aktiv. Tippen Sie zum Sprechen auf das Mikrofon.",
+        // voiceChatPlaceholderListening: "Höre zu...",
+        // voiceChatPlaceholderActive: "Voice-Chat aktiv. Tippen Sie zum Sprechen auf das Mikrofon.",
         voiceChatPlaceholderInactive: "Geben Sie Ihre Zutaten ein...",
         voiceChatErrorTitle: "Sprachfehler",
-        voiceChatToggleLabel: "Interaktiver Voice-Chat",
+        // voiceChatToggleLabel: "Interaktiver Voice-Chat",
         voiceChatSupportWarning: "Voice-Chat erfordert Browserunterstützung für Spracherkennung und -synthese.",
         voiceChatNotSupported: "(Nicht unterstützt)",
         voiceChatInfoListening: "Höre aktiv auf Zutaten...",
@@ -125,16 +127,16 @@ const uiText = {
         ariaLabelIngredients: "Verfügbare Zutaten durch Kommas getrennt eingeben",
         ariaLabelStopListening: "Zuhören beenden",
         ariaLabelStartListening: "Zuhören beginnen",
-        ariaLabelVoiceChatToggle: "Interaktiven Voice-Chat umschalten",
+        // ariaLabelVoiceChatToggle: "Interaktiven Voice-Chat umschalten",
     },
     "hi": { // Hindi Translations
         enterIngredientsTitle: "सामग्री दर्ज करें",
         ingredientsLabel: "सामग्री को अल्पविराम से अलग करके सूचीबद्ध करें (उदा., चिकन, चावल, ब्रोकोली)।",
-        voiceChatPlaceholderListening: "सुन रहा हूँ...",
-        voiceChatPlaceholderActive: "वॉइस चैट सक्रिय। बोलने के लिए माइक पर टैप करें।",
+        // voiceChatPlaceholderListening: "सुन रहा हूँ...",
+        // voiceChatPlaceholderActive: "वॉइस चैट सक्रिय। बोलने के लिए माइक पर टैप करें।",
         voiceChatPlaceholderInactive: "अपनी सामग्री टाइप करें...",
         voiceChatErrorTitle: "वॉइस त्रुटि",
-        voiceChatToggleLabel: "इंटरैक्टिव वॉइस चैट",
+        // voiceChatToggleLabel: "इंटरैक्टिव वॉइस चैट",
         voiceChatSupportWarning: "वॉइस चैट के लिए स्पीच रिकग्निशन और सिंथेसिस के लिए ब्राउज़र समर्थन आवश्यक है।",
         voiceChatNotSupported: "(समर्थित नहीं)",
         voiceChatInfoListening: "सामग्री के लिए सक्रिय रूप से सुन रहा हूँ...",
@@ -153,16 +155,16 @@ const uiText = {
         ariaLabelIngredients: "उपलब्ध सामग्री अल्पविराम से अलग करके दर्ज करें",
         ariaLabelStopListening: "सुनना बंद करें",
         ariaLabelStartListening: "सुनना शुरू करें",
-        ariaLabelVoiceChatToggle: "इंटरैक्टिव वॉइस चैट टॉगल करें",
+        // ariaLabelVoiceChatToggle: "इंटरैक्टिव वॉइस चैट टॉगल करें",
     },
     "bn": { // Bengali Translations
         enterIngredientsTitle: "উপকরণ লিখুন",
         ingredientsLabel: "উপকরণগুলি কমা দ্বারা পৃথক করে তালিকাভুক্ত করুন (যেমন, চিকেন, ভাত, ব্রোকলি)।",
-        voiceChatPlaceholderListening: "শুনছি...",
-        voiceChatPlaceholderActive: "ভয়েস চ্যাট সক্রিয়। কথা বলতে মাইকে ট্যাপ করুন।",
+        // voiceChatPlaceholderListening: "শুনছি...",
+        // voiceChatPlaceholderActive: "ভয়েস চ্যাট সক্রিয়। কথা বলতে মাইকে ট্যাপ করুন।",
         voiceChatPlaceholderInactive: "আপনার উপকরণ টাইপ করুন...",
         voiceChatErrorTitle: "ভয়েস ত্রুটি",
-        voiceChatToggleLabel: "ইন্টারেক্টিভ ভয়েস চ্যাট",
+        // voiceChatToggleLabel: "ইন্টারেক্টিভ ভয়েস চ্যাট",
         voiceChatSupportWarning: "ভয়েস চ্যাটের জন্য স্পিচ রিকগনিশন এবং সিন্থেসিসের জন্য ব্রাউজার সমর্থন প্রয়োজন।",
         voiceChatNotSupported: "(সমর্থিত নয়)",
         voiceChatInfoListening: "সক্রিয়ভাবে উপকরণের জন্য শুনছি...",
@@ -181,7 +183,7 @@ const uiText = {
         ariaLabelIngredients: "উপলব্ধ উপকরণ কমা দ্বারা পৃথক করে লিখুন",
         ariaLabelStopListening: "শোনা বন্ধ করুন",
         ariaLabelStartListening: "শোনা শুরু করুন",
-        ariaLabelVoiceChatToggle: "ইন্টারেক্টিভ ভয়েস চ্যাট টগল করুন",
+        // ariaLabelVoiceChatToggle: "ইন্টারেক্টিভ ভয়েস চ্যাট টগল করুন",
     },
      // Add more languages as needed
 };
@@ -208,7 +210,7 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
   const { toast } = useToast();
   const [ingredientsInput, setIngredientsInput] = useState<string>('');
   const [inputError, setInputError] = useState<string | null>(null);
-  const [isVoiceChatEnabled, setIsVoiceChatEnabled] = useState(false);
+  const [isVoiceChatEnabled, setIsVoiceChatEnabled] = useState(false); // Keep state, but UI is removed
 
   // Get translated UI text
   const T = uiText[language as keyof typeof uiText] || uiText['en'];
@@ -278,6 +280,7 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
 
 
    const handleVoiceChatToggle = (checked: boolean) => {
+    // Removed UI update logic, just manage state and potentially voice service
     setIsVoiceChatEnabled(checked);
     if (!voiceSupport && checked) {
       toast({
@@ -357,12 +360,14 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
        }
    };
 
-  // Determine placeholder based on voice chat state
+  // Determine placeholder based on voice chat state (kept for potential future use)
   const getPlaceholder = () => {
-    if (isVoiceChatEnabled) {
-        return isListening ? T.voiceChatPlaceholderListening : T.voiceChatPlaceholderActive;
-    }
+    // Always return inactive placeholder now
     return T.voiceChatPlaceholderInactive;
+    // if (isVoiceChatEnabled) {
+    //     return isListening ? T.voiceChatPlaceholderListening : T.voiceChatPlaceholderActive;
+    // }
+    // return T.voiceChatPlaceholderInactive;
   };
 
   return (
@@ -375,32 +380,32 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
             <Textarea
               id="ingredients-input"
               placeholder={getPlaceholder()}
-              className={`resize-none min-h-[100px] bg-background focus:ring-primary ${inputError ? 'border-destructive focus:ring-destructive' : ''} ${isVoiceChatEnabled ? 'pr-12' : ''}`} // Increased min-height
+              className={`resize-none min-h-[100px] bg-background focus:ring-primary ${inputError ? 'border-destructive focus:ring-destructive' : ''}`} // Removed voice chat padding adjustment
               value={ingredientsInput}
               onChange={(e) => {
-                if (!isVoiceChatEnabled) {
-                  setIngredientsInput(e.target.value);
-                  setInputError(null);
-                }
+                // Always allow typing now
+                setIngredientsInput(e.target.value);
+                setInputError(null);
               }}
               aria-label={T.ariaLabelIngredients}
               aria-invalid={!!inputError}
               aria-describedby="input-error-msg"
-              readOnly={isVoiceChatEnabled}
+              readOnly={false} // Always editable
             />
-            {isVoiceChatEnabled && voiceSupport && (
+             {/* Mic button removed */}
+            {/* {isVoiceChatEnabled && voiceSupport && (
               <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 ${isListening ? 'text-destructive animate-pulse' : 'text-primary'} hover:bg-accent/50 rounded-full`} // Adjusted size and styling
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 ${isListening ? 'text-destructive animate-pulse' : 'text-primary'} hover:bg-accent/50 rounded-full`}
                   onClick={toggleManualListen}
                   aria-label={isListening ? T.ariaLabelStopListening : T.ariaLabelStartListening}
                   disabled={isGenerating}
                 >
                   {isListening ? <MicOff className="h-5 w-5"/> : <Mic className="h-5 w-5"/>}
                 </Button>
-             )}
+             )} */}
           </div>
            {inputError && (
                 <p id="input-error-msg" className="text-sm font-medium text-destructive flex items-center mt-1">
@@ -408,7 +413,7 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
                     {inputError}
                 </p>
             )}
-            {isVoiceChatEnabled && speechError && (
+            {isVoiceChatEnabled && speechError && ( // Keep error display logic if voice is still attempted
                 <Alert variant="destructive" className="mt-2">
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>{T.voiceChatErrorTitle}</AlertTitle>
@@ -416,7 +421,8 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
                 </Alert>
              )}
 
-            <div className="flex items-center space-x-2 pt-3">
+            {/* Voice Chat Switch removed from UI */}
+            {/* <div className="flex items-center space-x-2 pt-3">
                 <Switch
                     id="voice-chat-switch"
                     checked={isVoiceChatEnabled}
@@ -427,19 +433,10 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
                 <Label htmlFor="voice-chat-switch" className={`text-sm font-medium cursor-pointer ${!voiceSupport ? 'text-muted-foreground italic cursor-not-allowed' : 'text-muted-foreground'}`}>
                     {T.voiceChatToggleLabel} {!voiceSupport && T.voiceChatNotSupported}
                 </Label>
-            </div>
-             {isVoiceChatEnabled && voiceSupport && (
-                 <div className="text-xs text-muted-foreground italic p-2 border border-dashed border-accent/70 rounded-md bg-accent/10 dark:bg-accent/20 flex items-center mt-2">
-                    <Info className="h-3 w-3 mr-1.5 flex-shrink-0 text-accent"/>
-                    {isListening ? T.voiceChatInfoListening : T.voiceChatInfoReady}
-                 </div>
-             )}
-             {isVoiceChatEnabled && !voiceSupport && (
-                  <div className="text-xs text-destructive italic p-2 border border-dashed border-destructive/50 rounded-md bg-destructive/10 dark:bg-destructive/20 flex items-center mt-2">
-                     <AlertCircle className="h-3 w-3 mr-1.5 flex-shrink-0"/>
-                     {T.voiceChatSupportWarning}
-                  </div>
-             )}
+            </div> */}
+             {/* Info/Warning boxes removed */}
+             {/* {isVoiceChatEnabled && voiceSupport && ( ... )} */}
+             {/* {isVoiceChatEnabled && !voiceSupport && ( ... )} */}
         </div>
 
         <div className="pt-4"> {/* Added padding top for separation */}
@@ -447,7 +444,7 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
              type="button"
              onClick={handleGenerateClick}
              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary text-base h-11 shadow-md" // Increased size and added shadow
-             disabled={isGenerating || (isVoiceChatEnabled && isListening)}
+             disabled={isGenerating} // Removed voice listening condition
              aria-live="polite"
            >
              {isGenerating ? (
@@ -466,5 +463,6 @@ export function IngredientForm({ onSubmit, isGenerating, language }: IngredientF
     </div>
   );
 }
+
 
     
