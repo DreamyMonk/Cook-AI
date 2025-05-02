@@ -15,7 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Paperclip, Send, Loader2, AlertCircle, RotateCcw, ChefHat, MessageSquare, User } from 'lucide-react'; // Ensure User is imported
+import { Paperclip, Send, Loader2, AlertCircle, RotateCcw, ChefHat, User } from 'lucide-react'; // Removed MessageSquare as it's not used
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { chatWithEva, type ChatWithEvaInput, type ChatMessage } from '@/ai/flows/chat-with-eva'; // Corrected import path
@@ -34,7 +34,7 @@ const supportedLanguagesMap = {
     // Add more as needed
 };
 
-// UI Text translations (keyed by LanguageCode)
+// UI Text translations (keyed by LanguageCode) - Removed token-related text
 const uiText = {
   "en": {
     title: "Chat with Chef Eva",
@@ -51,9 +51,9 @@ const uiText = {
     imageUploadErrorSize: "Image size exceeds the 2MB limit.",
     imageUploadErrorType: "Invalid file type. Please upload JPEG or PNG images.",
     imageUploadErrorRead: "Could not read the image file.",
-    tokensRemaining: "Tokens Remaining: {count}",
-    noTokensTitle: "Out of Tokens",
-    noTokensDesc: "You have used all your Chef Eva chat tokens for today. Tokens reset daily.",
+    // tokensRemaining: "Tokens Remaining: {count}", // Removed
+    // noTokensTitle: "Out of Tokens", // Removed
+    // noTokensDesc: "You have used all your Chef Eva chat tokens for today. Tokens reset daily.", // Removed
     resetChatButton: "Reset Chat",
     resetChatConfirmTitle: "Reset Chat?",
     resetChatConfirmDesc: "Are you sure you want to clear the chat history? This action cannot be undone.",
@@ -76,9 +76,9 @@ const uiText = {
     imageUploadErrorSize: "El tamaño de la imagen excede el límite de 2MB.",
     imageUploadErrorType: "Tipo de archivo inválido. Sube imágenes JPEG o PNG.",
     imageUploadErrorRead: "No se pudo leer el archivo de imagen.",
-    tokensRemaining: "Tokens Restantes: {count}",
-    noTokensTitle: "Sin Tokens",
-    noTokensDesc: "Has usado todos tus tokens de chat de Chef Eva por hoy. Los tokens se restablecen diariamente.",
+    // tokensRemaining: "Tokens Restantes: {count}", // Removed
+    // noTokensTitle: "Sin Tokens", // Removed
+    // noTokensDesc: "Has usado todos tus tokens de chat de Chef Eva por hoy. Los tokens se restablecen diariamente.", // Removed
     resetChatButton: "Restablecer Chat",
     resetChatConfirmTitle: "¿Restablecer Chat?",
     resetChatConfirmDesc: "¿Estás seguro de que quieres borrar el historial del chat? Esta acción no se puede deshacer.",
@@ -101,9 +101,9 @@ const uiText = {
     imageUploadErrorSize: "La taille de l'image dépasse la limite de 2 Mo.",
     imageUploadErrorType: "Type de fichier invalide. Veuillez télécharger des images JPEG ou PNG.",
     imageUploadErrorRead: "Impossible de lire le fichier image.",
-    tokensRemaining: "Jetons Restants : {count}",
-    noTokensTitle: "Plus de Jetons",
-    noTokensDesc: "Vous avez utilisé tous vos jetons de chat Chef Eva pour aujourd'hui. Les jetons se réinitialisent quotidiennement.",
+    // tokensRemaining: "Jetons Restants : {count}", // Removed
+    // noTokensTitle: "Plus de Jetons", // Removed
+    // noTokensDesc: "Vous avez utilisé tous vos jetons de chat Chef Eva pour aujourd'hui. Les jetons se réinitialisent quotidiennement.", // Removed
     resetChatButton: "Réinitialiser le Chat",
     resetChatConfirmTitle: "Réinitialiser le Chat ?",
     resetChatConfirmDesc: "Êtes-vous sûr de vouloir effacer l'historique du chat ? Cette action est irréversible.",
@@ -126,9 +126,9 @@ const uiText = {
     imageUploadErrorSize: "Die Bildgröße überschreitet das 2MB-Limit.",
     imageUploadErrorType: "Ungültiger Dateityp. Bitte laden Sie JPEG- or PNG-Bilder hoch.",
     imageUploadErrorRead: "Die Bilddatei konnte nicht gelesen werden.",
-    tokensRemaining: "Verbleibende Tokens: {count}",
-    noTokensTitle: "Keine Tokens mehr",
-    noTokensDesc: "Sie haben alle Ihre Chef Eva Chat-Tokens für heute verbraucht. Tokens werden täglich zurückgesetzt.",
+    // tokensRemaining: "Verbleibende Tokens: {count}", // Removed
+    // noTokensTitle: "Keine Tokens mehr", // Removed
+    // noTokensDesc: "Sie haben alle Ihre Chef Eva Chat-Tokens für heute verbraucht. Tokens werden täglich zurückgesetzt.", // Removed
     resetChatButton: "Chat zurücksetzen",
     resetChatConfirmTitle: "Chat zurücksetzen?",
     resetChatConfirmDesc: "Möchten Sie den Chatverlauf wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
@@ -151,9 +151,9 @@ const uiText = {
     imageUploadErrorSize: "छवि का आकार 2MB सीमा से अधिक है।",
     imageUploadErrorType: "अमान्य फ़ाइल प्रकार। कृपया JPEG या PNG छवियां अपलोड करें।",
     imageUploadErrorRead: "छवि फ़ाइल पढ़ने में असमर्थ।",
-    tokensRemaining: "शेष टोकन: {count}",
-    noTokensTitle: "टोकन समाप्त",
-    noTokensDesc: "आपने आज के लिए अपने सभी शेफ ईवा चैट टोकन का उपयोग कर लिया है। टोकन प्रतिदिन रीसेट होते हैं।",
+    // tokensRemaining: "शेष टोकन: {count}", // Removed
+    // noTokensTitle: "टोकन समाप्त", // Removed
+    // noTokensDesc: "आपने आज के लिए अपने सभी शेफ ईवा चैट टोकन का उपयोग कर लिया है। टोकन प्रतिदिन रीसेट होते हैं।", // Removed
     resetChatButton: "चैट रीसेट करें",
     resetChatConfirmTitle: "चैट रीसेट करें?",
     resetChatConfirmDesc: "क्या आप वाकई चैट इतिहास साफ़ करना चाहते हैं? यह क्रिया वापस नहीं की जा सकती।",
@@ -176,9 +176,9 @@ const uiText = {
     imageUploadErrorSize: "ছবির আকার ২MB সীমা অতিক্রম করেছে।",
     imageUploadErrorType: "অবৈধ ফাইলের ধরণ। অনুগ্রহ করে JPEG বা PNG ছবি আপলোড করুন।",
     imageUploadErrorRead: "ছবির ফাইল পড়া যায়নি।",
-    tokensRemaining: "অবশিষ্ট টোকেন: {count}",
-    noTokensTitle: "টোকেন নেই",
-    noTokensDesc: "আপনি আজকের জন্য আপনার সমস্ত শেফ ইভা চ্যাট টোকেন ব্যবহার করেছেন। টোকেন প্রতিদিন রিসেট হয়।",
+    // tokensRemaining: "অবশিষ্ট টোকেন: {count}", // Removed
+    // noTokensTitle: "টোকেন নেই", // Removed
+    // noTokensDesc: "আপনি আজকের জন্য আপনার সমস্ত শেফ ইভা চ্যাট টোকেন ব্যবহার করেছেন। টোকেন প্রতিদিন রিসেট হয়।", // Removed
     resetChatButton: "চ্যাট রিসেট করুন",
     resetChatConfirmTitle: "চ্যাট রিসেট করবেন?",
     resetChatConfirmDesc: "আপনি কি নিশ্চিতভাবে চ্যাট ইতিহাস মুছে ফেলতে চান? এই ক্রিয়াটি পূর্বাবস্থায় ফেরানো যাবে না।",
@@ -193,7 +193,7 @@ interface ChatEvaProps {
   isOpen: boolean;
   onClose: () => void;
   language: LanguageCode;
-  userId: string; // Receive userId
+  userId: string; // Receive userId (though not used for tokens now)
 }
 
 // Helper to estimate tokens (simple word count, refine as needed)
@@ -214,36 +214,21 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const [tokensLeft, setTokensLeft] = useState<number | null>(null); // Initialize as null
+  // const [tokensLeft, setTokensLeft] = useState<number | null>(null); // Removed token state
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(initialLanguage);
 
   const T = uiText[currentLanguage] || uiText.en; // Use currentLanguage for UI text
 
-  // --- Fetch Initial Tokens ---
+  // --- Initialize Chat ---
   useEffect(() => {
-      const fetchTokens = async () => {
-          try {
-              const response = await fetch(`/api/user/${userId}/tokens`);
-              if (!response.ok) {
-                  throw new Error('Failed to fetch token count');
-              }
-              const data = await response.json();
-              setTokensLeft(data.tokens);
-          } catch (err) {
-              console.error("Error fetching tokens:", err);
-              setError("Could not load your token balance."); // User-friendly error
-          }
-      };
-
-      if (isOpen && userId) {
-          fetchTokens();
+      if (isOpen) {
           // Add initial message if chat is empty
           if (messages.length === 0) {
               setMessages([{ role: 'model', parts: [{ text: T.description }] }]);
           }
       }
-  }, [isOpen, userId, T.description, messages.length]); // Add T.description and messages.length
+  }, [isOpen, T.description, messages.length]); // Removed userId dependency
 
 
   // --- Language Sync & Reset ---
@@ -312,10 +297,7 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
   const handleSend = useCallback(async () => {
     const currentInput = input.trim();
     if (!currentInput && !imageDataUri) return;
-    if (tokensLeft !== null && tokensLeft <= 0) {
-        setError(T.noTokensDesc);
-        return;
-    }
+    // Removed token check
 
     setError(null);
 
@@ -380,20 +362,7 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
     startTransition(async () => {
       try {
 
-         // Send request to your API route for token decrement
-          const tokenResponse = await fetch(`/api/user/${userId}/decrement-token`, { method: 'POST' });
-          if (!tokenResponse.ok) {
-             if (tokenResponse.status === 429) { // Too Many Requests - No tokens left
-                 const errorData = await tokenResponse.json();
-                 setError(errorData.error || T.noTokensDesc);
-                 // Revert message optimistic update if token decrement failed
-                 setMessages(messages);
-                 return;
-             }
-             throw new Error('Failed to decrement token');
-          }
-          const tokenData = await tokenResponse.json();
-          setTokensLeft(tokenData.tokens); // Update local token count
+        // Removed token decrement request
 
         // --- Call AI Flow ---
         const flowInput: ChatWithEvaInput = {
@@ -428,13 +397,11 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
         setError(errorMsg);
         // Revert optimistic update on error
         setMessages(messages);
-         // Optionally refund token on error? Depends on business logic.
-         // await fetch(`/api/user/${userId}/increment-token`, { method: 'POST' });
-         // fetchTokens(); // Re-fetch tokens
+         // Removed token refund logic
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, imageDataUri, messages, userId, tokensLeft, currentLanguage, T]); // Add currentLanguage and T
+  }, [input, imageDataUri, messages, userId, currentLanguage, T]); // Removed tokensLeft dependency
 
   // --- Reset Chat ---
   const handleResetChat = () => {
@@ -476,12 +443,7 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
                     </SelectContent>
                 </Select>
             </div>
-           {/* Token Display */}
-           {tokensLeft !== null && (
-                <DialogDescription className="text-xs text-primary pt-1">
-                 {T.tokensRemaining.replace('{count}', String(tokensLeft))}
-                </DialogDescription>
-           )}
+           {/* Token Display Removed */}
         </DialogHeader>
 
         <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
@@ -532,7 +494,8 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
             <div className="px-4 pb-2">
                 <Alert variant="destructive" className="text-sm">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>{tokensLeft !== null && tokensLeft <= 0 ? T.noTokensTitle : T.chatErrorTitle}</AlertTitle>
+                    {/* Removed token-specific title */}
+                    <AlertTitle>{T.chatErrorTitle}</AlertTitle>
                     <AlertDescription>{error}</AlertDescription>
                 </Alert>
             </div>
@@ -556,7 +519,7 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
                <RotateCcw className="h-4 w-4 text-muted-foreground"/>
             </Button>
              {/* Attach Button */}
-            <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isSending || (tokensLeft !== null && tokensLeft <= 0)}>
+            <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isSending /* Removed token check */}>
                  <Paperclip className="h-4 w-4" />
                  <span className="sr-only">{T.attachLabel}</span>
             </Button>
@@ -573,9 +536,9 @@ export function ChatEva({ isOpen, onClose, language: initialLanguage, userId }: 
             placeholder={T.inputPlaceholder}
             className="flex-grow"
             onKeyDown={(e) => e.key === 'Enter' && !isSending && handleSend()}
-            disabled={isSending || (tokensLeft !== null && tokensLeft <= 0)}
+            disabled={isSending /* Removed token check */}
           />
-          <Button onClick={handleSend} disabled={isSending || (!input.trim() && !imageDataUri) || (tokensLeft !== null && tokensLeft <= 0)} className="min-w-[80px]">
+          <Button onClick={handleSend} disabled={isSending || (!input.trim() && !imageDataUri) /* Removed token check */} className="min-w-[80px]">
             {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             <span className="ml-2 hidden sm:inline">{isSending ? T.sendingButton : T.sendButton}</span>
           </Button>
