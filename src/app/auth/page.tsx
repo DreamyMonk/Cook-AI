@@ -1,8 +1,8 @@
 
-// 'use client';
+'use client'; // Add 'use client' as it was likely intended for the full auth form
 
 // import { useState } from 'react';
-// import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // Uncommented necessary imports
 // import { Button } from '@/components/ui/button';
 // import { Input } from '@/components/ui/input';
 // import { Label } from '@/components/ui/label';
@@ -134,10 +134,10 @@ export default function AuthPage() {
          </TabsContent>
        </Tabs>
        */}
-        <Card className="w-[400px]">
-          <CardHeader>
-            <CardTitle>Authentication Disabled</CardTitle>
-            <CardDescription>Login and Sign Up features are currently unavailable.</CardDescription>
+        <Card className="w-[400px] bg-card text-card-foreground shadow-lg rounded-xl">
+          <CardHeader className="p-6">
+            <CardTitle className="text-xl font-semibold">Authentication Disabled</CardTitle>
+            <CardDescription className="text-sm text-muted-foreground mt-1">Login and Sign Up features are currently unavailable.</CardDescription>
           </CardHeader>
         </Card>
      </div>
